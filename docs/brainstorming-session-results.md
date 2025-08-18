@@ -324,10 +324,87 @@
 - How do we handle controversial books and diverse literary opinions?
 - What library partnerships are realistic for MVP launch?
 
+---
+
+## Follow-up Session: Library Management Integration
+
+**Session Date:** 2025-08-18
+**Facilitator:** Business Analyst Mary 📊
+**Focus:** Adding library operations capabilities to EzLib value proposition
+
+### Key Insight Discovered
+
+**Missing Stakeholder:** The original brainstorming session focused heavily on the reader/borrower experience but missed a crucial stakeholder - **libraries themselves** need operational tools to make EzLib work effectively.
+
+**Target Libraries:** Small and medium-sized single-location libraries with 1-3 staff and no existing management systems.
+
+### Library Management Core Features
+
+**📚 Book Management**
+- Add books (ISBN scan + manual entry)
+- Track quantities and available copies  
+- Basic cataloging (title, author, genre, shelf location)
+- Mark books as damaged/lost/retired
+- Integration with social buzz: See which books have EzLib reader interest
+
+**👥 Member Management**
+- Member registration and profiles
+- Contact information and borrowing limits
+- Member search and status tracking
+- Simple ID system (member numbers/cards)
+- Optional linking to EzLib social profiles
+
+**🔄 Borrowing Operations** 
+- Check out books to members
+- Due date tracking and renewals
+- Check in returned books
+- Overdue notifications and basic fee tracking
+- Integration with EzLib's "excitement-to-action pipeline"
+
+**📊 Simple Reports**
+- Popular books and circulation statistics
+- Overdue items and member reports  
+- Basic inventory counts
+- Social discovery impact: "Books borrowed after EzLib recommendations"
+
+### Enhanced Value Proposition
+
+**For Readers:** Social discovery + seamless borrowing from community libraries
+**For Libraries:** Complete management system + community engagement insights
+**For EzLib Platform:** Direct library partnerships + verified borrowing data for social features
+
+### Updated Priority Ideas
+
+#### #1 Priority: Social Feed with Recognition System *(unchanged)*
+
+#### #2 Priority: Integrated Library Management System *(new)*
+- **Rationale:** Enables library partnerships and provides operational foundation for borrowing pipeline
+- **Next steps:**
+  1. Design library staff interface for book/member/borrowing management
+  2. Build ISBN scanning and cataloging features
+  3. Create member registration and check-out workflows
+- **Resources needed:** Backend developer, library staff UX research, mobile scanning capabilities
+- **Timeline:** 10-14 weeks for MVP
+
+#### #3 Priority: 30-Second Excitement-to-Action Pipeline *(updated)*
+- **Rationale:** Now enhanced by direct library integration rather than external API dependencies
+- **Next steps:**
+  1. Connect social discovery to real-time library inventory
+  2. Build instant borrowing workflow for library members
+  3. Design pickup/notification system for libraries
+- **Resources needed:** Full-stack developer, library workflow design
+- **Timeline:** 8-12 weeks (reduced due to integrated approach)
+
+#### #4 Priority: Personal Reading Management *(moved to #4)*
+
+### Architecture Insight
+
+**Simplified Approach:** Rather than complex API integrations with existing library systems, EzLib becomes the complete library management solution for small/medium libraries, creating a unified platform where social discovery and library operations work seamlessly together.
+
 ### Next Session Planning
-- **Suggested topics:** Technical architecture design, community guidelines and moderation strategy
-- **Recommended timeframe:** Within 1-2 weeks while insights are fresh
-- **Preparation needed:** Research library APIs, competitive analysis of book social networks
+- **Suggested topics:** Technical architecture for integrated library management system, library staff onboarding and training workflows
+- **Recommended timeframe:** Within 1-2 weeks while insights are fresh  
+- **Preparation needed:** Research library management software UI patterns, interview small library staff about daily workflows
 
 ---
 
