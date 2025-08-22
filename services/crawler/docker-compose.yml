@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  ezlib-crawler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - LOG_LEVEL=info
+    volumes:
+      - ./src:/app/src:ro
+    networks:
+      - ezlib-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Redis for caching (optional, for future use)
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ezlib-network
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+networks:
+  ezlib-network:
+    driver: bridge
+
+volumes:
+  redis_data:
