@@ -1,1 +1,1 @@
-"""External API client implementations."""
+"""External API clients for book metadata retrieval."""

@@ -9,11 +9,16 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.api import enrichment, health
+from src.core.config import settings
+from src.core.logging import setup_logging
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> Any:  # type: ignore
     """Handle application startup and shutdown."""
     # Startup
+    setup_logging()
     print("🚀 EzLib Book Crawler Service starting up...")
     yield
     # Shutdown
@@ -22,9 +27,9 @@ async def lifespan(app: FastAPI) -> Any:  # type: ignore
 
 # Create FastAPI application
 app = FastAPI(
-    title="EzLib Book Crawler Service",
+    title=settings.APP_NAME,
     description="Service for enriching book metadata from external sources",
-    version="0.1.0",
+    version=settings.APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
@@ -33,25 +38,23 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
-
-@app.get("/health")
-async def health_check() -> dict[str, str]:
-    """Health check endpoint."""
-    return {"status": "healthy", "service": "ezlib-book-crawler"}
+# Include API routers
+app.include_router(enrichment.router)
+app.include_router(health.router)
 
 
 @app.get("/")
 async def root() -> dict[str, str]:
     """Root endpoint."""
     return {
-        "message": "EzLib Book Crawler Service",
-        "version": "0.1.0",
+        "message": settings.APP_NAME,
+        "version": settings.APP_VERSION,
         "docs": "/docs",
         "health": "/health",
     }
