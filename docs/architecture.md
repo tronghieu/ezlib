@@ -43,9 +43,10 @@ EzLib implements a **unified fullstack platform** using a Next.js monorepo archi
 
 ### Repository Structure
 
-**Structure:** Monorepo with shared packages  
+**Structure:** Monorepo with shared packages and dedicated Supabase directory  
 **Monorepo Tool:** Turbo (built into Vercel, optimized for Next.js)  
-**Package Organization:** App-based separation with shared libraries for types, UI components, and business logic
+**Package Organization:** App-based separation with shared libraries for types, UI components, and business logic  
+**Database:** Supabase directory at root level (standard CLI structure) shared across all apps
 
 ### High Level Architecture Diagram
 
@@ -53,19 +54,16 @@ EzLib implements a **unified fullstack platform** using a Next.js monorepo archi
 graph TB
     Users[👥 Users<br/>Readers + Library Managers] --> LB[🌐 Vercel Edge Network]
     
-    LB --> ReaderApp[📱 Reader Social App<br/>Next.js]
-    LB --> LibApp[💼 Library Management App<br/>Next.js] 
-    LB --> PublicSite[🌍 Public Site<br/>Next.js]
+    LB --> ReaderApp[📱 Reader Social App<br/>ezlib.com (DEFAULT)<br/>Next.js]
+    LB --> LibApp[💼 Library Management App<br/>manage.ezlib.com<br/>Next.js] 
+    LB --> PublicSite[🌍 Public Site<br/>(Optional)<br/>Next.js]
     
-    ReaderApp --> API[🔗 Shared API Layer<br/>Next.js API Routes]
-    LibApp --> API
-    PublicSite --> API
+    ReaderApp --> Supabase[(🗄️ Supabase<br/>PostgreSQL + Auth + Realtime)]
+    LibApp --> Supabase
+    PublicSite --> Supabase
     
-    API --> Supabase[(🗄️ Supabase<br/>PostgreSQL + Auth + Realtime)]
-    API --> Crawler[📚 Book Crawler Service<br/>Node.js/Vercel Functions]
-    
+    Crawler[📚 Book Crawler Service<br/>Node.js/Vercel Functions] --> Supabase
     Crawler --> External[🌐 External APIs<br/>ISBN/Reviews/Ratings]
-    Crawler --> Supabase
     
     Supabase --> RLS[🔐 Row Level Security<br/>Multi-tenant + Role-based]
 ```
@@ -910,50 +908,40 @@ components:
 
 Based on the multi-frontend architecture, unified data models, and REST API design, here are the major logical components across the fullstack EzLib system:
 
-### Reader Social App (ezlib.com)
+### Reader Social App (ezlib.com) - **DEFAULT APPLICATION**
 
-**Responsibility:** Public-facing social book discovery platform for readers to find, review, and borrow books from local libraries.
+**Responsibility:** Public-facing social book discovery platform for readers to find, review, and borrow books from local libraries. This is the default application users see when visiting the main domain.
 
-**Key Interfaces:**
-- `/api/books/discover` - Curated book discovery with social context
-- `/api/social/feed` - Personalized reading activity feed  
-- `/api/borrowing/request` - Book borrowing workflow
-- `/api/reviews` - Social review creation and interaction
-- Supabase real-time subscriptions for book availability updates
+**Key Features:**
+- Book discovery with social context and recommendations
+- Personalized reading activity feed and social interactions
+- Direct book borrowing workflow with library integration
+- Review creation and social engagement features
+- Real-time notifications for book availability and borrowing updates
 
-**Dependencies:** Shared API Layer, Supabase Database, Python Book Crawler
+**Data Access:** Direct Supabase client integration with Row Level Security
 
-**Technology Stack:** Next.js 14 App Router, shadcn/ui components, Zustand + React Query state management, Tailwind CSS styling
+**Dependencies:** Supabase Database, Book Crawler Service (for enrichment)
 
-### Library Management App (manage.ezlib.com)
+**Technology Stack:** Next.js 14 App Router, Supabase JavaScript client, shadcn/ui components, React Query for data fetching, Tailwind CSS styling
 
-**Responsibility:** Administrative dashboard for library staff to manage books, members, borrowing operations, and collections.
+### Library Management App (manage.ezlib.com) - **SUBDOMAIN**
 
-**Key Interfaces:**
-- `/api/libraries/{id}/inventory` - Book catalog and availability management
-- `/api/libraries/{id}/members` - Member registration and status tracking
-- `/api/libraries/{id}/transactions` - Borrowing workflow management
-- `/api/libraries/{id}/collections` - Book organization and curation
+**Responsibility:** Administrative dashboard for library staff to manage books, members, borrowing operations, and collections. Accessed via subdomain for administrative users.
+
+**Key Features:**
+- Book inventory and catalog management
+- Member registration, tracking, and subscription management
+- Borrowing transaction workflow management (approve, check-out, return)
+- Book collection organization and curation
 - Real-time notifications for borrowing requests and overdue items
+- Library analytics and reporting
 
-**Dependencies:** Shared API Layer, Supabase Database, Role-based Access Control
+**Data Access:** Direct Supabase client integration with admin-level Row Level Security
 
-**Technology Stack:** Next.js 14 App Router with server-side rendering, professional UI components optimized for data management, table-heavy interfaces with filtering and search
+**Dependencies:** Supabase Database, Book Crawler Service (for book enrichment)
 
-### Shared API Layer
-
-**Responsibility:** Unified backend services providing authentication, business logic, and data access for both frontend applications.
-
-**Key Interfaces:**
-- REST API endpoints (defined in API specification)
-- Supabase client integration with Row Level Security
-- Cross-subdomain authentication token validation
-- Rate limiting and request validation middleware
-- Error handling and logging integration
-
-**Dependencies:** Supabase Database, Python Book Crawler, External APIs
-
-**Technology Stack:** Next.js API Routes with TypeScript, Zod request validation, Supabase JavaScript client, middleware for auth and rate limiting
+**Technology Stack:** Next.js 14 App Router with server-side rendering, Supabase JavaScript client, professional UI components optimized for data management, React Query for data fetching, table-heavy interfaces with filtering and search
 
 ### Supabase Database Layer
 
@@ -970,20 +958,28 @@ Based on the multi-frontend architecture, unified data models, and REST API desi
 
 **Technology Stack:** Supabase (PostgreSQL + Auth + Storage + Real-time), custom RLS policies, database functions for complex queries
 
+**Multi-App Configuration:**
+- **Single Supabase Project**: Shared database across reader app and management app
+- **Cross-Domain Authentication**: Supports both `ezlib.com` and `manage.ezlib.com`
+- **Shared Row Level Security**: App-agnostic data access policies based on user roles
+- **Real-time Subscriptions**: Cross-app notifications (e.g., borrowing requests from reader to management)
+
 ### Python Book Crawler Service
 
 **Responsibility:** Asynchronous book metadata enrichment from external sources including ISBN lookups, review aggregation, and author information.
 
-**Key Interfaces:**
+**Key Features:**
 - `/crawler/enrich-book` - Triggered enrichment for specific books
 - ISBN lookup APIs (OpenLibrary, Google Books, Goodreads)
 - Web scraping for review and rating data
 - Author biographical data collection
 - Book cover image processing and optimization
 
-**Dependencies:** External book APIs, Supabase Database (for data updates), image processing services
+**Data Access:** Direct Supabase Python client for database updates
 
-**Technology Stack:** FastAPI with Python 3.11+, asyncio for concurrent processing, BeautifulSoup/Scrapy for web scraping, requests for API integration, Pydantic for data validation
+**Dependencies:** External book APIs, image processing services
+
+**Technology Stack:** FastAPI with Python 3.11+, Supabase Python client, asyncio for concurrent processing, BeautifulSoup/Scrapy for web scraping, requests for API integration, Pydantic for data validation
 
 ### Component Diagrams
 
@@ -997,20 +993,14 @@ graph TB
     subgraph "Shared Frontend Packages"
         SharedTypes[@ezlib/types<br/>TypeScript Interfaces]
         SharedUI[@ezlib/ui<br/>React Components]
-        SharedClient[@ezlib/supabase-client<br/>Database Client]
         SharedUtils[@ezlib/utils<br/>Helper Functions]
-    end
-    
-    subgraph "Backend Services"
-        APILayer[🔗 Shared API Layer<br/>Next.js API Routes]
-        AuthComponent[🔐 Auth & Authorization<br/>Role-based Access]
-        RealtimeComponent[⚡ Real-time Notifications<br/>Supabase Subscriptions]
     end
     
     subgraph "Data Layer"
         Database[(🗄️ Supabase Database<br/>PostgreSQL + RLS)]
         Storage[📁 Supabase Storage<br/>Files & Images]
         Auth[👤 Supabase Auth<br/>User Management]
+        Realtime[⚡ Supabase Realtime<br/>Cross-app Subscriptions]
     end
     
     subgraph "External Services"
@@ -1021,33 +1011,29 @@ graph TB
     %% Frontend Dependencies
     ReaderApp --> SharedTypes
     ReaderApp --> SharedUI
-    ReaderApp --> SharedClient
     LibApp --> SharedTypes
     LibApp --> SharedUI
-    LibApp --> SharedClient
-    SharedClient --> SharedUtils
+    SharedTypes --> SharedUtils
     
-    %% API Layer Dependencies
-    ReaderApp --> APILayer
-    LibApp --> APILayer
-    APILayer --> AuthComponent
-    APILayer --> Database
-    APILayer --> RealtimeComponent
+    %% Direct Database Connections
+    ReaderApp --> Database
+    ReaderApp --> Auth
+    ReaderApp --> Storage
+    ReaderApp --> Realtime
+    
+    LibApp --> Database
+    LibApp --> Auth
+    LibApp --> Storage
+    LibApp --> Realtime
     
     %% Database Dependencies
     Database --> Auth
     Database --> Storage
-    AuthComponent --> Auth
-    RealtimeComponent --> Database
+    Database --> Realtime
     
     %% External Service Dependencies
     Crawler --> Database
     Crawler --> ExternalAPIs
-    APILayer --> Crawler
-    
-    %% Real-time Subscriptions
-    ReaderApp -.->|WebSocket| RealtimeComponent
-    LibApp -.->|WebSocket| RealtimeComponent
 ```
 
 ## External APIs
@@ -1150,7 +1136,6 @@ Critical system workflows illustrating component interactions, external API inte
 sequenceDiagram
     participant R as Reader
     participant RA as Reader App
-    participant API as Shared API
     participant DB as Supabase DB
     participant RT as Real-time
     participant LA as Library App
@@ -1159,44 +1144,35 @@ sequenceDiagram
     Note over R,LS: Social Discovery → Instant Borrowing Pipeline
 
     R->>RA: Browse social feed
-    RA->>API: GET /social/feed
-    API->>DB: Query reviews from followed users
-    DB-->>API: Social activities with book context
-    API-->>RA: Curated feed with book availability
+    RA->>DB: Query reviews from followed users (Supabase client)
+    DB-->>RA: Social activities with book context
     RA-->>R: Display book in social context
 
     Note over R,RA: 0-2s: Discovery moment
     R->>RA: Tap book for quick preview
-    RA->>API: GET /books/general/{id}
-    API->>DB: Fetch book + editions + reviews
-    DB-->>API: Complete book information
-    API-->>RA: Book details with social proof
+    RA->>DB: Fetch book + editions + reviews (Supabase client)
+    DB-->>RA: Complete book information
     RA-->>R: Show review + "Borrow" button
 
     Note over R,RA: 2-6s: Decision point
     R->>RA: Tap "Borrow" button
-    RA->>API: GET /books/editions/{id}/availability
-    API->>DB: Query inventory across user's libraries
-    DB-->>API: Real-time availability status
-    API-->>RA: Available libraries list
+    RA->>DB: Query inventory across user's libraries (Supabase client)
+    DB-->>RA: Real-time availability status
     RA-->>R: Show library options with availability
 
     Note over R,RA: 6-9s: Library selection
     R->>RA: Select library and confirm
-    RA->>API: POST /borrowing/request
-    API->>DB: Create borrowing transaction
+    RA->>DB: Create borrowing transaction (Supabase client)
     DB->>RT: Trigger real-time notification
     RT->>LA: Push notification to library staff
-    DB-->>API: Transaction created
-    API-->>RA: Borrowing request confirmed
+    DB-->>RA: Transaction created
     RA-->>R: Success notification + due date
 
     Note over RT,LS: 9-12s: Staff notification
     RT-->>LA: Real-time borrowing request appears
     LA-->>LS: New request notification badge
     LS->>LA: Review and approve request
-    LA->>API: PATCH /borrowing/requests/{id}/approve
-    API->>DB: Update transaction status
+    LA->>DB: Update transaction status (Supabase client)
     DB->>RT: Trigger approval notification
     RT->>RA: Push notification to reader
     RA-->>R: "Book ready for pickup" notification
@@ -1208,7 +1184,6 @@ sequenceDiagram
 sequenceDiagram
     participant LS as Library Staff
     participant LA as Library App
-    participant API as Shared API
     participant DB as Supabase DB
     participant Crawler as Python Crawler
     participant ExtAPI as External APIs
@@ -1216,10 +1191,9 @@ sequenceDiagram
     Note over LS,ExtAPI: Staff adds book → Automatic enrichment
 
     LS->>LA: Add book with ISBN
-    LA->>API: POST /libraries/{id}/inventory
-    API->>DB: Create BookEdition + BookInventory
-    API->>Crawler: POST /crawler/enrich-book
-    API-->>LA: Book added (minimal metadata)
+    LA->>DB: Create BookEdition + BookInventory (Supabase client)
+    LA->>Crawler: POST /crawler/enrich-book
+    DB-->>LA: Book added (minimal metadata)
     LA-->>LS: Immediate confirmation
 
     Note over Crawler,ExtAPI: Async enrichment process
@@ -1236,8 +1210,7 @@ sequenceDiagram
     end
 
     Crawler->>Crawler: Merge and validate data
-    Crawler->>API: PATCH /books/editions/{id}/metadata
-    API->>DB: Update BookEdition + Author + BookContributor
+    Crawler->>DB: Update BookEdition + Author + BookContributor (Supabase Python client)
     
     Note over DB,LS: Real-time metadata update
     DB->>LA: Real-time subscription update
@@ -1254,21 +1227,21 @@ sequenceDiagram
     participant LA as Library App<br/>(manage.ezlib.com)
     participant DB as Supabase DB
 
-    Note over U,DB: Seamless context switching
+    Note over U,DB: Seamless cross-app authentication
 
     U->>RA: Login on reader app
-    RA->>Auth: Email/password authentication
+    RA->>Auth: Email/password authentication (Supabase client)
     Auth-->>RA: JWT token + user session
-    RA->>DB: Fetch user profile + roles
+    RA->>DB: Fetch user profile + roles (Supabase client)
     DB-->>RA: User data + LibReader + LibAdmin records
     RA-->>U: Logged in as reader
 
     Note over U,LA: Switch to library management
     U->>LA: Navigate to manage.ezlib.com
-    LA->>LA: Check for existing auth token
-    LA->>Auth: Validate JWT token
+    LA->>LA: Check for existing auth token (shared Supabase session)
+    LA->>Auth: Validate JWT token (Supabase client)
     Auth-->>LA: Token valid + user ID
-    LA->>DB: Query LibAdmin roles for user
+    LA->>DB: Query LibAdmin roles for user (Supabase client)
     DB-->>LA: Admin permissions for libraries
     
     alt User has library admin access
@@ -1277,10 +1250,10 @@ sequenceDiagram
         LA-->>U: Show "Request Library Access" page
     end
 
-    Note over U,LA: Role-based interface
+    Note over U,LA: Role-based interface with RLS
     U->>LA: Perform admin action
-    LA->>DB: Check specific library permissions
-    DB-->>LA: Verify LibAdmin role for this library
+    LA->>DB: Action with RLS policy check (Supabase client)
+    DB-->>LA: Data returned or access denied based on RLS
     LA->>LA: Execute action or show permission error
 ```
 

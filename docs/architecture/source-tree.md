@@ -11,16 +11,20 @@ This document defines the monorepo structure for the EzLib platform, organizing 
 ```
 ezlib/
 ├── apps/                           # Frontend applications
-│   ├── reader/                     # Public reader social app (ezlib.com)
+│   ├── reader/                     # Public reader social app (ezlib.com - DEFAULT)
 │   ├── library-management/         # Library admin dashboard (manage.ezlib.com)
-│   └── public-site/               # Marketing/landing pages
+│   └── public-site/               # Marketing/landing pages (optional)
 ├── services/                       # Backend services
 │   └── crawler/                   # Python book crawler service
 ├── packages/                       # Shared libraries
 │   ├── ui/                        # Shared UI components
 │   ├── types/                     # TypeScript type definitions
-│   ├── database/                  # Database schemas and migrations
 │   └── utils/                     # Shared utility functions
+├── supabase/                       # Database configuration and migrations
+│   ├── config.toml                # Supabase local development config
+│   ├── migrations/                # SQL migration files
+│   ├── seed.sql                   # Sample data
+│   └── .gitignore                 # Supabase-specific gitignore
 ├── docs/                          # Project documentation
 │   ├── architecture/              # Architecture documents
 │   ├── stories/                   # Development stories
@@ -45,10 +49,10 @@ ezlib/
 
 ## Frontend Applications (`apps/`)
 
-### Reader Social App (`apps/reader/`)
+### Reader Social App (`apps/reader/`) - **DEFAULT APP**
 
 **Purpose**: Public-facing social book discovery platform  
-**Domain**: ezlib.com  
+**Domain**: ezlib.com (main domain - default when users visit the website)  
 **Framework**: Next.js 14 App Router
 
 ```
@@ -152,7 +156,7 @@ apps/reader/
 ### Library Management App (`apps/library-management/`)
 
 **Purpose**: Administrative dashboard for library staff  
-**Domain**: manage.ezlib.com  
+**Domain**: manage.ezlib.com (subdomain for library management)  
 **Framework**: Next.js 14 App Router
 
 ```
@@ -217,8 +221,9 @@ apps/library-management/
 
 ### Book Crawler Service (`services/crawler/`)
 
-**Purpose**: Python FastAPI service for book metadata enrichment  
-**Deployment**: Vercel Functions (initially) → Dedicated service (later)
+**Purpose**: Python FastAPI service for book metadata enrichment with direct Supabase integration  
+**Deployment**: Vercel Functions (initially) → Dedicated service (later)  
+**Database Access**: Direct connection via Supabase Python client
 
 ```
 services/crawler/
@@ -243,7 +248,7 @@ services/crawler/
 │   │   │   │   ├── worldcat.py
 │   │   │   │   ├── goodreads.py
 │   │   │   │   └── isbn_db.py
-│   │   │   ├── database.py       # Database operations
+│   │   │   ├── database.py       # Supabase Python client operations
 │   │   │   ├── cache.py          # Caching layer
 │   │   │   └── rate_limiter.py   # Rate limiting
 │   │   ├── api/                  # FastAPI routers
@@ -318,13 +323,42 @@ app.include_router(crawler_router, prefix="/api/crawler")
 # services/crawler/src/crawler/services/enrichment.py
 from typing import Optional
 from .external_apis import OpenLibraryAPI, GoogleBooksAPI
+from .database import SupabaseClient
 from ..models.book import BookMetadata
 
 class BookEnrichmentService:
+    def __init__(self):
+        self.supabase = SupabaseClient()
+        
     async def enrich_book(self, isbn: str) -> Optional[BookMetadata]:
-        """Main enrichment workflow"""
-        # Implementation details...
-        pass
+        """Main enrichment workflow with direct Supabase updates"""
+        # Fetch from external APIs
+        metadata = await self._fetch_external_metadata(isbn)
+        
+        # Update Supabase directly
+        await self.supabase.update_book_metadata(metadata)
+        return metadata
+```
+
+```python
+# services/crawler/src/crawler/services/database.py
+from supabase import create_client, Client
+from ..config import settings
+from ..models.book import BookMetadata
+
+class SupabaseClient:
+    def __init__(self):
+        self.client: Client = create_client(
+            settings.supabase_url,
+            settings.supabase_service_key  # Service role key for admin access
+        )
+    
+    async def update_book_metadata(self, metadata: BookMetadata) -> None:
+        """Direct Supabase update - no API layer needed"""
+        await self.client.table('book_editions').update({
+            'edition_metadata': metadata.to_dict(),
+            'updated_at': 'now()'
+        }).eq('isbn_13', metadata.isbn).execute()
 ```
 
 ---
@@ -390,37 +424,33 @@ packages/types/
 └── tsconfig.json
 ```
 
-### Database Package (`packages/database/`)
+---
 
-**Purpose**: Database schemas, migrations, and utilities
+## Database Configuration (`supabase/`)
+
+**Purpose**: Supabase local development and database management  
+**Location**: Root-level directory (standard Supabase CLI structure)
 
 ```
-packages/database/
-├── src/
-│   ├── migrations/             # SQL migration files
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_add_book_crawler.sql
-│   │   └── 003_add_social_features.sql
-│   ├── schemas/                # Database schema definitions
-│   │   ├── tables.sql
-│   │   ├── functions.sql
-│   │   ├── triggers.sql
-│   │   └── rls_policies.sql
-│   ├── seeds/                  # Sample data
-│   │   ├── users.sql
-│   │   ├── libraries.sql
-│   │   └── books.sql
-│   └── utils/                  # Database utilities
-│       ├── client.ts          # Database client setup
-│       ├── migrate.ts         # Migration utilities
-│       └── seed.ts            # Seeding utilities
-├── supabase/                   # Supabase configuration
-│   ├── config.toml
-│   ├── seed.sql
-│   └── migrations/
-├── package.json
-└── README.md
+supabase/
+├── config.toml                 # Supabase local development configuration
+├── migrations/                 # SQL migration files (timestamped)
+│   ├── 20250823000001_core_book_metadata.sql
+│   ├── 20250823000002_book_relationships.sql
+│   ├── 20250823000003_indexes_performance.sql
+│   ├── 20250823000004_triggers_functions.sql
+│   └── 20250823000005_row_level_security.sql
+├── seed.sql                   # Sample data for local development
+├── .gitignore                 # Supabase-specific git ignores
+└── functions/                 # Edge functions (optional)
+    └── book-enrichment/
 ```
+
+**Key Configuration Notes:**
+- **Multi-app Support**: Configure `site_url` and `additional_redirect_urls` for multiple domains
+- **Authentication**: Set up CORS and auth redirects for both `ezlib.com` and `manage.ezlib.com`
+- **Row Level Security**: Shared database with app-specific access policies
+- **Real-time**: Enable subscriptions for cross-app notifications
 
 ---
 
