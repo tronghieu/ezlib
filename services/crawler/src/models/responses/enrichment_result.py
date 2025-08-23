@@ -139,3 +139,29 @@ class HealthResponse(BaseModel):
                 "services": {"openlibrary": {"status": "healthy", "available": True}},
             }
         }
+
+
+class JobStatusResponse(BaseModel):
+    """Response model for enrichment job status."""
+    
+    job_id: str = Field(..., description="Unique job identifier")
+    correlation_id: str = Field(..., description="Correlation ID for tracking")
+    isbn: str = Field(..., description="Book ISBN being enriched")
+    status: str = Field(..., description="Current job status")
+    created_at: str = Field(..., description="Job creation timestamp")
+    updated_at: str = Field(..., description="Last update timestamp")
+    quality_score: Optional[float] = Field(None, description="Data quality score")
+    has_warnings: bool = Field(False, description="Whether quality warnings exist")
+    requires_review: bool = Field(False, description="Whether manual review required")
+    error_message: Optional[str] = Field(None, description="Error message if failed")
+    processing_time: Optional[float] = Field(None, description="Processing duration in seconds")
+
+
+class ActiveJobsResponse(BaseModel):
+    """Response model for active jobs list."""
+    
+    active_jobs: List[JobStatusResponse] = Field(
+        default_factory=list, 
+        description="List of currently active enrichment jobs"
+    )
+    total_active: int = Field(..., description="Total number of active jobs")
