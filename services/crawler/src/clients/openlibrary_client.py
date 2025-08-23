@@ -54,15 +54,13 @@ class OpenLibraryClient(BaseHTTPClient):
 
         # Validate ISBN contains only digits
         if not isbn.isdigit():
-            raise ValidationError("ISBN must contain only digits", field="isbn", value=isbn)
+            raise ValidationError(
+                "ISBN must contain only digits", field="isbn", value=isbn
+            )
 
         # OpenLibrary API endpoint for book details
         path = "/api/books"
-        params = {
-            "bibkeys": f"ISBN:{isbn}",
-            "format": "json",
-            "jscmd": "details"
-        }
+        params = {"bibkeys": f"ISBN:{isbn}", "format": "json", "jscmd": "details"}
 
         logger.info("Fetching book from OpenLibrary", isbn=isbn)
 
@@ -79,7 +77,7 @@ class OpenLibraryClient(BaseHTTPClient):
                     "OpenLibrary API error",
                     isbn=isbn,
                     status_code=response.status_code,
-                    response_text=response.text[:500]
+                    response_text=response.text[:500],
                 )
                 raise OpenLibraryError(error_msg, status_code=response.status_code)
 
@@ -90,21 +88,29 @@ class OpenLibraryClient(BaseHTTPClient):
                     "Failed to parse OpenLibrary response as JSON",
                     isbn=isbn,
                     error=str(e),
-                    response_text=response.text[:500]
+                    response_text=response.text[:500],
                 )
                 raise OpenLibraryError("Invalid JSON response from OpenLibrary") from e
 
             # OpenLibrary returns data keyed by "ISBN:{isbn}"
             book_key = f"ISBN:{isbn}"
             if book_key not in data:
-                logger.info("Book not found in OpenLibrary response", isbn=isbn, keys=list(data.keys()))
+                logger.info(
+                    "Book not found in OpenLibrary response",
+                    isbn=isbn,
+                    keys=list(data.keys()),
+                )
                 return None
 
             book_data = data[book_key]
 
             # Validate response structure
             if "details" not in book_data:
-                logger.warning("OpenLibrary response missing details", isbn=isbn, keys=list(book_data.keys()))
+                logger.warning(
+                    "OpenLibrary response missing details",
+                    isbn=isbn,
+                    keys=list(book_data.keys()),
+                )
                 return None
 
             details = book_data["details"]
@@ -113,7 +119,7 @@ class OpenLibraryClient(BaseHTTPClient):
                 "Successfully fetched book from OpenLibrary",
                 isbn=isbn,
                 title=details.get("title", "Unknown"),
-                authors_count=len(details.get("authors", []))
+                authors_count=len(details.get("authors", [])),
             )
 
             return details
@@ -123,11 +129,11 @@ class OpenLibraryClient(BaseHTTPClient):
                 "HTTP error from OpenLibrary",
                 isbn=isbn,
                 status_code=e.response.status_code,
-                error=str(e)
+                error=str(e),
             )
             raise OpenLibraryError(
                 f"HTTP {e.response.status_code} from OpenLibrary",
-                status_code=e.response.status_code
+                status_code=e.response.status_code,
             ) from e
 
         except httpx.RequestError as e:
@@ -135,15 +141,12 @@ class OpenLibraryClient(BaseHTTPClient):
                 "Request error to OpenLibrary",
                 isbn=isbn,
                 error=str(e),
-                error_type=type(e).__name__
+                error_type=type(e).__name__,
             )
             raise OpenLibraryError(f"Failed to connect to OpenLibrary: {str(e)}") from e
 
     async def search_books(
-        self,
-        title: str | None = None,
-        author: str | None = None,
-        limit: int = 10
+        self, title: str | None = None, author: str | None = None, limit: int = 10
     ) -> list[dict[str, Any]]:
         """Search for books by title and/or author.
 
@@ -163,7 +166,9 @@ class OpenLibraryClient(BaseHTTPClient):
             raise ValidationError("Must provide title or author for search")
 
         if limit < 1 or limit > 100:
-            raise ValidationError("Limit must be between 1 and 100", field="limit", value=limit)
+            raise ValidationError(
+                "Limit must be between 1 and 100", field="limit", value=limit
+            )
 
         # Build search query
         query_parts = []
@@ -178,7 +183,7 @@ class OpenLibraryClient(BaseHTTPClient):
         params = {
             "q": query,
             "limit": limit,
-            "fields": "key,title,author_name,first_publish_year,isbn,cover_i"
+            "fields": "key,title,author_name,first_publish_year,isbn,cover_i",
         }
 
         logger.info("Searching books in OpenLibrary", query=query, limit=limit)
@@ -191,7 +196,7 @@ class OpenLibraryClient(BaseHTTPClient):
                 logger.warning(
                     "OpenLibrary search error",
                     query=query,
-                    status_code=response.status_code
+                    status_code=response.status_code,
                 )
                 raise OpenLibraryError(error_msg, status_code=response.status_code)
 
@@ -199,7 +204,9 @@ class OpenLibraryClient(BaseHTTPClient):
                 data = response.json()
             except Exception as e:
                 logger.error("Failed to parse search response as JSON", error=str(e))
-                raise OpenLibraryError("Invalid JSON response from OpenLibrary search") from e
+                raise OpenLibraryError(
+                    "Invalid JSON response from OpenLibrary search"
+                ) from e
 
             docs = data.get("docs", [])
             logger.info("Search completed", query=query, results_count=len(docs))
@@ -210,7 +217,7 @@ class OpenLibraryClient(BaseHTTPClient):
             logger.error("HTTP error in OpenLibrary search", error=str(e))
             raise OpenLibraryError(
                 f"HTTP {e.response.status_code} from OpenLibrary search",
-                status_code=e.response.status_code
+                status_code=e.response.status_code,
             ) from e
 
         except httpx.RequestError as e:

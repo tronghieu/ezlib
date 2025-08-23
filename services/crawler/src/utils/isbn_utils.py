@@ -192,9 +192,7 @@ def normalize_isbn(isbn: str) -> str:
 
     else:
         raise ValidationError(
-            f"ISBN must be 10 or 13 digits, got {len(clean)}",
-            field="isbn",
-            value=isbn
+            f"ISBN must be 10 or 13 digits, got {len(clean)}", field="isbn", value=isbn
         )
 
 

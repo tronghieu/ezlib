@@ -30,8 +30,12 @@ class BookMetadata(BaseModel):
 
     # Metadata about the enrichment
     source: str = Field("openlibrary", description="Data source identifier")
-    enriched_at: datetime = Field(default_factory=datetime.utcnow, description="Enrichment timestamp")
-    quality_score: float | None = Field(None, ge=0.0, le=1.0, description="Data quality score")
+    enriched_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Enrichment timestamp"
+    )
+    quality_score: float | None = Field(
+        None, ge=0.0, le=1.0, description="Data quality score"
+    )
 
     @validator("publication_date")
     def validate_publication_date(cls, v: date | None) -> date | None:
@@ -159,9 +163,7 @@ class BookMetadata(BaseModel):
 
     @classmethod
     def from_openlibrary(
-        cls,
-        isbn: str,
-        ol_details: OpenLibraryBookDetails
+        cls, isbn: str, ol_details: OpenLibraryBookDetails
     ) -> BookMetadata:
         """Create BookMetadata from OpenLibrary details.
 
@@ -205,7 +207,7 @@ class BookMetadata(BaseModel):
             description=ol_details.description,
             subjects=ol_details.subjects,
             isbn_10=ol_details.get_primary_isbn_10(),
-            source="openlibrary"
+            source="openlibrary",
         )
 
         # Calculate and set quality score

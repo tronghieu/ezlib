@@ -8,7 +8,9 @@ from typing import Any
 class CrawlerServiceError(Exception):
     """Base exception for all crawler service errors."""
 
-    def __init__(self, message: str, error_code: str | None = None, **context: Any) -> None:
+    def __init__(
+        self, message: str, error_code: str | None = None, **context: Any
+    ) -> None:
         """Initialize crawler service error.
 
         Args:
@@ -45,7 +47,7 @@ class ValidationError(CrawlerServiceError):
         message: str,
         field: str | None = None,
         value: Any | None = None,
-        **context: Any
+        **context: Any,
     ) -> None:
         """Initialize validation error.
 
@@ -81,7 +83,7 @@ class ExternalAPIError(CrawlerServiceError):
         api_name: str | None = None,
         status_code: int | None = None,
         response_data: str | None = None,
-        **context: Any
+        **context: Any,
     ) -> None:
         """Initialize external API error.
 
@@ -108,7 +110,9 @@ class ExternalAPIError(CrawlerServiceError):
             result["status_code"] = self.status_code
 
         if self.response_data:
-            result["response_data"] = self.response_data[:500]  # Truncate long responses
+            result["response_data"] = self.response_data[
+                :500
+            ]  # Truncate long responses
 
         return result
 
@@ -121,7 +125,7 @@ class OpenLibraryError(ExternalAPIError):
         message: str,
         status_code: int | None = None,
         response_data: str | None = None,
-        **context: Any
+        **context: Any,
     ) -> None:
         """Initialize OpenLibrary error."""
         super().__init__(
@@ -129,7 +133,7 @@ class OpenLibraryError(ExternalAPIError):
             api_name="OpenLibrary",
             status_code=status_code,
             response_data=response_data,
-            **context
+            **context,
         )
 
 
@@ -141,7 +145,7 @@ class RateLimitError(ExternalAPIError):
         message: str,
         api_name: str | None = None,
         retry_after: int | None = None,
-        **context: Any
+        **context: Any,
     ) -> None:
         """Initialize rate limit error.
 
@@ -156,7 +160,7 @@ class RateLimitError(ExternalAPIError):
             api_name=api_name,
             status_code=429,
             error_code="RATE_LIMIT_ERROR",
-            **context
+            **context,
         )
         self.retry_after = retry_after
 
@@ -179,7 +183,7 @@ class EnrichmentError(CrawlerServiceError):
         isbn: str | None = None,
         source: str | None = None,
         stage: str | None = None,
-        **context: Any
+        **context: Any,
     ) -> None:
         """Initialize enrichment error.
 
@@ -220,7 +224,7 @@ class DataQualityError(EnrichmentError):
         quality_score: float,
         min_score: float,
         missing_fields: list[str] | None = None,
-        **context: Any
+        **context: Any,
     ) -> None:
         """Initialize data quality error.
 
@@ -235,7 +239,7 @@ class DataQualityError(EnrichmentError):
             message,
             error_code="DATA_QUALITY_ERROR",
             stage="quality_validation",
-            **context
+            **context,
         )
         self.quality_score = quality_score
         self.min_score = min_score
@@ -244,11 +248,13 @@ class DataQualityError(EnrichmentError):
     def to_dict(self) -> dict[str, Any]:
         """Convert data quality error to dictionary."""
         result = super().to_dict()
-        result.update({
-            "quality_score": self.quality_score,
-            "min_score": self.min_score,
-            "missing_fields": self.missing_fields
-        })
+        result.update(
+            {
+                "quality_score": self.quality_score,
+                "min_score": self.min_score,
+                "missing_fields": self.missing_fields,
+            }
+        )
         return result
 
 
@@ -256,10 +262,7 @@ class ConfigurationError(CrawlerServiceError):
     """Error in application configuration."""
 
     def __init__(
-        self,
-        message: str,
-        config_key: str | None = None,
-        **context: Any
+        self, message: str, config_key: str | None = None, **context: Any
     ) -> None:
         """Initialize configuration error.
 
@@ -289,7 +292,7 @@ class DatabaseError(CrawlerServiceError):
         message: str,
         operation: str | None = None,
         table: str | None = None,
-        **context: Any
+        **context: Any,
     ) -> None:
         """Initialize database error.
 
@@ -324,7 +327,7 @@ class ConcurrencyError(CrawlerServiceError):
         message: str,
         current_requests: int | None = None,
         max_requests: int | None = None,
-        **context: Any
+        **context: Any,
     ) -> None:
         """Initialize concurrency error.
 

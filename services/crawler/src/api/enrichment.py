@@ -59,19 +59,17 @@ def create_error_response(error: Exception) -> JSONResponse:
                 status_code = status.HTTP_502_BAD_GATEWAY
 
         return JSONResponse(
-            status_code=status_code,
-            content=ErrorResponse(**error_dict).dict()
+            status_code=status_code, content=ErrorResponse(**error_dict).dict()
         )
 
     else:
         # Generic error response
         error_response = ErrorResponse(
-            error_type="InternalServerError",
-            message=str(error)
+            error_type="InternalServerError", message=str(error)
         )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content=error_response.dict()
+            content=error_response.dict(),
         )
 
 
@@ -93,7 +91,7 @@ def enrichment_result_to_response(result: EnrichmentResult) -> EnrichmentRespons
         error=result.error,
         quality_score=result.quality_score,
         sources_used=result.sources_used,
-        processing_time=result.processing_time
+        processing_time=result.processing_time,
     )
 
 
@@ -103,31 +101,19 @@ def enrichment_result_to_response(result: EnrichmentResult) -> EnrichmentRespons
     summary="Enrich single book metadata",
     description="Fetch and enrich metadata for a single book using its ISBN identifier",
     responses={
-        200: {
-            "description": "Book successfully enriched",
-            "model": EnrichmentResponse
-        },
-        400: {
-            "description": "Invalid request parameters",
-            "model": ErrorResponse
-        },
+        200: {"description": "Book successfully enriched", "model": EnrichmentResponse},
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
         404: {
             "description": "Book not found in external sources",
-            "model": ErrorResponse
+            "model": ErrorResponse,
         },
-        429: {
-            "description": "Rate limit exceeded",
-            "model": ErrorResponse
-        },
-        502: {
-            "description": "External API error",
-            "model": ErrorResponse
-        }
-    }
+        429: {"description": "Rate limit exceeded", "model": ErrorResponse},
+        502: {"description": "External API error", "model": ErrorResponse},
+    },
 )
 async def enrich_book(
     request: EnrichmentRequest,
-    service: BookEnrichmentService = Depends(get_enrichment_service)
+    service: BookEnrichmentService = Depends(get_enrichment_service),
 ) -> EnrichmentResponse:
     """Enrich metadata for a single book.
 
@@ -142,7 +128,7 @@ async def enrich_book(
         result = await service.enrich_book(
             isbn=request.isbn,
             force_refresh=request.force_refresh,
-            min_quality_score=request.min_quality_score
+            min_quality_score=request.min_quality_score,
         )
 
         response = enrichment_result_to_response(result)
@@ -150,14 +136,14 @@ async def enrich_book(
         # Return appropriate HTTP status based on enrichment status
         if result.status == "failed":
             return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND if "not found" in (result.error or "").lower()
+                status_code=status.HTTP_404_NOT_FOUND
+                if "not found" in (result.error or "").lower()
                 else status.HTTP_502_BAD_GATEWAY,
-                content=response.dict()
+                content=response.dict(),
             )
         elif result.status == "partial":
             return JSONResponse(
-                status_code=status.HTTP_206_PARTIAL_CONTENT,
-                content=response.dict()
+                status_code=status.HTTP_206_PARTIAL_CONTENT, content=response.dict()
             )
 
         return response
@@ -174,21 +160,15 @@ async def enrich_book(
     responses={
         200: {
             "description": "Batch enrichment completed (may include partial failures)",
-            "model": BatchEnrichmentResponse
+            "model": BatchEnrichmentResponse,
         },
-        400: {
-            "description": "Invalid request parameters",
-            "model": ErrorResponse
-        },
-        429: {
-            "description": "Rate limit exceeded",
-            "model": ErrorResponse
-        }
-    }
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        429: {"description": "Rate limit exceeded", "model": ErrorResponse},
+    },
 )
 async def batch_enrich_books(
     request: BatchEnrichmentRequest,
-    service: BookEnrichmentService = Depends(get_enrichment_service)
+    service: BookEnrichmentService = Depends(get_enrichment_service),
 ) -> BatchEnrichmentResponse:
     """Enrich metadata for multiple books concurrently.
 
@@ -201,12 +181,13 @@ async def batch_enrich_books(
     """
     try:
         import time
+
         start_time = time.time()
 
         results = await service.batch_enrich_books(
             isbns=request.isbns,
             force_refresh=request.force_refresh,
-            min_quality_score=request.min_quality_score
+            min_quality_score=request.min_quality_score,
         )
 
         processing_time = time.time() - start_time
@@ -225,14 +206,13 @@ async def batch_enrich_books(
             failed=failed,
             partial=partial,
             results=response_results,
-            processing_time=processing_time
+            processing_time=processing_time,
         )
 
         # Return 207 Multi-Status if there were any failures
         if failed > 0 or partial > 0:
             return JSONResponse(
-                status_code=status.HTTP_207_MULTI_STATUS,
-                content=response.dict()
+                status_code=status.HTTP_207_MULTI_STATUS, content=response.dict()
             )
 
         return response
@@ -249,13 +229,10 @@ async def batch_enrich_books(
     responses={
         200: {
             "description": "Enrichment status retrieved",
-            "model": EnrichmentResponse
+            "model": EnrichmentResponse,
         },
-        404: {
-            "description": "Enrichment request not found",
-            "model": ErrorResponse
-        }
-    }
+        404: {"description": "Enrichment request not found", "model": ErrorResponse},
+    },
 )
 async def get_enrichment_status(correlation_id: str) -> EnrichmentResponse:
     """Get enrichment status by correlation ID.
@@ -272,5 +249,5 @@ async def get_enrichment_status(correlation_id: str) -> EnrichmentResponse:
     # TODO: Implement job status tracking with database/cache
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Status tracking not yet implemented"
+        detail="Status tracking not yet implemented",
     )

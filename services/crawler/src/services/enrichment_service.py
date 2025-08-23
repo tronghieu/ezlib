@@ -112,7 +112,9 @@ class BookEnrichmentService:
             openlibrary_client: OpenLibrary client instance
         """
         self._openlibrary_client = openlibrary_client
-        self._concurrency_semaphore = asyncio.Semaphore(settings.ENRICHMENT_MAX_CONCURRENT)
+        self._concurrency_semaphore = asyncio.Semaphore(
+            settings.ENRICHMENT_MAX_CONCURRENT
+        )
 
     async def __aenter__(self) -> BookEnrichmentService:
         """Async context manager entry."""
@@ -129,12 +131,12 @@ class BookEnrichmentService:
             self._openlibrary_client = OpenLibraryClient()
 
         # Start the clients if they support context management
-        if hasattr(self._openlibrary_client, '__aenter__'):
+        if hasattr(self._openlibrary_client, "__aenter__"):
             await self._openlibrary_client.__aenter__()
 
     async def close(self) -> None:
         """Close all API clients."""
-        if self._openlibrary_client and hasattr(self._openlibrary_client, 'close'):
+        if self._openlibrary_client and hasattr(self._openlibrary_client, "close"):
             await self._openlibrary_client.close()
 
     async def enrich_book(
@@ -164,13 +166,15 @@ class BookEnrichmentService:
             "Starting book enrichment",
             isbn=isbn,
             correlation_id=correlation_id,
-            force_refresh=force_refresh
+            force_refresh=force_refresh,
         )
 
         # Validate and normalize ISBN
         try:
             if not is_valid_isbn(isbn):
-                raise ValidationError(f"Invalid ISBN format: {isbn}", field="isbn", value=isbn)
+                raise ValidationError(
+                    f"Invalid ISBN format: {isbn}", field="isbn", value=isbn
+                )
 
             normalized_isbn = normalize_isbn(isbn)
 
@@ -180,7 +184,7 @@ class BookEnrichmentService:
                 isbn=isbn,
                 status=EnrichmentStatus.FAILED,
                 error=str(e),
-                correlation_id=correlation_id
+                correlation_id=correlation_id,
             )
 
         # Use concurrency control
@@ -188,8 +192,10 @@ class BookEnrichmentService:
             try:
                 # Set timeout for the entire enrichment process
                 result = await asyncio.wait_for(
-                    self._enrich_single_book(normalized_isbn, correlation_id, min_quality_score),
-                    timeout=settings.ENRICHMENT_TIMEOUT
+                    self._enrich_single_book(
+                        normalized_isbn, correlation_id, min_quality_score
+                    ),
+                    timeout=settings.ENRICHMENT_TIMEOUT,
                 )
 
                 processing_time = asyncio.get_event_loop().time() - start_time
@@ -201,7 +207,7 @@ class BookEnrichmentService:
                     correlation_id=correlation_id,
                     status=result.status,
                     quality_score=result.quality_score,
-                    processing_time=processing_time
+                    processing_time=processing_time,
                 )
 
                 return result
@@ -215,7 +221,7 @@ class BookEnrichmentService:
                     isbn=normalized_isbn,
                     correlation_id=correlation_id,
                     timeout=settings.ENRICHMENT_TIMEOUT,
-                    processing_time=processing_time
+                    processing_time=processing_time,
                 )
 
                 return EnrichmentResult(
@@ -223,7 +229,7 @@ class BookEnrichmentService:
                     status=EnrichmentStatus.FAILED,
                     error=error_msg,
                     correlation_id=correlation_id,
-                    processing_time=processing_time
+                    processing_time=processing_time,
                 )
 
             except Exception as e:
@@ -237,7 +243,7 @@ class BookEnrichmentService:
                     error=error_msg,
                     error_type=type(e).__name__,
                     processing_time=processing_time,
-                    exc_info=True
+                    exc_info=True,
                 )
 
                 return EnrichmentResult(
@@ -245,14 +251,11 @@ class BookEnrichmentService:
                     status=EnrichmentStatus.FAILED,
                     error=error_msg,
                     correlation_id=correlation_id,
-                    processing_time=processing_time
+                    processing_time=processing_time,
                 )
 
     async def _enrich_single_book(
-        self,
-        isbn: str,
-        correlation_id: str,
-        min_quality_score: float | None = None
+        self, isbn: str, correlation_id: str, min_quality_score: float | None = None
     ) -> EnrichmentResult:
         """Enrich a single book from OpenLibrary.
 
@@ -271,7 +274,7 @@ class BookEnrichmentService:
             logger.debug(
                 "Fetching book data from OpenLibrary",
                 isbn=isbn,
-                correlation_id=correlation_id
+                correlation_id=correlation_id,
             )
 
             await self._ensure_clients()
@@ -283,7 +286,7 @@ class BookEnrichmentService:
                 logger.info(
                     "Book not found in OpenLibrary",
                     isbn=isbn,
-                    correlation_id=correlation_id
+                    correlation_id=correlation_id,
                 )
 
                 return EnrichmentResult(
@@ -291,7 +294,7 @@ class BookEnrichmentService:
                     status=EnrichmentStatus.FAILED,
                     error="Book not found in OpenLibrary",
                     sources_used=["openlibrary"],
-                    correlation_id=correlation_id
+                    correlation_id=correlation_id,
                 )
 
             # Convert to internal metadata format
@@ -304,7 +307,7 @@ class BookEnrichmentService:
                 correlation_id=correlation_id,
                 title=metadata.title,
                 authors_count=len(metadata.authors),
-                quality_score=metadata.quality_score
+                quality_score=metadata.quality_score,
             )
 
             # Validate data quality
@@ -318,7 +321,7 @@ class BookEnrichmentService:
                     correlation_id=correlation_id,
                     quality_score=metadata.quality_score,
                     min_score=min_score,
-                    missing_fields=missing_fields
+                    missing_fields=missing_fields,
                 )
 
                 return EnrichmentResult(
@@ -328,7 +331,7 @@ class BookEnrichmentService:
                     error=error_msg,
                     quality_score=metadata.quality_score,
                     sources_used=["openlibrary"],
-                    correlation_id=correlation_id
+                    correlation_id=correlation_id,
                 )
 
             # Successful enrichment
@@ -338,7 +341,7 @@ class BookEnrichmentService:
                 metadata=metadata,
                 quality_score=metadata.quality_score,
                 sources_used=["openlibrary"],
-                correlation_id=correlation_id
+                correlation_id=correlation_id,
             )
 
         except Exception as e:
@@ -347,7 +350,7 @@ class BookEnrichmentService:
                 isbn=isbn,
                 correlation_id=correlation_id,
                 error=str(e),
-                error_type=type(e).__name__
+                error_type=type(e).__name__,
             )
 
             return EnrichmentResult(
@@ -355,7 +358,7 @@ class BookEnrichmentService:
                 status=EnrichmentStatus.FAILED,
                 error=str(e),
                 sources_used=["openlibrary"],
-                correlation_id=correlation_id
+                correlation_id=correlation_id,
             )
 
     async def batch_enrich_books(
@@ -377,13 +380,12 @@ class BookEnrichmentService:
         logger.info(
             "Starting batch book enrichment",
             book_count=len(isbns),
-            force_refresh=force_refresh
+            force_refresh=force_refresh,
         )
 
         # Create enrichment tasks
         tasks = [
-            self.enrich_book(isbn, force_refresh, min_quality_score)
-            for isbn in isbns
+            self.enrich_book(isbn, force_refresh, min_quality_score) for isbn in isbns
         ]
 
         # Wait for all tasks to complete
@@ -395,9 +397,7 @@ class BookEnrichmentService:
             if isinstance(result, Exception):
                 enrichment_results.append(
                     EnrichmentResult(
-                        isbn=isbn,
-                        status=EnrichmentStatus.FAILED,
-                        error=str(result)
+                        isbn=isbn, status=EnrichmentStatus.FAILED, error=str(result)
                     )
                 )
             else:
@@ -411,7 +411,7 @@ class BookEnrichmentService:
             "Batch enrichment completed",
             total_books=len(isbns),
             successful=successful,
-            failed=failed
+            failed=failed,
         )
 
         return enrichment_results
@@ -425,7 +425,7 @@ class BookEnrichmentService:
         health_status = {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
-            "services": {}
+            "services": {},
         }
 
         # Check OpenLibrary
@@ -436,12 +436,12 @@ class BookEnrichmentService:
             ol_healthy = await self._openlibrary_client.health_check()
             health_status["services"]["openlibrary"] = {
                 "status": "healthy" if ol_healthy else "unhealthy",
-                "available": ol_healthy
+                "available": ol_healthy,
             }
         except Exception as e:
             health_status["services"]["openlibrary"] = {
                 "status": "unhealthy",
-                "error": str(e)
+                "error": str(e),
             }
 
         # Overall status based on critical services

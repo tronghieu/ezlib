@@ -24,90 +24,83 @@ class Settings(BaseSettings):
 
     # OpenLibrary API settings
     OPENLIBRARY_BASE_URL: str = Field(
-        "https://openlibrary.org",
-        description="OpenLibrary API base URL"
+        "https://openlibrary.org", description="OpenLibrary API base URL"
     )
     OPENLIBRARY_RATE_LIMIT: int = Field(
-        100,
-        description="OpenLibrary requests per minute"
+        100, description="OpenLibrary requests per minute"
     )
     OPENLIBRARY_TIMEOUT: float = Field(
-        10.0,
-        description="OpenLibrary request timeout in seconds"
+        10.0, description="OpenLibrary request timeout in seconds"
     )
     OPENLIBRARY_MAX_RETRIES: int = Field(
-        3,
-        description="Maximum retry attempts for OpenLibrary requests"
+        3, description="Maximum retry attempts for OpenLibrary requests"
     )
 
     # Cache settings
     CACHE_TTL: int = Field(
-        86400,  # 24 hours
-        description="Default cache TTL in seconds"
+        86400, description="Default cache TTL in seconds"  # 24 hours
     )
-    REDIS_URL: str | None = Field(
-        None,
-        description="Redis connection URL for caching"
-    )
+    REDIS_URL: str | None = Field(None, description="Redis connection URL for caching")
+    REDIS_PASSWORD: str | None = Field(None, description="Redis password")
+    REDIS_DB: int = Field(0, description="Redis database number")
+
+    # Rate limiting and performance
+    MAX_CONCURRENT_REQUESTS: int = Field(10, description="Maximum concurrent requests")
+    DEFAULT_CACHE_TTL: int = Field(86400, description="Default cache TTL in seconds")
 
     # Database settings
-    SUPABASE_URL: str | None = Field(
-        None,
-        description="Supabase project URL"
-    )
+    SUPABASE_URL: str | None = Field(None, description="Supabase project URL")
     SUPABASE_SERVICE_ROLE_KEY: str | None = Field(
-        None,
-        description="Supabase service role key"
+        None, description="Supabase service role key"
     )
     SUPABASE_MAX_CONNECTIONS: int = Field(
-        20,
-        description="Maximum database connections"
+        20, description="Maximum database connections"
     )
     SUPABASE_CONNECTION_TIMEOUT: int = Field(
-        30,
-        description="Database connection timeout in seconds"
+        30, description="Database connection timeout in seconds"
     )
 
     # External API settings
-    GOOGLE_BOOKS_API_KEY: str | None = Field(
-        None,
-        description="Google Books API key"
+    GOOGLE_BOOKS_API_KEY: str | None = Field(None, description="Google Books API key")
+    ISBN_DB_API_KEY: str | None = Field(None, description="ISBN Database API key")
+
+    # Additional rate limits (stored as comma-separated values in env)
+    GOOGLE_BOOKS_RATE_LIMIT: str | None = Field(
+        None, description="Google Books rate limit (requests,seconds)"
     )
-    ISBN_DB_API_KEY: str | None = Field(
-        None,
-        description="ISBN Database API key"
+    WIKIDATA_RATE_LIMIT: str | None = Field(
+        None, description="Wikidata rate limit (requests,seconds)"
     )
 
     # Enrichment settings
     ENRICHMENT_TIMEOUT: float = Field(
-        10.0,
-        description="Maximum time for single book enrichment"
+        10.0, description="Maximum time for single book enrichment"
     )
     ENRICHMENT_MAX_CONCURRENT: int = Field(
-        100,
-        description="Maximum concurrent enrichment requests"
+        100, description="Maximum concurrent enrichment requests"
     )
     ENRICHMENT_MIN_QUALITY_SCORE: float = Field(
-        0.6,
-        description="Minimum acceptable quality score"
+        0.6, description="Minimum acceptable quality score"
     )
 
     # Security settings
-    SECRET_KEY: str | None = Field(
-        None,
-        description="Secret key for JWT tokens"
+    SECRET_KEY: str | None = Field(None, description="Secret key for JWT tokens")
+    JWT_SECRET_KEY: str | None = Field(
+        None, description="JWT secret key for service authentication"
     )
-    ALLOWED_HOSTS: list[str] = Field(
-        ["*"],
-        description="List of allowed host headers"
+    ALLOWED_HOSTS: list[str] = Field(["*"], description="List of allowed host headers")
+    CORS_ORIGINS: list[str] = Field(["*"], description="List of allowed CORS origins")
+    ALLOWED_ORIGINS: str | None = Field(
+        None, description="Comma-separated list of allowed CORS origins"
     )
-    CORS_ORIGINS: list[str] = Field(
-        ["*"],
-        description="List of allowed CORS origins"
-    )
+
+    # Monitoring
+    ENABLE_METRICS: bool = Field(False, description="Enable metrics collection")
+    METRICS_PORT: int = Field(9090, description="Port for metrics endpoint")
 
     class Config:
         """Pydantic configuration."""
+
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
@@ -115,7 +108,10 @@ class Settings(BaseSettings):
     @property
     def is_development(self) -> bool:
         """Check if running in development mode."""
-        return self.DEBUG or os.getenv("ENVIRONMENT", "").lower() in ("dev", "development")
+        return self.DEBUG or os.getenv("ENVIRONMENT", "").lower() in (
+            "dev",
+            "development",
+        )
 
     @property
     def is_production(self) -> bool:

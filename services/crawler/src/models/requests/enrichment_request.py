@@ -10,13 +10,12 @@ from src.utils.isbn_utils import is_valid_isbn
 class EnrichmentRequest(BaseModel):
     """Request model for single book enrichment."""
 
-    isbn: str = Field(..., min_length=10, max_length=17, description="Book ISBN identifier")
+    isbn: str = Field(
+        ..., min_length=10, max_length=17, description="Book ISBN identifier"
+    )
     force_refresh: bool = Field(False, description="Skip cache and fetch fresh data")
     min_quality_score: float | None = Field(
-        None,
-        ge=0.0,
-        le=1.0,
-        description="Minimum quality score threshold (0.0-1.0)"
+        None, ge=0.0, le=1.0, description="Minimum quality score threshold (0.0-1.0)"
     )
 
     @validator("isbn")
@@ -35,11 +34,12 @@ class EnrichmentRequest(BaseModel):
 
     class Config:
         """Pydantic configuration."""
+
         schema_extra = {
             "example": {
                 "isbn": "9780134685991",
                 "force_refresh": False,
-                "min_quality_score": 0.7
+                "min_quality_score": 0.7,
             }
         }
 
@@ -48,17 +48,11 @@ class BatchEnrichmentRequest(BaseModel):
     """Request model for batch book enrichment."""
 
     isbns: list[str] = Field(
-        ...,
-        min_items=1,
-        max_items=50,
-        description="List of book ISBN identifiers"
+        ..., min_items=1, max_items=50, description="List of book ISBN identifiers"
     )
     force_refresh: bool = Field(False, description="Skip cache and fetch fresh data")
     min_quality_score: float | None = Field(
-        None,
-        ge=0.0,
-        le=1.0,
-        description="Minimum quality score threshold (0.0-1.0)"
+        None, ge=0.0, le=1.0, description="Minimum quality score threshold (0.0-1.0)"
     )
 
     @validator("isbns")
@@ -88,10 +82,11 @@ class BatchEnrichmentRequest(BaseModel):
 
     class Config:
         """Pydantic configuration."""
+
         schema_extra = {
             "example": {
                 "isbns": ["9780134685991", "9780596517748"],
                 "force_refresh": False,
-                "min_quality_score": 0.7
+                "min_quality_score": 0.7,
             }
         }

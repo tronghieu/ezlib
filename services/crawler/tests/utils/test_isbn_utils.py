@@ -7,15 +7,15 @@ import pytest
 from src.core.exceptions import ValidationError
 from src.utils.isbn_utils import (
     clean_isbn,
-    validate_isbn_10,
-    validate_isbn_13,
+    extract_isbn_from_text,
+    format_isbn_10,
+    format_isbn_13,
+    is_valid_isbn,
     isbn_10_to_13,
     isbn_13_to_10,
     normalize_isbn,
-    is_valid_isbn,
-    format_isbn_13,
-    format_isbn_10,
-    extract_isbn_from_text
+    validate_isbn_10,
+    validate_isbn_13,
 )
 
 
@@ -37,10 +37,10 @@ class TestIsbnUtils:
         # Standard ISBN-10
         assert validate_isbn_10("0134685997") is True
         assert validate_isbn_10("0596517742") is True
-        
+
         # ISBN-10 with X check digit
         assert validate_isbn_10("080442957X") is True
-        
+
         # With formatting
         assert validate_isbn_10("0-13-468599-7") is True
 
@@ -58,7 +58,7 @@ class TestIsbnUtils:
         assert validate_isbn_13("9780134685991") is True
         assert validate_isbn_13("9780596517748") is True
         assert validate_isbn_13("9791220109062") is True  # 979 prefix
-        
+
         # With formatting
         assert validate_isbn_13("978-0-13-468599-1") is True
 
@@ -77,7 +77,7 @@ class TestIsbnUtils:
         assert isbn_10_to_13("0134685997") == "9780134685991"
         assert isbn_10_to_13("0596517742") == "9780596517748"
         assert isbn_10_to_13("080442957X") == "9780804429573"
-        
+
         # With formatting
         assert isbn_10_to_13("0-13-468599-7") == "9780134685991"
 
@@ -85,14 +85,14 @@ class TestIsbnUtils:
         """Test ISBN-10 to ISBN-13 conversion with invalid input."""
         with pytest.raises(ValidationError) as exc_info:
             isbn_10_to_13("invalid")
-        
+
         assert "Invalid ISBN-10 format" in str(exc_info.value)
 
     def test_isbn_13_to_10_conversion(self):
         """Test ISBN-13 to ISBN-10 conversion."""
         assert isbn_13_to_10("9780134685991") == "0134685997"
         assert isbn_13_to_10("9780804429573") == "080442957X"
-        
+
         # With formatting
         assert isbn_13_to_10("978-0-13-468599-1") == "0134685997"
 
@@ -105,7 +105,7 @@ class TestIsbnUtils:
         """Test ISBN-13 to ISBN-10 conversion with invalid input."""
         with pytest.raises(ValidationError) as exc_info:
             isbn_13_to_10("invalid")
-        
+
         assert "Invalid ISBN-13 format" in str(exc_info.value)
 
     def test_normalize_isbn_isbn10(self):
@@ -124,17 +124,17 @@ class TestIsbnUtils:
         """Test ISBN normalization with invalid input."""
         with pytest.raises(ValidationError) as exc_info:
             normalize_isbn("")
-        
+
         assert "Empty ISBN" in str(exc_info.value)
-        
+
         with pytest.raises(ValidationError) as exc_info:
             normalize_isbn("123")
-        
+
         assert "ISBN must be 10 or 13 digits" in str(exc_info.value)
-        
+
         with pytest.raises(ValidationError) as exc_info:
             normalize_isbn("1234567890")  # 10 digits but invalid checksum
-        
+
         assert "Invalid ISBN-10" in str(exc_info.value)
 
     def test_is_valid_isbn(self):
@@ -145,7 +145,7 @@ class TestIsbnUtils:
         assert is_valid_isbn("978-0-13-468599-1") is True
         assert is_valid_isbn("0-13-468599-7") is True
         assert is_valid_isbn("080442957X") is True
-        
+
         # Invalid ISBNs
         assert is_valid_isbn("") is False
         assert is_valid_isbn("invalid") is False
@@ -156,7 +156,7 @@ class TestIsbnUtils:
         """Test ISBN-13 formatting."""
         assert format_isbn_13("9780134685991") == "978-0-134-68599-1"
         assert format_isbn_13("9791234567890") == "979-1-234-56789-0"
-        
+
         # Invalid length returns as-is
         assert format_isbn_13("123") == "123"
 
@@ -164,7 +164,7 @@ class TestIsbnUtils:
         """Test ISBN-10 formatting."""
         assert format_isbn_10("0134685997") == "0-134-68599-7"
         assert format_isbn_10("080442957X") == "0-804-42957-X"
-        
+
         # Invalid length returns as-is
         assert format_isbn_10("123") == "123"
 
@@ -175,9 +175,9 @@ class TestIsbnUtils:
         Another book: ISBN: 9791220109062
         Invalid: 1234567890
         """
-        
+
         isbns = extract_isbn_from_text(text)
-        
+
         # Should extract and normalize valid ISBNs
         expected = {"9780134685991", "9780804429573", "9791220109062"}
         assert set(isbns) == expected
@@ -194,9 +194,9 @@ class TestIsbnUtils:
         Also: 9780134685991
         And: 0-13-468599-7
         """
-        
+
         isbns = extract_isbn_from_text(text)
-        
+
         # All should normalize to the same ISBN-13
         assert isbns == ["9780134685991"]
 
@@ -205,11 +205,11 @@ class TestIsbnUtils:
         # ISBN-10 with X check digit
         assert validate_isbn_10("123456789X") is True
         assert isbn_10_to_13("123456789X") == "9781234567897"
-        
+
         # ISBN-13 with 979 prefix
         assert validate_isbn_13("9791220109062") is True
         assert isbn_13_to_10("9791220109062") is None
-        
+
         # Edge case with valid checksum
         assert validate_isbn_13("9780000000002") is True
 
@@ -221,20 +221,20 @@ class TestIsbnUtils:
             ("1449373321", "9781449373320"),  # Learning Python
             ("0321125215", "9780321125217"),  # Effective C++
         ]
-        
+
         for isbn_10, isbn_13 in real_isbns:
             # Validate both formats
             assert validate_isbn_10(isbn_10) is True
             assert validate_isbn_13(isbn_13) is True
-            
+
             # Test conversion
             assert isbn_10_to_13(isbn_10) == isbn_13
             assert isbn_13_to_10(isbn_13) == isbn_10
-            
+
             # Test normalization
             assert normalize_isbn(isbn_10) == isbn_13
             assert normalize_isbn(isbn_13) == isbn_13
-            
+
             # Test validity
             assert is_valid_isbn(isbn_10) is True
             assert is_valid_isbn(isbn_13) is True

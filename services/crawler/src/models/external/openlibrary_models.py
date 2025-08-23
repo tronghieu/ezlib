@@ -27,7 +27,9 @@ class OpenLibraryBookDetails(BaseModel):
 
     title: str | None = Field(None, description="Book title")
     subtitle: str | None = Field(None, description="Book subtitle")
-    authors: list[OpenLibraryAuthor] = Field(default_factory=list, description="Book authors")
+    authors: list[OpenLibraryAuthor] = Field(
+        default_factory=list, description="Book authors"
+    )
     publish_date: str | None = Field(None, description="Publication date as string")
     publishers: list[str] = Field(default_factory=list, description="Publishers")
     isbn_10: list[str] = Field(default_factory=list, description="ISBN-10 identifiers")
@@ -178,7 +180,9 @@ class OpenLibrarySearchResult(BaseModel):
 class OpenLibrarySearchResponse(BaseModel):
     """OpenLibrary search API response."""
 
-    docs: list[OpenLibrarySearchResult] = Field(default_factory=list, description="Search results")
+    docs: list[OpenLibrarySearchResult] = Field(
+        default_factory=list, description="Search results"
+    )
     num_found: int = Field(0, description="Total number of results found")
     start: int = Field(0, description="Starting index of results")
 
@@ -189,7 +193,5 @@ class OpenLibrarySearchResponse(BaseModel):
         docs = [OpenLibrarySearchResult(**doc) for doc in docs_data]
 
         return cls(
-            docs=docs,
-            num_found=data.get("num_found", 0),
-            start=data.get("start", 0)
+            docs=docs, num_found=data.get("num_found", 0), start=data.get("start", 0)
         )

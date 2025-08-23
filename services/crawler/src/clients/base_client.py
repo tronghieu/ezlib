@@ -61,7 +61,7 @@ class BaseHTTPClient(ABC):
             self._client = httpx.AsyncClient(
                 timeout=self.timeout,
                 follow_redirects=True,
-                limits=httpx.Limits(max_keepalive_connections=20, max_connections=100)
+                limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
             )
 
     async def close(self) -> None:
@@ -84,21 +84,20 @@ class BaseHTTPClient(ABC):
                     logger.info(
                         "Rate limit reached, waiting",
                         sleep_time=sleep_time,
-                        current_requests=len(self._request_times)
+                        current_requests=len(self._request_times),
                     )
                     await asyncio.sleep(sleep_time)
                     # Clean up old requests after sleeping
                     now = time.time()
-                    self._request_times = [t for t in self._request_times if now - t < 60]
+                    self._request_times = [
+                        t for t in self._request_times if now - t < 60
+                    ]
 
             # Record this request
             self._request_times.append(now)
 
     async def _retry_request(
-        self,
-        method: str,
-        url: str,
-        **kwargs: Any
+        self, method: str, url: str, **kwargs: Any
     ) -> httpx.Response:
         """Make HTTP request with exponential backoff retry."""
         await self._ensure_client()
@@ -115,17 +114,14 @@ class BaseHTTPClient(ABC):
                         "Retrying request after failure",
                         attempt=attempt,
                         sleep_time=sleep_time,
-                        url=url
+                        url=url,
                     )
                     await asyncio.sleep(sleep_time)
 
                 await self._wait_for_rate_limit()
 
                 logger.debug(
-                    "Making HTTP request",
-                    method=method,
-                    url=url,
-                    attempt=attempt + 1
+                    "Making HTTP request", method=method, url=url, attempt=attempt + 1
                 )
 
                 response = await self._client.request(method, url, **kwargs)
@@ -136,7 +132,7 @@ class BaseHTTPClient(ABC):
                     method=method,
                     url=url,
                     status_code=response.status_code,
-                    attempt=attempt + 1
+                    attempt=attempt + 1,
                 )
 
                 return response
@@ -149,7 +145,7 @@ class BaseHTTPClient(ABC):
                     url=url,
                     attempt=attempt + 1,
                     error=str(e),
-                    error_type=type(e).__name__
+                    error_type=type(e).__name__,
                 )
 
                 if attempt == self.max_retries:
@@ -162,7 +158,7 @@ class BaseHTTPClient(ABC):
                     method=method,
                     url=url,
                     error=str(e),
-                    error_type=type(e).__name__
+                    error_type=type(e).__name__,
                 )
                 raise
 
@@ -171,7 +167,7 @@ class BaseHTTPClient(ABC):
             "All retry attempts exhausted",
             method=method,
             url=url,
-            max_retries=self.max_retries
+            max_retries=self.max_retries,
         )
         raise last_exception or httpx.RequestError("All retry attempts failed")
 

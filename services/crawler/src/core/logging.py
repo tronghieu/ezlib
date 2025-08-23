@@ -33,13 +33,17 @@ def setup_logging() -> None:
 
     # Add development-friendly formatting or JSON for production
     if settings.is_development:
-        processors.extend([
-            structlog.dev.ConsoleRenderer(colors=True),
-        ])
+        processors.extend(
+            [
+                structlog.dev.ConsoleRenderer(colors=True),
+            ]
+        )
     else:
-        processors.extend([
-            structlog.processors.JSONRenderer(),
-        ])
+        processors.extend(
+            [
+                structlog.processors.JSONRenderer(),
+            ]
+        )
 
     # Configure structlog
     structlog.configure(
@@ -87,17 +91,13 @@ def log_function_call(func_name: str, **kwargs: Any) -> dict[str, Any]:
     """
     context = {
         "function": func_name,
-        "args": {k: v for k, v in kwargs.items() if not k.startswith("_")}
+        "args": {k: v for k, v in kwargs.items() if not k.startswith("_")},
     }
     return context
 
 
 def log_api_request(
-    method: str,
-    url: str,
-    status_code: int,
-    response_time: float,
-    **extra: Any
+    method: str, url: str, status_code: int, response_time: float, **extra: Any
 ) -> dict[str, Any]:
     """Create log context for API requests.
 
@@ -129,7 +129,7 @@ def log_enrichment_request(
     success: bool,
     quality_score: float = None,
     error: str = None,
-    **extra: Any
+    **extra: Any,
 ) -> dict[str, Any]:
     """Create log context for book enrichment requests.
 
