@@ -1720,6 +1720,1257 @@ CREATE TRIGGER update_inventory_availability
     EXECUTE FUNCTION update_book_availability();
 ```
 
+## Internationalization Architecture
+
+EzLib implements comprehensive internationalization (i18n) to support libraries and readers across different countries and languages. The architecture enables automatic location detection, user-configurable preferences, and culturally appropriate interfaces.
+
+### i18n Technology Stack
+
+| Component | Technology | Version | Purpose | Rationale |
+|-----------|------------|---------|---------|-----------|
+| **Next.js i18n** | Built-in i18n | 14+ | Locale routing and SSG/SSR support | Native Next.js integration, optimal performance |
+| **Translation Library** | React-intl (FormatJS) | 6.5+ | Message formatting and component localization | ICU message format, React-focused, extensive formatting |
+| **Location Detection** | ipapi.co | Latest | IP-based geolocation service | GDPR-compliant, reliable, generous free tier |
+| **Cultural Formatting** | Intl API | Native | Date/number/time formatting | Browser-native, comprehensive locale support |
+| **Translation Management** | Crowdin | Latest | Translation workflow and collaboration | Professional translation tools, GitHub integration |
+
+### User Preference-Based i18n Configuration
+
+```typescript
+// next.config.js - NO locale routing, clean URLs maintained
+module.exports = {
+  // Remove i18n routing configuration entirely
+  // i18n will be handled through user preferences + client-side switching
+  
+  webpack: (config, { isServer }) => {
+    // Optimize translation bundle loading
+    if (!isServer) {
+      config.optimization.splitChunks.cacheGroups.translations = {
+        test: /[\\/]locales[\\/]/,
+        name: 'translations',
+        chunks: 'async',
+        enforce: true
+      };
+    }
+    return config;
+  },
+  
+  // Enable server-side language detection without routing
+  async middleware() {
+    return [
+      {
+        source: '/((?!api|_next|_static).*)',
+        destination: '/middleware',
+      },
+    ];
+  }
+};
+
+// URL patterns remain clean:
+// ezlib.com → User's preferred language applied
+// ezlib.com/profile → User's preferred language applied  
+// manage.ezlib.com → User's preferred language applied
+// No /es, /fr, /de in URLs ever!
+```
+
+### User Preference-Driven Language System
+
+```typescript
+// Enhanced user preferences model - NO routing involved
+interface UserPreferences {
+  // Language and region - drives UI language without URL changes
+  preferred_language: string; // ISO 639-1 (en, es, vi, fr, de)
+  preferred_country: string;  // ISO 3166-1 Alpha-2 (US, ES, VN, FR, DE)
+  auto_detected_country?: string; // Original detection result
+  
+  // Language preference source tracking
+  language_source: 'auto_detected' | 'user_selected' | 'browser_default';
+  language_changed_at?: Date; // When user last changed language manually
+  
+  // Cultural formatting preferences (independent of interface language)
+  date_format: 'auto' | 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
+  time_format: 'auto' | '12h' | '24h';
+  number_format: 'auto' | 'US' | 'EU' | 'UK';
+  
+  // Notification preferences
+  notification_email: boolean;
+  notification_language: string; // Can differ from interface language
+  
+  // Privacy
+  privacy_social_activity: 'public' | 'followers' | 'private';
+  gdpr_consent: {
+    location_detection: boolean;
+    analytics_cookies: boolean;
+    marketing_communications: boolean;
+    consent_date: Date;
+  };
+}
+
+// Language persistence strategy
+interface LanguagePreference {
+  locale: string;
+  source: 'cookie' | 'user_account' | 'browser' | 'geo_detection';
+  priority: number; // Higher priority wins
+  expires_at?: Date;
+}
+```
+
+### Preference-Based Language Detection Flow (No URL Changes)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as App
+    participant LP as Language Preference Manager
+    participant L as Location Service
+    participant DB as Database
+    
+    U->>A: Visit ezlib.com (any page)
+    A->>LP: Check language preference priority
+    LP->>LP: Check sources: 1) User Account, 2) Cookie, 3) Browser, 4) Geo
+    
+    alt Has user account preference (highest priority)
+        LP->>DB: Load user.preferred_language
+        LP->>A: Apply saved language immediately
+        A->>A: Render page in user's preferred language
+    else Has language cookie
+        LP->>LP: Read ezlib_lang cookie
+        LP->>A: Apply cookie language
+        A->>A: Render page in cookie language
+    else First-time visitor (no preferences)
+        LP->>A: Use browser Accept-Language header
+        A->>U: Show GDPR consent banner
+        alt User accepts location detection
+            U->>A: Grant consent
+            A->>L: Request IP geolocation
+            L->>A: Return country/suggested language
+            LP->>A: Show language suggestion notification
+            A->>U: "We detected you're in Spain. Switch to Spanish?"
+            alt User accepts
+                U->>LP: Confirm language preference
+                LP->>LP: Set cookie: ezlib_lang=es
+                LP->>A: Switch interface to Spanish (no redirect)
+                alt User is authenticated
+                    LP->>DB: Update user.preferred_language = 'es'
+                end
+            else User declines
+                U->>LP: Keep current language
+                LP->>LP: Set cookie with current language
+            end
+        else User declines location detection
+            LP->>A: Continue with browser language or English default
+        end
+    end
+    
+    Note over A,LP: All language changes happen instantly without URL changes
+    Note over LP: Language preference persists across pages and sessions
+```
+
+### Translation File Structure
+
+```
+locales/
+├── en/
+│   ├── common.json          # Shared UI elements
+│   ├── reader/
+│   │   ├── discovery.json   # Book discovery interface
+│   │   ├── profile.json     # User profile pages
+│   │   └── borrowing.json   # Borrowing workflows
+│   ├── library/
+│   │   ├── dashboard.json   # Management dashboard
+│   │   ├── inventory.json   # Book management
+│   │   └── members.json     # Member management
+│   └── emails/
+│       ├── notifications.json # Email templates
+│       └── system.json       # System emails
+├── es/
+│   └── [same structure]
+└── fr/
+    └── [same structure]
+```
+
+### Cultural Formatting Implementation
+
+```typescript
+// Cultural formatting utilities
+export class CulturalFormatter {
+  constructor(private locale: string, private country: string) {}
+  
+  formatDate(date: Date, format?: 'short' | 'medium' | 'long'): string {
+    const options: Intl.DateTimeFormatOptions = {
+      dateStyle: format || 'medium'
+    };
+    
+    // Country-specific overrides
+    switch (this.country) {
+      case 'US':
+        return date.toLocaleDateString('en-US', options);
+      case 'GB':
+        return date.toLocaleDateString('en-GB', options);
+      case 'ES':
+        return date.toLocaleDateString('es-ES', options);
+      default:
+        return date.toLocaleDateString(this.locale, options);
+    }
+  }
+  
+  formatNumber(value: number, type: 'decimal' | 'currency' | 'percent' = 'decimal'): string {
+    const options: Intl.NumberFormatOptions = { style: type };
+    
+    if (type === 'currency') {
+      options.currency = this.getCurrencyForCountry();
+    }
+    
+    return new Intl.NumberFormat(`${this.locale}-${this.country}`, options).format(value);
+  }
+  
+  private getCurrencyForCountry(): string {
+    const currencyMap = {
+      'US': 'USD', 'GB': 'GBP', 'ES': 'EUR', 'FR': 'EUR', 'DE': 'EUR'
+    };
+    return currencyMap[this.country as keyof typeof currencyMap] || 'USD';
+  }
+}
+```
+
+## Authentication Architecture
+
+EzLib implements passwordless email OTP authentication with cross-domain session management, supporting independent login flows for the Reader app and Library Management app while maintaining unified user identity.
+
+### Authentication Technology Stack
+
+| Component | Technology | Purpose | Configuration |
+|-----------|------------|---------|---------------|
+| **Auth Provider** | Supabase Auth | Passwordless OTP, user management | Email-only auth, custom SMTP |
+| **Session Management** | Supabase Client | JWT tokens, cross-domain support | Custom domain configuration |
+| **Email Service** | Supabase SMTP | OTP delivery | Custom branding, templates |
+| **Frontend Auth** | @supabase/auth-helpers-nextjs | Next.js auth integration | App Router compatible |
+
+### Cross-Domain Authentication Strategy
+
+```mermaid
+graph TB
+    User[👤 User] --> ReaderApp[📱 Reader App<br/>ezlib.com]
+    User --> LibApp[💼 Library Management<br/>manage.ezlib.com]
+    
+    ReaderApp --> SupabaseAuth[🔐 Supabase Auth]
+    LibApp --> SupabaseAuth
+    
+    SupabaseAuth --> SharedDB[(🗄️ Shared User Database)]
+    
+    subgraph "Cross-Domain Session Management"
+        SupabaseAuth --> JWT1[JWT Token - ezlib.com]
+        SupabaseAuth --> JWT2[JWT Token - manage.ezlib.com]
+    end
+    
+    JWT1 --> RLS1[RLS: Reader Permissions]
+    JWT2 --> RLS2[RLS: Reader + LibAdmin Permissions]
+```
+
+### Registration and Authentication Flows
+
+#### New User Registration (Reader App Only)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant R as Reader App
+    participant S as Supabase Auth
+    participant DB as Database
+    
+    U->>R: Visit ezlib.com (first time)
+    R->>R: Check authentication status
+    R->>U: Show registration form
+    U->>R: Enter email address
+    R->>S: Request OTP (signUp)
+    S->>U: Send 6-digit OTP email
+    U->>R: Enter OTP code
+    R->>S: Verify OTP + create user
+    S->>DB: Create auth.users record
+    R->>R: Show profile completion form
+    U->>R: Enter: display_name, gender, language, country
+    R->>DB: Create users profile record
+    R->>R: Complete registration → dashboard
+```
+
+#### Cross-Domain Login Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant L as Library App
+    participant S as Supabase Auth
+    participant DB as Database
+    
+    U->>L: Visit manage.ezlib.com
+    L->>L: Check authentication
+    L->>U: Show login form (email only)
+    U->>L: Enter existing email
+    L->>S: Request login OTP (signIn)
+    S->>U: Send 6-digit OTP email
+    U->>L: Enter OTP code
+    L->>S: Verify OTP
+    S->>L: Return JWT token for manage.ezlib.com
+    L->>DB: Check LibAdmin permissions via RLS
+    alt Has LibAdmin record
+        L->>L: Load library management interface
+    else No LibAdmin record
+        L->>L: Show "Request Library Access" page
+    end
+```
+
+### Supabase Authentication Configuration
+
+```typescript
+// supabase/config/auth.sql
+-- Configure auth settings
+UPDATE auth.config SET
+  site_url = 'https://ezlib.com',
+  uri_allow_list = 'https://ezlib.com,https://manage.ezlib.com',
+  jwt_exp = 3600, -- 1 hour tokens
+  refresh_token_rotation_enabled = true,
+  security_captcha_enabled = false, -- OTP provides security
+  external_email_enabled = true,
+  external_phone_enabled = false,
+  enable_signup = true,
+  email_confirm_required = false -- OTP verification handles this
+  password_min_length = null; -- No passwords
+
+-- Custom auth hook for profile creation
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only create profile for users who complete registration
+  -- (handled by application, not trigger)
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+### Authentication Middleware
+
+```typescript
+// middleware.ts - Next.js middleware for auth protection
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
+  
+  const { data: { session } } = await supabase.auth.getSession();
+  const { pathname } = req.nextUrl;
+  
+  // Reader app protection (ezlib.com)
+  if (req.nextUrl.hostname === 'ezlib.com') {
+    if (pathname.startsWith('/profile') || pathname.startsWith('/borrowing')) {
+      if (!session) {
+        return NextResponse.redirect(new URL('/login', req.url));
+      }
+    }
+  }
+  
+  // Library management protection (manage.ezlib.com)
+  if (req.nextUrl.hostname === 'manage.ezlib.com') {
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+    
+    // Check LibAdmin permissions
+    const { data: adminCheck } = await supabase
+      .from('lib_admins')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .single();
+    
+    if (!adminCheck && !pathname.startsWith('/request-access')) {
+      return NextResponse.redirect(new URL('/request-access', req.url));
+    }
+  }
+  
+  return res;
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
+};
+```
+
+### Role-Based Access Control Implementation
+
+```typescript
+// lib/auth/permissions.ts
+export interface UserPermissions {
+  isReader: boolean;
+  isLibraryAdmin: boolean;
+  adminLibraries: string[]; // Library IDs where user is admin
+  adminPermissions: Record<string, AdminPermissions>; // Per library
+}
+
+export async function getUserPermissions(userId: string): Promise<UserPermissions> {
+  const supabase = createClientComponentClient();
+  
+  // Check library admin status
+  const { data: adminRecords } = await supabase
+    .from('lib_admins')
+    .select(`
+      library_id,
+      role,
+      permissions,
+      libraries!inner(name, status)
+    `)
+    .eq('user_id', userId)
+    .eq('libraries.status', 'active');
+  
+  return {
+    isReader: true, // All authenticated users are readers
+    isLibraryAdmin: adminRecords.length > 0,
+    adminLibraries: adminRecords.map(r => r.library_id),
+    adminPermissions: adminRecords.reduce((acc, record) => {
+      acc[record.library_id] = record.permissions;
+      return acc;
+    }, {} as Record<string, AdminPermissions>)
+  };
+}
+```
+
+## Privacy and GDPR Compliance Architecture
+
+EzLib implements comprehensive privacy controls and GDPR compliance, particularly for location detection and cross-border data handling required for internationalization features.
+
+### Privacy Technology Stack
+
+| Component | Purpose | Implementation | GDPR Compliance |
+|-----------|---------|----------------|-----------------|
+| **Consent Management** | User consent tracking | Custom Supabase tables | Explicit consent, withdrawal support |
+| **Location Detection** | IP geolocation | ipapi.co with consent | Opt-in required, data minimization |
+| **Cookie Management** | Session and preference storage | Next.js secure cookies | Essential cookies only without consent |
+| **Data Retention** | Automated cleanup | Supabase functions | Configurable retention periods |
+| **Right to Deletion** | User data removal | API endpoints + cascading deletes | Complete data erasure |
+
+### Consent Management Data Model
+
+```sql
+-- User consent tracking
+CREATE TABLE user_consents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    consent_type TEXT NOT NULL CHECK (consent_type IN (
+        'location_detection',
+        'analytics_cookies',
+        'marketing_communications',
+        'data_processing',
+        'cross_border_transfer'
+    )),
+    granted BOOLEAN NOT NULL,
+    consent_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    withdrawal_date TIMESTAMPTZ,
+    ip_address INET, -- For legal compliance
+    user_agent TEXT, -- For legal compliance
+    version TEXT NOT NULL DEFAULT '1.0', -- Consent version
+    UNIQUE(user_id, consent_type)
+);
+
+-- Location detection audit trail
+CREATE TABLE location_detections (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    session_id TEXT, -- For anonymous users
+    ip_address INET NOT NULL,
+    detected_country TEXT NOT NULL,
+    detected_timezone TEXT,
+    detection_service TEXT NOT NULL DEFAULT 'ipapi.co',
+    consent_given BOOLEAN NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    -- Automatic cleanup after 30 days
+    expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '30 days')
+);
+```
+
+### GDPR-Compliant Location Detection
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as App
+    participant C as Consent Manager
+    participant L as Location Service
+    participant DB as Database
+    
+    U->>A: First visit (no existing consent)
+    A->>A: Check consent cookies
+    A->>U: Show GDPR consent banner
+    Note over U,A: Clear explanation of location detection purpose
+    
+    alt User accepts location detection
+        U->>C: Grant location consent
+        C->>DB: Store consent record (type: location_detection)
+        C->>A: Set consent cookie (essential)
+        A->>L: Request IP geolocation
+        L->>A: Return country/region data
+        A->>DB: Store detection result (with audit trail)
+        A->>U: Show suggested language/region
+    else User declines location detection
+        U->>C: Decline location consent
+        C->>DB: Store decline record
+        C->>A: Set decline cookie
+        A->>A: Use default locale (English/US)
+        A->>U: Continue with default settings
+    end
+    
+    Note over A,DB: Location data auto-expires after 30 days
+```
+
+### Consent Management Component
+
+```typescript
+// components/ConsentBanner.tsx
+import { useState, useEffect } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+export function ConsentBanner() {
+  const [showBanner, setShowBanner] = useState(false);
+  const [consents, setConsents] = useState({
+    location_detection: false,
+    analytics_cookies: false
+  });
+  
+  useEffect(() => {
+    // Check existing consent
+    const existingConsent = localStorage.getItem('gdpr_consent');
+    if (!existingConsent) {
+      setShowBanner(true);
+    }
+  }, []);
+  
+  const handleConsentSubmit = async () => {
+    const supabase = createClientComponentClient();
+    
+    // Record consent choices
+    for (const [type, granted] of Object.entries(consents)) {
+      await supabase.from('user_consents').upsert({
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        consent_type: type,
+        granted,
+        ip_address: await getClientIP(),
+        user_agent: navigator.userAgent
+      });
+    }
+    
+    // Set consent cookie (essential, no consent needed)
+    localStorage.setItem('gdpr_consent', JSON.stringify({
+      date: new Date().toISOString(),
+      consents
+    }));
+    
+    // Trigger location detection if consented
+    if (consents.location_detection) {
+      await detectAndSetLocation();
+    }
+    
+    setShowBanner(false);
+  };
+  
+  if (!showBanner) return null;
+  
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-slate-900 text-white p-4 z-50">
+      <div className="max-w-4xl mx-auto">
+        <h3 className="font-semibold mb-2">Privacy Preferences</h3>
+        <p className="text-sm mb-4">
+          EzLib respects your privacy. We use minimal data to provide our service.
+          Please choose your preferences:
+        </p>
+        
+        <div className="space-y-3 mb-4">
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={consents.location_detection}
+              onChange={(e) => setConsents(prev => ({
+                ...prev,
+                location_detection: e.target.checked
+              }))}
+            />
+            <div>
+              <div className="font-medium">Location Detection</div>
+              <div className="text-xs text-gray-300">
+                Detect your country to suggest appropriate language and formatting.
+                Your IP address is processed temporarily and not stored.
+              </div>
+            </div>
+          </label>
+          
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={consents.analytics_cookies}
+              onChange={(e) => setConsents(prev => ({
+                ...prev,
+                analytics_cookies: e.target.checked
+              }))}
+            />
+            <div>
+              <div className="font-medium">Analytics Cookies</div>
+              <div className="text-xs text-gray-300">
+                Help us improve EzLib by anonymously tracking usage patterns.
+              </div>
+            </div>
+          </label>
+        </div>
+        
+        <div className="flex space-x-4">
+          <button
+            onClick={handleConsentSubmit}
+            className="bg-blue-600 px-4 py-2 rounded font-medium"
+          >
+            Save Preferences
+          </button>
+          <button
+            onClick={() => {
+              setConsents({ location_detection: false, analytics_cookies: false });
+              handleConsentSubmit();
+            }}
+            className="bg-gray-600 px-4 py-2 rounded"
+          >
+            Decline All
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### Data Retention and Cleanup
+
+```sql
+-- Automated data cleanup function
+CREATE OR REPLACE FUNCTION cleanup_expired_data()
+RETURNS void AS $$
+BEGIN
+    -- Remove expired location detection records
+    DELETE FROM location_detections 
+    WHERE expires_at < NOW();
+    
+    -- Remove old audit logs (keep for 2 years for legal compliance)
+    DELETE FROM transaction_events 
+    WHERE timestamp < NOW() - INTERVAL '2 years';
+    
+    -- Clean up withdrawn consent data
+    UPDATE user_consents 
+    SET ip_address = NULL, user_agent = NULL 
+    WHERE withdrawal_date IS NOT NULL 
+      AND withdrawal_date < NOW() - INTERVAL '30 days';
+      
+    RAISE NOTICE 'Data cleanup completed at %', NOW();
+END;
+$$ LANGUAGE plpgsql;
+
+-- Schedule cleanup (run daily)
+SELECT cron.schedule('daily-cleanup', '0 2 * * *', 'SELECT cleanup_expired_data();');
+```
+
+### Right to Data Portability and Deletion
+
+```typescript
+// api/user/data-export.ts - GDPR data export
+export async function POST(request: Request) {
+  const { user_id } = await request.json();
+  const supabase = createRouteHandlerClient({ cookies });
+  
+  // Verify user authorization
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.id !== user_id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  }
+  
+  // Export all user data
+  const userData = await exportUserData(user_id);
+  
+  return NextResponse.json({
+    export_date: new Date().toISOString(),
+    user_data: userData,
+    note: "This export contains all personal data stored by EzLib."
+  });
+}
+
+// api/user/delete-account.ts - GDPR right to deletion
+export async function DELETE(request: Request) {
+  const { user_id } = await request.json();
+  const supabase = createRouteHandlerClient({ cookies });
+  
+  // Verify user authorization
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.id !== user_id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  }
+  
+  // Cascading deletion (handled by foreign key constraints)
+  await supabase.from('users').delete().eq('id', user_id);
+  
+  // Sign out user
+  await supabase.auth.signOut();
+  
+  return NextResponse.json({ 
+    message: "Account and all associated data has been permanently deleted." 
+  });
+}
+```
+
+## Geolocation Services Integration
+
+EzLib integrates IP-based geolocation services to provide automatic country detection for internationalization, with GDPR compliance and fallback strategies.
+
+### Geolocation Service Architecture
+
+```typescript
+// lib/services/geolocation.ts
+export interface LocationDetectionResult {
+  country: string;           // ISO 3166-1 Alpha-2
+  country_name: string;      // Full country name
+  timezone: string;          // IANA timezone
+  suggested_language: string; // ISO 639-1
+  confidence: number;        // 0-1 confidence score
+  service: string;          // Detection service used
+}
+
+export interface GeolocationProvider {
+  name: string;
+  detectLocation(ip: string): Promise<LocationDetectionResult>;
+  isAvailable(): Promise<boolean>;
+  getRateLimit(): { requests: number; window: string };
+}
+
+// Primary service: ipapi.co (GDPR compliant)
+export class IpapiGeolocationProvider implements GeolocationProvider {
+  name = 'ipapi.co';
+  private readonly baseUrl = 'https://ipapi.co';
+  
+  async detectLocation(ip: string): Promise<LocationDetectionResult> {
+    const response = await fetch(`${this.baseUrl}/${ip}/json/`);
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(`Location detection failed: ${data.reason}`);
+    }
+    
+    return {
+      country: data.country,
+      country_name: data.country_name,
+      timezone: data.timezone,
+      suggested_language: this.mapCountryToLanguage(data.country),
+      confidence: data.country ? 0.85 : 0.1,
+      service: this.name
+    };
+  }
+  
+  async isAvailable(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/json/`, { 
+        method: 'HEAD',
+        timeout: 5000 
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+  
+  getRateLimit() {
+    return { requests: 1000, window: 'day' }; // Free tier limits
+  }
+  
+  private mapCountryToLanguage(countryCode: string): string {
+    const mapping: Record<string, string> = {
+      'US': 'en', 'GB': 'en', 'CA': 'en', 'AU': 'en',
+      'ES': 'es', 'MX': 'es', 'AR': 'es', 'CO': 'es',
+      'FR': 'fr', 'BE': 'fr', 'CH': 'fr',
+      'DE': 'de', 'AT': 'de'
+    };
+    return mapping[countryCode] || 'en';
+  }
+}
+```
+
+### Frontend Location Detection Hook
+
+```typescript
+// hooks/useLocationDetection.ts
+export function useLocationDetection() {
+  const [location, setLocation] = useState<LocationDetectionResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const detectLocation = useCallback(async (userConsent: boolean) => {
+    if (!userConsent) {
+      setError('Location detection requires user consent');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/detect-location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consent: userConsent })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Location detection failed');
+      }
+      
+      const result = await response.json();
+      setLocation(result);
+      
+      // Automatically apply suggested settings
+      if (result.suggested_language && result.country) {
+        await updateUserPreferences({
+          preferred_country: result.country,
+          preferred_language: result.suggested_language,
+          auto_detected_country: result.country
+        });
+      }
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  
+  return {
+    location,
+    loading,
+    error,
+    detectLocation
+  };
+}
+```
+
+## Enhanced Frontend Architecture for i18n
+
+EzLib's frontend architecture supports comprehensive internationalization with React-Intl, Next.js i18n routing, and cultural formatting across both Reader and Library Management applications.
+
+### Preference-Based React-Intl Integration
+
+```typescript
+// lib/i18n/LanguagePreferenceManager.tsx
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { IntlProvider as ReactIntlProvider } from 'react-intl';
+import Cookies from 'js-cookie';
+
+interface LanguageContextType {
+  currentLanguage: string;
+  availableLanguages: string[];
+  changeLanguage: (locale: string, persist?: boolean) => void;
+  isLoading: boolean;
+}
+
+const LanguageContext = createContext<LanguageContextType | null>(null);
+
+interface Props {
+  children: ReactNode;
+  initialLanguage?: string;
+}
+
+export function LanguageProvider({ children, initialLanguage }: Props) {
+  const [currentLanguage, setCurrentLanguage] = useState<string>(initialLanguage || 'en');
+  const [messages, setMessages] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const availableLanguages = ['en', 'es', 'vi', 'fr', 'de']; // Add Vietnamese support
+  
+  // Language priority resolution (no router needed!)
+  const resolveLanguagePreference = (): string => {
+    // 1. Check if user is authenticated and has saved preference
+    const savedUserLanguage = getUserLanguageFromAccount(); // From Supabase
+    if (savedUserLanguage) return savedUserLanguage;
+    
+    // 2. Check cookie preference
+    const cookieLanguage = Cookies.get('ezlib_lang');
+    if (cookieLanguage && availableLanguages.includes(cookieLanguage)) {
+      return cookieLanguage;
+    }
+    
+    // 3. Check browser language
+    if (typeof navigator !== 'undefined') {
+      const browserLanguage = navigator.language.split('-')[0]; // 'en-US' -> 'en'
+      if (availableLanguages.includes(browserLanguage)) {
+        return browserLanguage;
+      }
+    }
+    
+    // 4. Default to English
+    return 'en';
+  };
+  
+  const loadMessages = async (locale: string) => {
+    setIsLoading(true);
+    
+    try {
+      // Load messages dynamically based on locale
+      const [common, reader, library] = await Promise.all([
+        import(`../../locales/${locale}/common.json`),
+        import(`../../locales/${locale}/reader.json`),  
+        import(`../../locales/${locale}/library.json`)
+      ]);
+      
+      setMessages({
+        ...common.default,
+        ...reader.default,
+        ...library.default
+      });
+    } catch (error) {
+      console.warn(`Failed to load messages for ${locale}, using English fallback`);
+      
+      // Fallback to English
+      const [common, reader, library] = await Promise.all([
+        import(`../../locales/en/common.json`),
+        import(`../../locales/en/reader.json`),
+        import(`../../locales/en/library.json`)
+      ]);
+      
+      setMessages({
+        ...common.default,
+        ...reader.default,
+        ...library.default
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const changeLanguage = async (locale: string, persist: boolean = true) => {
+    if (!availableLanguages.includes(locale)) return;
+    
+    setCurrentLanguage(locale);
+    await loadMessages(locale);
+    
+    if (persist) {
+      // Save to cookie (for anonymous users)
+      Cookies.set('ezlib_lang', locale, { expires: 365 });
+      
+      // Save to user account (for authenticated users)
+      const user = await getCurrentUser(); // Your auth function
+      if (user) {
+        await updateUserLanguagePreference(user.id, locale);
+      }
+    }
+  };
+  
+  // Initialize on mount
+  useEffect(() => {
+    const preferredLanguage = resolveLanguagePreference();
+    if (preferredLanguage !== currentLanguage) {
+      setCurrentLanguage(preferredLanguage);
+    }
+    loadMessages(preferredLanguage);
+  }, []);
+  
+  // Show loading state during translation load
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-gray-600">Loading interface...</div>
+      </div>
+    );
+  }
+  
+  return (
+    <LanguageContext.Provider 
+      value={{ 
+        currentLanguage, 
+        availableLanguages, 
+        changeLanguage, 
+        isLoading 
+      }}
+    >
+      <ReactIntlProvider
+        locale={currentLanguage}
+        messages={messages}
+        onError={(err) => {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('React-Intl Error:', err);
+          }
+        }}
+      >
+        {children}
+      </ReactIntlProvider>
+    </LanguageContext.Provider>
+  );
+}
+
+// Custom hook for language management
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error('useLanguage must be used within LanguageProvider');
+  }
+  return context;
+}
+
+// Helper functions
+async function getUserLanguageFromAccount(): Promise<string | null> {
+  // Implementation depends on your auth system
+  const user = await getCurrentUser();
+  return user?.preferred_language || null;
+}
+
+async function updateUserLanguagePreference(userId: string, language: string) {
+  // Update user preferences in Supabase
+  const supabase = createClientComponentClient();
+  await supabase
+    .from('users')
+    .update({ 
+      'preferences.preferred_language': language,
+      'preferences.language_source': 'user_selected',
+      'preferences.language_changed_at': new Date().toISOString()
+    })
+    .eq('id', userId);
+}
+```
+
+### Cultural Formatting Components
+
+```typescript
+// components/i18n/CulturalText.tsx
+import { useIntl } from 'react-intl';
+import { useCulturalFormatter } from '@/hooks/useCulturalFormatter';
+
+interface Props {
+  date?: Date;
+  number?: number;
+  currency?: { amount: number; code: string };
+  children?: React.ReactNode;
+}
+
+export function CulturalText({ date, number, currency, children }: Props) {
+  const intl = useIntl();
+  const formatter = useCulturalFormatter();
+  
+  if (date) {
+    return <span>{formatter.formatDate(date)}</span>;
+  }
+  
+  if (number !== undefined) {
+    return <span>{formatter.formatNumber(number)}</span>;
+  }
+  
+  if (currency) {
+    return (
+      <span>
+        {formatter.formatNumber(currency.amount, 'currency')}
+      </span>
+    );
+  }
+  
+  return <>{children}</>;
+}
+
+// components/i18n/TranslatedMessage.tsx
+import { FormattedMessage } from 'react-intl';
+
+interface Props {
+  id: string;
+  values?: Record<string, any>;
+  defaultMessage?: string;
+}
+
+export function T({ id, values, defaultMessage }: Props) {
+  return (
+    <FormattedMessage
+      id={id}
+      values={values}
+      defaultMessage={defaultMessage}
+    />
+  );
+}
+
+// Usage examples:
+// <T id="common.welcome" values={{ name: user.display_name }} />
+// <CulturalText date={book.due_date} />
+// <CulturalText currency={{ amount: 25.99, code: 'USD' }} />
+```
+
+### Language Switcher Components (No Routing)
+
+```typescript
+// components/i18n/LanguageSwitcher.tsx - No routing involved!
+import { useLanguage } from '@/lib/i18n/LanguagePreferenceManager';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
+
+export function LanguageSwitcher() {
+  const { currentLanguage, availableLanguages, changeLanguage, isLoading } = useLanguage();
+  
+  // No router.push needed! Language changes instantly
+  const switchLanguage = async (newLocale: string) => {
+    await changeLanguage(newLocale, true); // Persist to cookie + user account
+    // Page content updates automatically through React-Intl context
+  };
+  
+  if (isLoading) {
+    return <div className="w-24 h-8 bg-gray-200 animate-pulse rounded" />;
+  }
+  
+  return (
+    <div className="relative">
+      <select
+        value={currentLanguage}
+        onChange={(e) => switchLanguage(e.target.value)}
+        className="block appearance-none bg-white border border-gray-300 rounded px-3 py-2 pr-8 text-sm"
+        disabled={isLoading}
+      >
+        {availableLanguages.map((locale) => (
+          <option key={locale} value={locale}>
+            {getLanguageName(locale)}
+          </option>
+        ))}
+      </select>
+      <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+    </div>
+  );
+}
+
+// Enhanced language switcher with flags
+export function LanguageSwitcherWithFlags() {
+  const { currentLanguage, availableLanguages, changeLanguage } = useLanguage();
+  
+  return (
+    <div className="flex items-center space-x-2">
+      {availableLanguages.map((locale) => (
+        <button
+          key={locale}
+          onClick={() => changeLanguage(locale)}
+          className={`flex items-center px-2 py-1 rounded text-sm transition-colors ${
+            currentLanguage === locale 
+              ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+        >
+          <span className="mr-1">{getFlagEmoji(locale)}</span>
+          {getLanguageCode(locale)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function getLanguageName(locale: string): string {
+  const names: Record<string, string> = {
+    en: 'English',
+    es: 'Español', 
+    vi: 'Tiếng Việt',  // Vietnamese support added
+    fr: 'Français',
+    de: 'Deutsch'
+  };
+  return names[locale] || locale;
+}
+
+function getLanguageCode(locale: string): string {
+  const codes: Record<string, string> = {
+    en: 'EN',
+    es: 'ES',
+    vi: 'VI',  // Vietnamese support added
+    fr: 'FR', 
+    de: 'DE'
+  };
+  return codes[locale] || locale.toUpperCase();
+}
+
+function getFlagEmoji(locale: string): string {
+  const flags: Record<string, string> = {
+    en: '🇺🇸',
+    es: '🇪🇸',
+    vi: '🇻🇳',  // Vietnamese flag added
+    fr: '🇫🇷',
+    de: '🇩🇪'
+  };
+  return flags[locale] || '🌐';
+}
+```
+
+### Server-Side Language Detection (No Routing)
+
+```typescript
+// middleware.ts - Detects language preferences without URL redirects
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  // We don't redirect based on language preferences!
+  // Just detect and pass preferred language to app via headers
+  
+  const acceptLanguage = request.headers.get('accept-language') || '';
+  const cookieLanguage = request.cookies.get('ezlib_lang')?.value;
+  
+  // Determine preferred language for server-side rendering
+  const preferredLanguage = cookieLanguage || 
+    extractLanguageFromAcceptHeader(acceptLanguage) || 
+    'en';
+  
+  // Pass language preference to app (no redirect!)
+  const response = NextResponse.next();
+  response.headers.set('x-preferred-language', preferredLanguage);
+  
+  return response;
+}
+
+function extractLanguageFromAcceptHeader(acceptLanguage: string): string | null {
+  const supportedLanguages = ['en', 'es', 'vi', 'fr', 'de'];
+  
+  // Parse Accept-Language header: "en-US,en;q=0.9,vi;q=0.8"
+  const languages = acceptLanguage
+    .split(',')
+    .map(lang => lang.split(';')[0].split('-')[0].trim())
+    .filter(lang => supportedLanguages.includes(lang));
+  
+  return languages[0] || null;
+}
+
+export const config = {
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
+};
+```
+
+### App Integration (pages/_app.tsx)
+
+```typescript
+// pages/_app.tsx - Clean integration without routing
+import type { AppProps } from 'next/app';
+import { LanguageProvider } from '@/lib/i18n/LanguagePreferenceManager';
+import { ConsentBanner } from '@/components/privacy/ConsentBanner';
+
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <LanguageProvider initialLanguage={pageProps.preferredLanguage}>
+      <ConsentBanner />
+      <Component {...pageProps} />
+    </LanguageProvider>
+  );
+}
+
+// getServerSideProps example for any page
+export async function getServerSideProps({ req }: GetServerSidePropsContext) {
+  // Get language preference from middleware header
+  const preferredLanguage = req.headers['x-preferred-language'] as string || 'en';
+  
+  return {
+    props: {
+      preferredLanguage, // Pass to LanguageProvider
+      // ... other props
+    }
+  };
+}
+```
+
 ---
 
-*EzLib Fullstack Architecture Document v1.0 - Generated using the BMAD-METHOD framework*
+*EzLib Fullstack Architecture Document v1.1 - Generated using the BMAD-METHOD framework*  
+*Updated: August 2025 with Internationalization, Authentication, Privacy, and Frontend Architecture*
