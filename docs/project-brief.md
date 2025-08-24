@@ -161,6 +161,7 @@ Transform local reading culture by making community libraries the hub of social 
 - Book cataloging (genre, shelf location, condition)
 - Overdue notifications and basic reporting
 - Search and filtering capabilities
+- **Internationalization (i18n) Support:** Multi-language interface with automatic location-based language detection, user-selectable country preferences, and localized content for both library staff and reader interfaces
 
 ### Out of Scope for MVP
 - Social discovery and review features
@@ -200,6 +201,7 @@ Transform local reading culture by making community libraries the hub of social 
 - Mobile application for on-the-go access
 - Reading progress tracking and completion statistics
 - Book recommendation algorithms based on borrowing and reading patterns
+- **Internationalization & Localization:** Full multi-language support with location-based automatic language detection, user-configurable country preferences, localized date/time formats, and culturally appropriate UI elements
 
 ### Long-term Vision
 
@@ -277,12 +279,51 @@ Enable cross-library borrowing where readers can access books from any participa
 
 ## Next Steps
 
+## Authentication & Registration Strategy
+
+### Registration Flow (Reader App Only)
+
+**Single Registration Point:** All user registration occurs exclusively on the Reader app (`ezlib.com`) to avoid user confusion and establish clear platform identity.
+
+**Passwordless Email OTP Process:**
+1. **Email Collection**: User visits `ezlib.com` → enters email address → requests verification code
+2. **OTP Verification**: 6-digit code sent to email → user enters code for authentication
+3. **Profile Setup**: User completes profile with display name, gender, language preference, and region selection
+4. **Default Access**: All accounts created as readers with Supabase authenticated role
+
+### Cross-Domain Access Strategy
+
+**Early Stage Implementation:**
+- **Independent Login**: Users must log in separately on `ezlib.com` and `manage.ezlib.com`
+- **Registration Restriction**: Library management app shows "Login with existing account" - no registration option
+- **Clear Messaging**: Management app explains users must first register on main platform
+
+**Role-Based Access Control:**
+- **Default Role**: All users can access reader features (social book discovery) with authenticated role
+- **Library Management Access**: Users gain admin capabilities when added to LibAdmin table for specific libraries
+- **Permission Levels**: Owner, Manager, Librarian roles with granular permissions for each library
+
+**Future Enhancement:** Planned implementation of cross-domain session sharing for seamless user experience between applications.
+
+### Technical Implementation
+
+**Supabase Authentication:**
+- Email OTP authentication using `supabase.auth.signInWithOtp()`
+- JWT tokens with role-based claims
+- Row Level Security policies enforcing multi-tenant access
+
+**User Profile Structure:**
+- Base user record in `users` table
+- Optional `lib_readers` records for library memberships  
+- Optional `lib_admins` records for management access
+- Preference storage for language, region, notification settings
+
 ### Immediate Actions
 1. Conduct user interviews with 5-10 small library staff members to validate operational pain points and workflow requirements
-2. Create detailed wireframes for both library management interface and reader browsing experience
-3. Develop technical architecture documentation and database schema design
+2. Create detailed wireframes for both library management interface and reader browsing experience, including cross-domain authentication flows
+3. Develop technical architecture documentation and database schema design with OTP authentication
 4. Establish partnerships with 2-3 pilot libraries for MVP testing and feedback
-5. Set up development environment and basic project structure using Next.js/Supabase stack
+5. Set up development environment and basic project structure using Next.js/Supabase stack with OTP configuration
 
 ### PM Handoff
 
