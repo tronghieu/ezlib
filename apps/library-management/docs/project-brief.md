@@ -102,85 +102,173 @@ EzLib Library Management is an administrative web application that enables small
 
 ## MVP Scope
 
-### Core Features (Must Have)
+### Core Features (Must Have - Ultra-Simple Phase)
 
-- **Book Inventory Management:** Add, edit, remove books with ISBN lookup and metadata enrichment from crawler service
-- **Member Management:** Complete patron database with registration, profile management, and communication tools
-- **Circulation Operations:** Check-out, check-in, renewals, and holds management with real-time availability updates
-- **Overdue Management:** Automated tracking, notifications, and fine calculations with customizable policies
-- **Search & Discovery:** Fast search across books and members with filtering and sorting capabilities
-- **Basic Reporting:** Essential reports for circulation statistics, overdue items, and member activity
-- **Multi-library Support:** Tenant isolation with role-based access control for library staff
-- **Real-time Sync:** Integration with public reader app for inventory updates and holds
+**Ultra-Simple Library Management:**
+- **Basic Book List:** Add books (title, author, ISBN, available/checked out status) - ISBN lookup via crawler service optional
+- **Simple Member List:** Library patron names, email, and basic contact information
+- **Basic Checkout/Return:** One-click checkout to member, one-click return - no due dates or complex tracking initially
+- **Book Status Tracking:** Real-time available/checked-out status visible to both library staff and reader app
+- **Library Patron Registration:** Simple form for library staff to add new members to system
+
+### Enhanced Features (Add After Core Validation)
+- **Due Date Management:** Due date tracking, renewal capabilities, and overdue notifications
+- **Member Profiles:** Borrowing history, limits, preferences, and detailed contact management
+- **Advanced Book Cataloging:** Genre categorization, shelf location, condition tracking, bulk import
+- **Search & Filtering:** Advanced search across books and members with sorting capabilities
+- **Basic Reporting:** Circulation statistics, overdue items, member activity reports
+- **Automated Communications:** Email notifications for due dates, holds, and library announcements
 
 ### Out of Scope for MVP
+- Social discovery and review features integration
 - Advanced analytics and business intelligence dashboards
-- Mobile app versions (web-responsive only)
+- Mobile app versions (web-responsive design only)
 - Integration with external library systems (ILS, cataloging services)
-- Advanced reporting and custom report builder
-- Bulk operations and batch processing tools
-- Advanced member communications (SMS, automated email campaigns)
-- Financial management and detailed fine collection workflows
+- Custom report builder and advanced analytics
+- Financial management and fee collection workflows
+- Multi-library network and inter-library loan support
+- Complex member communication campaigns
 
 ### MVP Success Criteria
-A library staff member can successfully complete their full daily circulation workflow (member check-ins/check-outs, new book additions, overdue management) 50% faster than their current manual system with 90% accuracy, requiring minimal support after initial onboarding.
+
+**Core Validation:** Demonstrate that small libraries will adopt simple digital tools for basic book and member management, replacing paper/spreadsheet tracking systems.
+
+**For Library Staff:** Can replace basic manual tracking with digital checkout system that saves time and reduces errors
+
+**For Reader Integration:** Library book availability updates in real-time on public reader app, enabling seamless borrowing requests
+
+**Operational Test:** Validate that ultra-simple digital tracking meets daily operational needs without overwhelming small library staff
 
 ## Post-MVP Vision
 
 ### Phase 2 Features
-- **Enhanced Analytics:** Comprehensive dashboards with circulation trends, collection performance, and member engagement metrics
-- **Bulk Operations:** Mass import/export, batch updates, and automated collection maintenance
-- **Advanced Communications:** Email templates, automated member notifications, and communication tracking
-- **Mobile Optimization:** Dedicated mobile workflows for circulation desk operations
-- **Integration APIs:** Connect with existing library systems, accounting software, and third-party services
+
+**Enhanced Library Operations:**
+- **Due Date & Renewal Management:** Complete overdue tracking, automated renewals, and fine calculations with customizable policies
+- **Advanced Member Management:** Borrowing history, member preferences, detailed profiles, and communication tracking
+- **Enhanced Book Cataloging:** Bulk import/export, genre categorization, shelf location tracking, condition management
+- **Search & Filtering:** Advanced search capabilities across books and members with comprehensive sorting options
+- **Basic Reporting & Analytics:** Circulation statistics, member activity reports, collection performance insights
+
+**Advanced Communications:**
+- **Automated Notifications:** Email and SMS for due dates, holds ready, overdue items, and library announcements  
+- **Member Communication Tools:** Email templates, bulk messaging, and communication history tracking
+- **Library Program Management:** Event registration, program scheduling, and volunteer coordination
+
+**Internationalization & Localization:**
+- **Multi-language Support:** Full interface translation with automatic location-based language detection
+- **Regional Preferences:** User-configurable country settings, localized date/time formats, and cultural UI adaptations
+- **Library-Specific Customization:** Region-appropriate workflows, local compliance features, and culturally relevant interfaces
 
 ### Long-term Vision
-Transform EzLib into a comprehensive small library operations platform that includes program management, event coordination, volunteer scheduling, and community engagement tools, while maintaining the core simplicity that makes it accessible to resource-constrained libraries.
+
+**Community Library Hub (Year 1-2):**
+Transform library management system into comprehensive operational platform that integrates with social book discovery, enabling libraries to become engines of community literary engagement while maintaining operational simplicity for small staff teams.
+
+**Multi-Library Network (Year 2+):**
+Support library consortiums and regional networks with cross-library borrowing, shared collections, and inter-library loan workflows while preserving individual library autonomy and data privacy.
 
 ### Expansion Opportunities
-- **Regional Networks:** Support library consortiums and inter-library loan workflows
-- **Advanced Cataloging:** Integration with professional cataloging services and standards
-- **Community Features:** Public program management, event registration, and volunteer coordination
-- **Financial Management:** Complete accounting integration, budget tracking, and automated invoicing
+
+**Operational Enhancement:**
+- **Advanced Analytics:** Business intelligence dashboards, predictive insights, and operational optimization recommendations
+- **Financial Integration:** Complete accounting workflows, budget tracking, grant management, and automated invoicing
+- **Mobile Applications:** Dedicated mobile apps for circulation desk operations and staff workflow management
+
+**Network & Integration:**
+- **Library System Integration:** APIs for existing ILS systems, cataloging services, and municipal management platforms
+- **Publisher Relationships:** Direct integration for new acquisitions, automatic metadata updates, and digital content management  
+- **Educational Partnerships:** School library integration, reading program management, and literacy organization support
 
 ## Technical Considerations
 
 ### Platform Requirements
-- **Target Platforms:** Web application accessible on desktop and tablet browsers
-- **Browser/OS Support:** Modern browsers (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
-- **Performance Requirements:** Sub-2-second page loads, responsive design for 1024px+ screens
+- **Target Platforms:** Web application (desktop + mobile responsive) for library staff access
+- **Browser Support:** Modern browsers (Chrome 90+, Firefox 85+, Safari 14+, Edge 90+)
+- **Performance Requirements:** <3 second page loads, <500ms API response times, offline capability for basic operations
 
 ### Technology Preferences
-- **Frontend:** Next.js 14+ with TypeScript, shadcn/ui components, Tailwind CSS
-- **Backend:** Direct Supabase integration (no custom API layer)
-- **Database:** PostgreSQL via Supabase with Row Level Security for multi-tenant isolation
-- **Hosting/Infrastructure:** Vercel deployment with edge caching and global CDN
+- **Frontend:** Next.js 14+ with TypeScript, shadcn/ui components, Tailwind CSS for styling
+- **Backend:** Next.js API routes initially, with potential migration to separate services for scaling
+- **Database:** Supabase (PostgreSQL) with Row Level Security for multi-tenant data isolation
+- **Hosting/Infrastructure:** Vercel for frontend deployment, Supabase for backend services and database hosting
 
 ### Architecture Considerations
-- **Repository Structure:** Monorepo architecture as part of broader EzLib ecosystem (`apps/library-management/`)
-- **Service Architecture:** Jamstack approach with direct database connections, event-driven real-time updates
-- **Integration Requirements:** Real-time sync with reader app, integration with crawler service for book metadata
-- **Security/Compliance:** SOC 2 compliance via Supabase, HTTPS everywhere, role-based access control, audit logging
+- **Repository Structure:** Monorepo approach as part of broader EzLib ecosystem (`apps/library-management/`), sharing database schema and services
+- **Service Architecture:** Direct Supabase client integration (no shared API layer), server-side rendering with API routes
+- **Integration Requirements:** 
+  - Real-time sync with reader app (`apps/reader/`) for inventory updates and holds
+  - Integration with crawler service (`services/crawler/`) for book metadata enrichment
+  - Event-driven real-time updates using Supabase subscriptions
+- **Security/Compliance:** 
+  - User data privacy compliance via Supabase Auth
+  - Row Level Security policies for multi-tenant isolation
+  - Library patron data protection with role-based access control
+  - HTTPS everywhere with secure authentication flows
 
 ## Constraints & Assumptions
 
 ### Constraints
-- **Budget:** Development must leverage existing EzLib infrastructure and shared services
-- **Timeline:** MVP delivery targeted for Q1 2024 to align with broader platform launch
-- **Resources:** Single full-stack developer with UX support, leveraging existing design system
-- **Technical:** Must integrate seamlessly with existing Supabase database schema and crawler service
+- **Budget:** Development must leverage existing EzLib infrastructure and shared services to minimize external service costs
+- **Timeline:** MVP delivery targeted within 12-16 weeks with single full-stack developer, assuming part-time development schedule
+- **Resources:** Single full-stack developer with UX support, leveraging existing design system and shared EzLib components
+- **Technical:** Must integrate seamlessly with existing Supabase database schema and crawler service architecture
 
 ### Key Assumptions
 - Library staff have basic computer literacy and internet access during work hours
-- Libraries are willing to transition from manual systems with proper onboarding support
-- Existing EzLib database schema can accommodate library management requirements
+- Libraries are willing to transition from manual systems with proper onboarding support  
+- Libraries can provide internet connectivity for staff to use web-based system during operating hours
+- Existing EzLib database schema can accommodate library management requirements without major structural changes
 - Small libraries prioritize operational efficiency over advanced feature sets
-- Internet connectivity is reliable at library locations during operating hours
+- Real-time synchronization between library management and reader app will enhance rather than complicate library operations
+- Community libraries have authority to choose their own management systems without complex procurement processes
+- Privacy-conscious approach will differentiate from commercial library management platforms
+- Reader adoption will grow organically through participating libraries showcasing book availability
+
+## Authentication & Registration Strategy
+
+### Registration Flow (Reader App Only)
+
+**Single Registration Point:** All user registration occurs exclusively on the Reader app (`ezlib.com`) to avoid user confusion and establish clear platform identity. Library staff must first register as readers before gaining access to management tools.
+
+**Passwordless Email OTP Process:**
+1. **Email Collection**: Library staff visit `ezlib.com` → enter email address → request verification code
+2. **OTP Verification**: 6-digit code sent to email → user enters code for authentication
+3. **Profile Setup**: User completes profile with display name, gender, language preference, and region selection
+4. **Default Access**: All accounts created as readers with Supabase authenticated role
+
+### Cross-Domain Access Strategy
+
+**Early Stage Implementation:**
+- **Independent Login**: Library staff must log in separately on `ezlib.com` and `manage.ezlib.com`
+- **Registration Restriction**: Management app shows "Login with existing account" - no registration option
+- **Clear Messaging**: Management app explains users must first register on main platform
+
+**Role-Based Access Control:**
+- **Default Role**: All users can access reader features (social book discovery) with authenticated role
+- **Library Management Access**: Users gain admin capabilities when added to LibAdmin table for specific libraries
+- **Permission Levels**: Owner, Manager, Librarian roles with granular permissions for each library
+
+**Future Enhancement:** Planned implementation of cross-domain session sharing for seamless user experience between applications.
+
+### Technical Implementation
+
+**Supabase Authentication:**
+- Email OTP authentication using `supabase.auth.signInWithOtp()`
+- JWT tokens with role-based claims
+- Row Level Security policies enforcing multi-tenant access
+
+**User Profile Structure:**
+- Base user record in `users` table
+- Optional `lib_readers` records for library memberships  
+- Optional `lib_admins` records for management access
+- Preference storage for language, region, notification settings
 
 ## Risks & Open Questions
 
 ### Key Risks
 - **User Adoption:** Library staff may resist changing from familiar manual processes to digital workflows
+- **Authentication Flow:** Two-step login process (register on reader app, then access management) may create user friction
 - **Data Migration:** Complex migration from diverse existing systems (spreadsheets, basic software) could delay onboarding
 - **Feature Complexity:** Balancing simplicity with comprehensive functionality may be challenging for diverse library needs
 - **Integration Dependencies:** Reliance on crawler service and shared database could create system vulnerabilities
@@ -190,6 +278,7 @@ Transform EzLib into a comprehensive small library operations platform that incl
 - How do current manual systems handle edge cases that digital systems need to accommodate?
 - What level of customization do libraries expect for policies, workflows, and reporting?
 - How do libraries currently handle inter-library loans and resource sharing?
+- Will library staff accept the requirement to register on the reader platform first?
 
 ### Areas Needing Further Research
 - **Workflow Analysis:** Detailed observation of existing library operations to identify optimization opportunities
@@ -220,11 +309,12 @@ Based on preliminary research into small library operations:
 ## Next Steps
 
 ### Immediate Actions
-1. **Stakeholder Review:** Present this brief to library staff and administrators for validation and feedback
-2. **Technical Validation:** Confirm Supabase schema can support all identified MVP requirements
-3. **Competitive Analysis:** Conduct detailed analysis of existing small library management solutions
-4. **User Research:** Interview 3-5 small library staff members to validate workflows and pain points
-5. **PM Handoff:** Transition to Product Manager for PRD development with validated requirements
+1. **User Research:** Conduct interviews with 5-10 small library staff members to validate operational workflows and ultra-simple MVP requirements
+2. **Technical Architecture:** Validate Supabase schema can support real-time sync between library management and reader app for seamless book availability updates
+3. **Authentication Flow Design:** Create detailed wireframes for cross-domain authentication flow between `ezlib.com` and `manage.ezlib.com` with passwordless email OTP
+4. **Integration Planning:** Establish technical requirements for real-time synchronization with reader app and crawler service integration for book metadata
+5. **Pilot Library Partnership:** Secure 2-3 pilot libraries for MVP testing with ultra-simple workflow validation
+6. **Development Environment Setup:** Configure Next.js monorepo structure with Supabase integration and shared EzLib components
 
 ### PM Handoff
 
