@@ -1,6 +1,6 @@
-# Epic 1: Foundation & Authentication
+# Epic 1: Foundation & Passwordless Authentication
 
-**Epic Goal:** Establish the technical foundation for the library management application including project setup, multi-tenant authentication system, and basic library context management while delivering a deployable health check endpoint that validates the complete technical stack integration.
+**Epic Goal:** Establish the technical foundation for the library management application including project setup, passwordless email OTP authentication with cross-domain access strategy, and basic library context management while delivering a deployable health check endpoint that validates the complete technical stack integration and ultra-simple core functionality.
 
 ## Story 1.1: Project Setup and Core Infrastructure
 
@@ -34,22 +34,23 @@ so that **the application has type-safe database access and proper integration w
 7. Error handling established for database connection failures
 8. Real-time subscription setup tested for future transaction updates
 
-## Story 1.3: Multi-Tenant Authentication System
+## Story 1.3: Cross-Domain Passwordless Authentication System
 
 As a **library administrator**,  
-I want **to securely log in and access only the libraries I have permissions for**,  
-so that **I can safely manage library operations without accessing other libraries' data**.
+I want **to access the library management system using my existing ezlib.com account with passwordless authentication**,  
+so that **I can safely manage library operations through a unified authentication strategy while maintaining platform identity**.
 
 **Acceptance Criteria:**
-1. Supabase Auth integration with email/password authentication
-2. Authentication middleware implemented to protect admin routes
-3. `requireAdminAccess()` server-side function validates user permissions per library
-4. Role-based permission system established (owner, manager, librarian)
-5. Dynamic library assignment - users can have different roles across multiple libraries
-6. Permission checking hooks (`useAdminPermissions`) implemented for UI state management
-7. Authentication state persisted across browser sessions
-8. Logout functionality clears all authentication state and redirects appropriately
-9. Unauthorized access attempts redirect to sign-in page with appropriate error messages
+1. Management app displays "Login with existing account" with clear messaging that registration occurs on ezlib.com
+2. Passwordless email OTP authentication integration using `supabase.auth.signInWithOtp()`
+3. Cross-domain authentication that validates existing user accounts from reader platform
+4. Authentication middleware implemented to protect admin routes and validate cross-domain sessions
+5. `requireAdminAccess()` server-side function validates user permissions per library from LibAdmin table
+6. Role-based permission system established (owner, manager, librarian) with granular permissions
+7. Dynamic library assignment - users can have different roles across multiple libraries
+8. Permission checking hooks (`useAdminPermissions`) implemented for UI state management
+9. Authentication state persisted with independent sessions between ezlib.com and manage.ezlib.com
+10. Clear user messaging explaining the two-step authentication flow and future session sharing plans
 
 ## Story 1.4: Library Context Management
 

@@ -1,6 +1,6 @@
-# Epic 3: Circulation Management
+# Epic 3: Enhanced Circulation Management (Post-MVP)
 
-**Epic Goal:** Implement the core circulation desk operations including book check-out, check-in, renewal processes, holds management, and automated overdue tracking with real-time synchronization to the public reader interface, enabling library staff to efficiently manage the primary borrowing workflows that constitute the heart of daily library operations.
+**Epic Goal:** Extend the ultra-simple foundation with comprehensive circulation features including due date tracking, renewal processes, holds management, and automated overdue tracking with notifications, transforming the basic checkout/return system into a full-featured circulation management platform.
 
 ## Story 3.1: Book Check-Out Process
 

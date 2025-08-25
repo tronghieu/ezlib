@@ -3,57 +3,60 @@
 ## Goals and Background Context
 
 ### Goals
-- Enable small/medium libraries (1-3 staff, up to 5K books, 1K members) to replace manual/spreadsheet systems with integrated digital operations
-- Reduce administrative overhead for library staff by 40-60% through streamlined workflows
-- Achieve 99%+ accuracy in book inventory and member data management
-- Provide real-time synchronization with public reader interface for seamless patron experience
-- Deliver MVP functionality that proves core value before expanding to advanced features
-- Establish foundation for multi-tenant SaaS platform serving resource-constrained libraries
+- Enable small/medium libraries (1-3 staff, up to 5K books, 1K members) to replace manual/spreadsheet systems with ultra-simple digital operations
+- Deliver immediate operational value through basic book/member tracking before expanding to advanced features
+- Demonstrate that simple digital tools can replace paper/spreadsheet tracking systems without overwhelming small library staff
+- Provide real-time synchronization with public reader interface (ezlib.com) for seamless book availability updates
+- Establish foundation for multi-tenant SaaS platform with passwordless email OTP authentication architecture
+- Validate ultra-simple MVP approach (basic checkout/return, no due dates initially) before adding complexity
 
 ### Background Context
 
 The EzLib Library Management System addresses a critical gap in the small library market, where 70% of facilities operate without integrated digital management systems. These libraries, typically serving up to 5,000 books and 1,000 active members with just 1-3 staff members, currently rely on manual processes and spreadsheet-based tracking that creates operational inefficiencies and data fragmentation.
 
-This administrative web application (accessible at manage.ezlib.com) serves as the operational backbone for library staff, integrating with the broader EzLib ecosystem including the public reader interface and book metadata crawler service. By focusing specifically on small library needs rather than enterprise-scale solutions, the system prioritizes simplicity, affordability, and immediate operational value while leveraging modern web technologies and multi-tenant architecture.
+This administrative web application (accessible at manage.ezlib.com) serves as the operational backbone for library staff, integrating with the broader EzLib ecosystem including the public reader interface (ezlib.com) and book metadata crawler service. The system follows an "ultra-simple first" philosophy - starting with basic book lists, member tracking, and one-click checkout/return operations before gradually adding complexity like due dates, overdue management, and advanced features.
+
+The authentication strategy requires library staff to first register on the main reader platform (ezlib.com) using passwordless email OTP, then access the management interface through independent login, ensuring clear platform identity while enabling future cross-domain session sharing. By focusing specifically on small library needs rather than enterprise-scale solutions, the system prioritizes immediate operational value and adoption confidence over comprehensive feature sets.
 
 ### Change Log
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
+| 2024-08-25 | 2.0 | Major update: Ultra-simple MVP approach, passwordless email OTP authentication, cross-domain access strategy, internationalization support | John (PM) |
 | 2024-08-24 | 1.0 | Initial PRD creation from project brief | John (PM) |
 
 ## Requirements
 
 ### Functional Requirements
 
-1. **FR1:** The system shall provide secure authentication and role-based access control using Supabase Auth with dynamic multi-tenant library assignment, where authenticated users can hold different administrative roles (owner, manager, librarian) across multiple libraries, with each role providing specific permissions (canManageBooks, canManageMembers, canManageStaff) enforced through Row Level Security policies and server-side authorization checks
+1. **FR1:** The system shall require users to first register on the main reader platform (ezlib.com) using passwordless email OTP authentication, then provide independent login access to manage.ezlib.com with role-based access control (owner, manager, librarian) across multiple libraries, with permissions enforced through Row Level Security policies and server-side authorization checks
 
-2. **FR2:** The system shall enable staff to add new books with ISBN lookup integration to the crawler service for automatic metadata enrichment
+2. **FR2:** The system shall provide ultra-simple book management with basic book lists containing title, author, ISBN, and available/checked-out status, with optional ISBN lookup integration to the crawler service for automatic metadata enrichment
 
-3. **FR3:** The system shall maintain a comprehensive book inventory with real-time availability status synchronized with the public reader interface
+3. **FR3:** The system shall maintain real-time book availability status synchronized with the public reader interface (ezlib.com) for seamless borrowing request workflows
 
-4. **FR4:** The system shall provide full CRUD operations for library member management including registration, profile updates, and deactivation
+4. **FR4:** The system shall provide simple member management with library patron names, email, and basic contact information, enabling library staff to register new members
 
-5. **FR5:** The system shall process book check-out operations with automatic due date calculation and availability status updates
+5. **FR5:** The system shall process basic book check-out operations with one-click checkout to member and immediate availability status updates, initially without due date tracking
 
-6. **FR6:** The system shall process book check-in operations with automatic fine calculations and inventory updates
+6. **FR6:** The system shall process basic book check-in operations with one-click return and immediate inventory status updates, initially without fine calculations
 
-7. **FR7:** The system shall manage holds/reservations with automated notifications when items become available
+7. **FR7:** The system shall support enhanced circulation features (due dates, renewals, holds, overdue tracking) as post-MVP functionality after core validation
 
-8. **FR8:** The system shall track overdue items and automatically calculate fines based on configurable library policies
+8. **FR8:** The system shall support enhanced overdue management (automated tracking, fine calculations, notifications) as post-MVP functionality
 
-9. **FR9:** The system shall send automated overdue notifications to members via email with escalation rules
+9. **FR9:** The system shall support automated member communications (email notifications, overdue notices) as post-MVP functionality  
 
-10. **FR10:** The system shall provide comprehensive search capabilities across books (title, author, ISBN, genre) and members (name, email, member ID)
+10. **FR10:** The system shall provide basic search capabilities across books (title, author) and members (name, email) with enhanced filtering as post-MVP functionality
 
-11. **FR11:** The system shall generate standard reports including circulation statistics, overdue items, member activity, and inventory status
+11. **FR11:** The system shall support basic reporting (circulation statistics, member activity) with advanced analytics as post-MVP functionality
 
-12. **FR12:** The system shall support multi-tenant architecture with complete data isolation between different libraries
+12. **FR12:** The system shall support multi-tenant architecture with complete data isolation between different libraries using Row Level Security policies
 
-13. **FR13:** The system shall provide book renewal functionality with configurable limits and restrictions
+13. **FR13:** The system shall support cross-domain authentication between ezlib.com and manage.ezlib.com with independent login sessions and future cross-domain session sharing capability
 
-14. **FR14:** The system shall maintain audit logs for all critical operations (check-outs, returns, member changes, inventory updates)
+14. **FR14:** The system shall maintain audit logs for all critical operations (check-outs, returns, member changes, inventory updates) for compliance and operational analysis
 
-15. **FR15:** The system shall support bulk operations for inventory management and member communications
+15. **FR15:** The system shall support internationalization framework for future multi-language and regional preferences as post-MVP enhancement
 
 ### Non-Functional Requirements
 
@@ -122,11 +125,13 @@ Primary target is desktop browsers (1024px+) with tablet responsiveness for circ
 The library management application will be developed within the existing EzLib monorepo structure as `apps/library-management/`. This follows the established pattern alongside `apps/reader/` and `services/crawler/`, enabling shared configurations, dependencies, and streamlined deployment while maintaining clear application boundaries.
 
 ### Service Architecture
-**Direct Supabase Integration Architecture:** The application will connect directly to the shared Supabase PostgreSQL database without an intermediate API layer, following EzLib's architectural principle of direct client connections. This Jamstack approach provides:
-- Real-time subscriptions for live data updates
-- Built-in Row Level Security for multi-tenant isolation
+**Direct Supabase Integration with Cross-Domain Architecture:** The application will connect directly to the shared Supabase PostgreSQL database without an intermediate API layer, following EzLib's architectural principle of direct client connections. The system supports cross-domain access between ezlib.com and manage.ezlib.com with independent login sessions. This approach provides:
+- Real-time subscriptions for live data updates synchronized between reader and management apps
+- Built-in Row Level Security for multi-tenant isolation with cross-domain session validation
 - Reduced complexity and latency compared to custom API layers
 - Seamless integration with existing database schema and RLS policies
+- Independent authentication sessions with planned future cross-domain session sharing
+- Event-driven real-time updates using Supabase subscriptions for book availability synchronization
 
 ### Testing Requirements
 **Comprehensive Testing Strategy:** Implementation will include unit testing, integration testing with Supabase, and end-to-end user workflow testing:
@@ -179,23 +184,62 @@ The library management application will be developed within the existing EzLib m
 - **Image Optimization:** Next.js Image component for book covers and library assets
 - **Bundle Optimization:** Code splitting and lazy loading for optimal page load times
 
+## Authentication & Registration Strategy
+
+### Registration Flow (Reader App Only)
+
+**Single Registration Point:** All user registration occurs exclusively on the Reader app (`ezlib.com`) to avoid user confusion and establish clear platform identity. Library staff must first register as readers before gaining access to management tools.
+
+**Passwordless Email OTP Process:**
+1. **Email Collection**: Library staff visit `ezlib.com` → enter email address → request verification code
+2. **OTP Verification**: 6-digit code sent to email → user enters code for authentication
+3. **Profile Setup**: User completes profile with display name, gender, language preference, and region selection
+4. **Default Access**: All accounts created as readers with Supabase authenticated role
+
+### Cross-Domain Access Strategy
+
+**Early Stage Implementation:**
+- **Independent Login**: Library staff must log in separately on `ezlib.com` and `manage.ezlib.com`
+- **Registration Restriction**: Management app shows "Login with existing account" - no registration option
+- **Clear Messaging**: Management app explains users must first register on main platform
+
+**Role-Based Access Control:**
+- **Default Role**: All users can access reader features (social book discovery) with authenticated role
+- **Library Management Access**: Users gain admin capabilities when added to LibAdmin table for specific libraries
+- **Permission Levels**: Owner, Manager, Librarian roles with granular permissions for each library
+
+**Future Enhancement:** Planned implementation of cross-domain session sharing for seamless user experience between applications.
+
+### Technical Implementation
+
+**Supabase Authentication:**
+- Email OTP authentication using `supabase.auth.signInWithOtp()`
+- JWT tokens with role-based claims
+- Row Level Security policies enforcing multi-tenant access
+
+**User Profile Structure:**
+- Base user record in `users` table
+- Optional `lib_readers` records for library memberships  
+- Optional `lib_admins` records for management access
+- Preference storage for language, region, notification settings
+
 ## Epic List
 
-**Epic 1: Foundation & Authentication**  
-Establish project infrastructure, authentication system, and basic user management with a functional health check endpoint to validate core technical stack.
+**Epic 1: Foundation & Passwordless Authentication**  
+Establish project infrastructure, passwordless email OTP authentication with cross-domain access strategy, and basic library context management while delivering ultra-simple core functionality validation.
 
-**Epic 2: Core Library Operations**  
-Implement essential book inventory management and member database functionality enabling basic library administration workflows.
+**Epic 2: Ultra-Simple Library Operations**  
+Implement basic book lists, simple member management, and one-click checkout/return operations without due dates or complex tracking - focusing on core operational validation.
 
-**Epic 3: Circulation Management**  
-Build the circulation desk operations including check-out, check-in, holds, and overdue tracking that form the heart of daily library operations.
+**Epic 3: Enhanced Circulation Management**  
+Build comprehensive circulation features including due dates, renewals, holds, and overdue tracking that extend the ultra-simple foundation (post-MVP functionality).
 
-**Epic 4: Reporting & Multi-tenant Administration**  
-Complete the system with comprehensive reporting, bulk operations, and administrative features necessary for library management and compliance.
+**Epic 4: Advanced Features & Multi-tenant Administration**  
+Complete the system with reporting, bulk operations, internationalization support, and administrative features for comprehensive library management (post-MVP functionality).
 
-## Epic 1: Foundation & Authentication
+## Epic 1: Foundation & Passwordless Authentication
 
-**Epic Goal:** Establish the technical foundation for the library management application including project setup, multi-tenant authentication system, and basic library context management while delivering a deployable health check endpoint that validates the complete technical stack integration.
+**Epic Goal:** Establish the technical foundation for the library management application including project setup, passwordless email OTP authentication with cross-domain access strategy, and basic library context management while delivering a deployable health check endpoint that validates the complete technical stack integration and ultra-simple core functionality.
 
 ### Story 1.1: Project Setup and Core Infrastructure
 
@@ -229,22 +273,23 @@ so that **the application has type-safe database access and proper integration w
 7. Error handling established for database connection failures
 8. Real-time subscription setup tested for future transaction updates
 
-### Story 1.3: Multi-Tenant Authentication System
+### Story 1.3: Cross-Domain Passwordless Authentication System
 
 As a **library administrator**,  
-I want **to securely log in and access only the libraries I have permissions for**,  
-so that **I can safely manage library operations without accessing other libraries' data**.
+I want **to access the library management system using my existing ezlib.com account with passwordless authentication**,  
+so that **I can safely manage library operations through a unified authentication strategy while maintaining platform identity**.
 
 **Acceptance Criteria:**
-1. Supabase Auth integration with email/password authentication
-2. Authentication middleware implemented to protect admin routes
-3. `requireAdminAccess()` server-side function validates user permissions per library
-4. Role-based permission system established (owner, manager, librarian)
-5. Dynamic library assignment - users can have different roles across multiple libraries
-6. Permission checking hooks (`useAdminPermissions`) implemented for UI state management
-7. Authentication state persisted across browser sessions
-8. Logout functionality clears all authentication state and redirects appropriately
-9. Unauthorized access attempts redirect to sign-in page with appropriate error messages
+1. Management app displays "Login with existing account" with clear messaging that registration occurs on ezlib.com
+2. Passwordless email OTP authentication integration using `supabase.auth.signInWithOtp()`
+3. Cross-domain authentication that validates existing user accounts from reader platform
+4. Authentication middleware implemented to protect admin routes and validate cross-domain sessions
+5. `requireAdminAccess()` server-side function validates user permissions per library from LibAdmin table
+6. Role-based permission system established (owner, manager, librarian) with granular permissions
+7. Dynamic library assignment - users can have different roles across multiple libraries
+8. Permission checking hooks (`useAdminPermissions`) implemented for UI state management
+9. Authentication state persisted with independent sessions between ezlib.com and manage.ezlib.com
+10. Clear user messaging explaining the two-step authentication flow and future session sharing plans
 
 ### Story 1.4: Library Context Management
 
@@ -279,43 +324,43 @@ so that **I have immediate visibility into library operations and can efficientl
 8. Navigation state persistence across page refreshes and browser sessions
 9. Loading states and error boundaries for all dashboard components
 
-## Epic 2: Core Library Operations
+## Epic 2: Ultra-Simple Library Operations  
 
-**Epic Goal:** Implement comprehensive book inventory management and member database functionality that enables library staff to perform essential administrative tasks including book cataloging with metadata enrichment, member registration and management, and basic search capabilities across all library data.
+**Epic Goal:** Implement ultra-simple book lists, basic member management, and one-click checkout/return operations without due dates or complex tracking, enabling library staff to replace manual/spreadsheet systems with digital tools while validating core operational workflows before adding complexity.
 
-### Story 2.1: Book Inventory Management Interface
-
-As a **library staff member**,  
-I want **to view, search, and filter the complete book inventory**,  
-so that **I can quickly find books, check availability status, and manage the collection efficiently**.
-
-**Acceptance Criteria:**
-1. Inventory table displays books with title, author, ISBN, availability status, and location information
-2. Search functionality works across title, author, ISBN, and genre fields with real-time filtering
-3. Advanced filters available for availability status, genre, publication year, and acquisition date
-4. Pagination or virtualized scrolling for large inventories (up to 5,000 books)
-5. Sort functionality on all major columns (title, author, acquisition date, status)
-6. Bulk selection capabilities for future batch operations
-7. Export functionality for inventory reports in CSV format
-8. Loading states and error handling for all data operations
-9. Real-time updates when book status changes through circulation activities
-
-### Story 2.2: Add New Books with ISBN Lookup
+### Story 2.1: Ultra-Simple Book List Interface
 
 As a **library staff member**,  
-I want **to add new books to inventory with automatic metadata enrichment**,  
-so that **cataloging is efficient and book information is accurate and complete**.
+I want **to view and manage a simple book list with basic information**,  
+so that **I can quickly see what books we have and their availability status without complex features overwhelming the interface**.
 
 **Acceptance Criteria:**
-1. Add book form supports both ISBN lookup and manual entry modes
-2. ISBN-13 validation with proper format checking and error messages
-3. Integration with crawler service for automatic metadata enrichment from external APIs
-4. Manual entry form for books without ISBNs (title, author, publisher, year, genre)
-5. Book cover image handling through Supabase storage or URL reference
-6. Duplicate detection prevents adding books that already exist in inventory
-7. Success notification confirms book addition with option to add another immediately
-8. Form validation ensures required fields are completed before submission
-9. Added books immediately appear in inventory with proper availability status
+1. Simple book list displays title, author, ISBN, and available/checked-out status only
+2. Basic search functionality across title and author fields with simple text matching
+3. Clear available/checked-out status indicators using color coding (green/red)
+4. Simple pagination for book lists (up to 5,000 books)
+5. Basic sorting by title and author only - no complex filtering initially
+6. Real-time status updates when books are checked out or returned
+7. Loading states and error handling for data operations
+8. Mobile-responsive design for tablet usage at circulation desk
+9. Add new book button prominently displayed for easy access
+
+### Story 2.2: Ultra-Simple Add New Books
+
+As a **library staff member**,  
+I want **to add new books with minimal required information**,  
+so that **I can quickly build our book inventory without complex cataloging workflows**.
+
+**Acceptance Criteria:**
+1. Simple add book form with only required fields: title, author, ISBN (optional)
+2. Optional ISBN lookup integration with crawler service for metadata enrichment
+3. Manual entry fallback for books without ISBNs - title and author minimum required
+4. Duplicate detection prevents adding books with same title/author combination
+5. All new books automatically set to "available" status
+6. Simple success notification with option to "Add Another Book"
+7. Basic form validation ensures title and author are provided
+8. Added books immediately appear in book list with available status
+9. No complex cataloging fields (genre, publisher, etc.) in initial version
 
 ### Story 2.3: Book Details and Management
 
@@ -334,24 +379,41 @@ so that **I can maintain accurate inventory data and make necessary corrections*
 8. Integration status display showing last metadata enrichment attempt
 9. Manual re-enrichment option to update metadata from external sources
 
-### Story 2.4: Member Management System
+### Story 2.4: Ultra-Simple Member Management
 
 As a **library staff member**,  
-I want **to register new members and manage existing member profiles**,  
-so that **I can maintain accurate patron records and enable borrowing privileges**.
+I want **to register new library members with basic contact information**,  
+so that **I can track who can borrow books without complex member management workflows**.
 
 **Acceptance Criteria:**
-1. Member registration form collects name, email, phone, address, and library preferences
-2. Unique member ID generation with configurable format (auto-increment or custom)
-3. Member search functionality by name, email, member ID, or phone number
-4. Member profile view displays complete contact information and borrowing history
-5. Edit member information with validation for email format and required fields
-6. Member status management (active, suspended, expired) with effective dates
-7. Communication preferences (email notifications, phone calls) configuration
-8. Member export functionality for mailing lists and reports
-9. Duplicate detection during registration to prevent multiple accounts
+1. Simple member registration form: name, email, basic contact information only
+2. Automatic member ID generation (simple auto-increment format)
+3. Basic member search by name and email only
+4. Simple member list showing name, email, and current checkout count
+5. Basic member profile showing contact information and list of currently checked-out books
+6. Edit member contact information with email format validation
+7. All members default to "active" status - no complex status management initially
+8. Duplicate detection by email address to prevent multiple accounts
+9. No advanced features like fines, limits, or communication preferences in initial version
 
-### Story 2.5: Member Profile and Borrowing History
+### Story 2.5: Ultra-Simple Checkout and Return Operations
+
+As a **library staff member**,  
+I want **to check out books to members and check them back in with simple one-click operations**,  
+so that **I can track book borrowing without complex due date management or fine calculations**.
+
+**Acceptance Criteria:**
+1. One-click checkout: select book, select member, click "Check Out" - no due dates initially
+2. One-click return: scan/select book, click "Check In" - immediate status change to available
+3. Book status instantly updates from "available" to "checked out" and vice versa
+4. Member profile shows simple list of currently checked-out books
+5. Real-time sync with reader app so book availability updates instantly on ezlib.com
+6. Basic checkout history for member profile (book title, checkout date, return date)
+7. Simple checkout validation (book must be available, member must exist)
+8. No overdue tracking, fines, or renewal functionality in this version
+9. Transaction logging for basic audit trail and checkout statistics
+
+### Story 2.6: Member Profile and Borrowing History
 
 As a **library staff member**,  
 I want **to view detailed member profiles with complete borrowing history**,  
@@ -385,9 +447,9 @@ so that **I can quickly find books, members, or transactions without navigating 
 8. Real-time search with debounced input for optimal performance
 9. Empty state guidance when no results found with suggested search refinements
 
-## Epic 3: Circulation Management
+## Epic 3: Enhanced Circulation Management (Post-MVP)
 
-**Epic Goal:** Implement the core circulation desk operations including book check-out, check-in, renewal processes, holds management, and automated overdue tracking with real-time synchronization to the public reader interface, enabling library staff to efficiently manage the primary borrowing workflows that constitute the heart of daily library operations.
+**Epic Goal:** Extend the ultra-simple foundation with comprehensive circulation features including due date tracking, renewal processes, holds management, and automated overdue tracking with notifications, transforming the basic checkout/return system into a full-featured circulation management platform.
 
 ### Story 3.1: Book Check-Out Process
 
@@ -491,9 +553,9 @@ so that **I can efficiently manage all circulation activities from a single inte
 8. Customizable dashboard layout based on staff role and library workflows
 9. Real-time synchronization status with public interface and external systems
 
-## Epic 4: Reporting & Multi-tenant Administration
+## Epic 4: Advanced Features & Multi-tenant Administration (Post-MVP)  
 
-**Epic Goal:** Complete the professional library management system with comprehensive reporting capabilities, bulk operations for efficient data management, advanced administrative features, and system configuration tools that enable library directors to generate compliance reports, analyze operational performance, and configure library-specific policies and settings.
+**Epic Goal:** Complete the professional library management system with comprehensive reporting capabilities, bulk operations, internationalization support, advanced administrative features, and system configuration tools that enable library directors to generate compliance reports, analyze operational performance, and configure library-specific policies for diverse library needs and regional requirements.
 
 ### Story 4.1: Standard Library Reports
 
@@ -596,6 +658,23 @@ so that **the library management system runs reliably and efficiently for daily 
 7. Library data export functionality for system migrations or external backup purposes
 8. System usage statistics showing peak times, transaction volumes, and resource utilization
 9. Maintenance mode capabilities for system updates and major configuration changes
+
+### Story 4.7: Internationalization and Localization Support
+
+As a **library administrator in a diverse community**,  
+I want **the system to support multiple languages and regional preferences**,  
+so that **our library staff and community can use the system in their preferred language with culturally appropriate formats**.
+
+**Acceptance Criteria:**
+1. Multi-language interface support with automatic location-based language detection
+2. User-configurable language preferences with manual override capability
+3. Localized date/time formats based on regional settings and user preferences
+4. Cultural UI adaptations for libraries serving diverse communities
+5. Library-specific customization options for region-appropriate workflows
+6. Support for local compliance features and regulatory requirements
+7. Culturally relevant interface elements and terminology choices
+8. Language switching capability that persists across user sessions
+9. Integration with existing EzLib ecosystem language preferences and user profile settings
 
 ## Next Steps
 

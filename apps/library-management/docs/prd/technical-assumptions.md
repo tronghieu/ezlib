@@ -4,11 +4,13 @@
 The library management application will be developed within the existing EzLib monorepo structure as `apps/library-management/`. This follows the established pattern alongside `apps/reader/` and `services/crawler/`, enabling shared configurations, dependencies, and streamlined deployment while maintaining clear application boundaries.
 
 ## Service Architecture
-**Direct Supabase Integration Architecture:** The application will connect directly to the shared Supabase PostgreSQL database without an intermediate API layer, following EzLib's architectural principle of direct client connections. This Jamstack approach provides:
-- Real-time subscriptions for live data updates
-- Built-in Row Level Security for multi-tenant isolation
+**Direct Supabase Integration with Cross-Domain Architecture:** The application will connect directly to the shared Supabase PostgreSQL database without an intermediate API layer, following EzLib's architectural principle of direct client connections. The system supports cross-domain access between ezlib.com and manage.ezlib.com with independent login sessions. This approach provides:
+- Real-time subscriptions for live data updates synchronized between reader and management apps
+- Built-in Row Level Security for multi-tenant isolation with cross-domain session validation
 - Reduced complexity and latency compared to custom API layers
 - Seamless integration with existing database schema and RLS policies
+- Independent authentication sessions with planned future cross-domain session sharing
+- Event-driven real-time updates using Supabase subscriptions for book availability synchronization
 
 ## Testing Requirements
 **Comprehensive Testing Strategy:** Implementation will include unit testing, integration testing with Supabase, and end-to-end user workflow testing:

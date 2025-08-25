@@ -1,6 +1,6 @@
-# Epic 4: Reporting & Multi-tenant Administration
+# Epic 4: Advanced Features & Multi-tenant Administration (Post-MVP)  
 
-**Epic Goal:** Complete the professional library management system with comprehensive reporting capabilities, bulk operations for efficient data management, advanced administrative features, and system configuration tools that enable library directors to generate compliance reports, analyze operational performance, and configure library-specific policies and settings.
+**Epic Goal:** Complete the professional library management system with comprehensive reporting capabilities, bulk operations, internationalization support, advanced administrative features, and system configuration tools that enable library directors to generate compliance reports, analyze operational performance, and configure library-specific policies for diverse library needs and regional requirements.
 
 ## Story 4.1: Standard Library Reports
 
@@ -103,3 +103,20 @@ so that **the library management system runs reliably and efficiently for daily 
 7. Library data export functionality for system migrations or external backup purposes
 8. System usage statistics showing peak times, transaction volumes, and resource utilization
 9. Maintenance mode capabilities for system updates and major configuration changes
+
+## Story 4.7: Internationalization and Localization Support
+
+As a **library administrator in a diverse community**,  
+I want **the system to support multiple languages and regional preferences**,  
+so that **our library staff and community can use the system in their preferred language with culturally appropriate formats**.
+
+**Acceptance Criteria:**
+1. Multi-language interface support with automatic location-based language detection
+2. User-configurable language preferences with manual override capability
+3. Localized date/time formats based on regional settings and user preferences
+4. Cultural UI adaptations for libraries serving diverse communities
+5. Library-specific customization options for region-appropriate workflows
+6. Support for local compliance features and regulatory requirements
+7. Culturally relevant interface elements and terminology choices
+8. Language switching capability that persists across user sessions
+9. Integration with existing EzLib ecosystem language preferences and user profile settings

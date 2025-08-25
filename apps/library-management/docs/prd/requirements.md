@@ -2,35 +2,35 @@
 
 ## Functional Requirements
 
-1. **FR1:** The system shall provide secure authentication and role-based access control using Supabase Auth with dynamic multi-tenant library assignment, where authenticated users can hold different administrative roles (owner, manager, librarian) across multiple libraries, with each role providing specific permissions (canManageBooks, canManageMembers, canManageStaff) enforced through Row Level Security policies and server-side authorization checks
+1. **FR1:** The system shall require users to first register on the main reader platform (ezlib.com) using passwordless email OTP authentication, then provide independent login access to manage.ezlib.com with role-based access control (owner, manager, librarian) across multiple libraries, with permissions enforced through Row Level Security policies and server-side authorization checks
 
-2. **FR2:** The system shall enable staff to add new books with ISBN lookup integration to the crawler service for automatic metadata enrichment
+2. **FR2:** The system shall provide ultra-simple book management with basic book lists containing title, author, ISBN, and available/checked-out status, with optional ISBN lookup integration to the crawler service for automatic metadata enrichment
 
-3. **FR3:** The system shall maintain a comprehensive book inventory with real-time availability status synchronized with the public reader interface
+3. **FR3:** The system shall maintain real-time book availability status synchronized with the public reader interface (ezlib.com) for seamless borrowing request workflows
 
-4. **FR4:** The system shall provide full CRUD operations for library member management including registration, profile updates, and deactivation
+4. **FR4:** The system shall provide simple member management with library patron names, email, and basic contact information, enabling library staff to register new members
 
-5. **FR5:** The system shall process book check-out operations with automatic due date calculation and availability status updates
+5. **FR5:** The system shall process basic book check-out operations with one-click checkout to member and immediate availability status updates, initially without due date tracking
 
-6. **FR6:** The system shall process book check-in operations with automatic fine calculations and inventory updates
+6. **FR6:** The system shall process basic book check-in operations with one-click return and immediate inventory status updates, initially without fine calculations
 
-7. **FR7:** The system shall manage holds/reservations with automated notifications when items become available
+7. **FR7:** The system shall support enhanced circulation features (due dates, renewals, holds, overdue tracking) as post-MVP functionality after core validation
 
-8. **FR8:** The system shall track overdue items and automatically calculate fines based on configurable library policies
+8. **FR8:** The system shall support enhanced overdue management (automated tracking, fine calculations, notifications) as post-MVP functionality
 
-9. **FR9:** The system shall send automated overdue notifications to members via email with escalation rules
+9. **FR9:** The system shall support automated member communications (email notifications, overdue notices) as post-MVP functionality  
 
-10. **FR10:** The system shall provide comprehensive search capabilities across books (title, author, ISBN, genre) and members (name, email, member ID)
+10. **FR10:** The system shall provide basic search capabilities across books (title, author) and members (name, email) with enhanced filtering as post-MVP functionality
 
-11. **FR11:** The system shall generate standard reports including circulation statistics, overdue items, member activity, and inventory status
+11. **FR11:** The system shall support basic reporting (circulation statistics, member activity) with advanced analytics as post-MVP functionality
 
-12. **FR12:** The system shall support multi-tenant architecture with complete data isolation between different libraries
+12. **FR12:** The system shall support multi-tenant architecture with complete data isolation between different libraries using Row Level Security policies
 
-13. **FR13:** The system shall provide book renewal functionality with configurable limits and restrictions
+13. **FR13:** The system shall support cross-domain authentication between ezlib.com and manage.ezlib.com with independent login sessions and future cross-domain session sharing capability
 
-14. **FR14:** The system shall maintain audit logs for all critical operations (check-outs, returns, member changes, inventory updates)
+14. **FR14:** The system shall maintain audit logs for all critical operations (check-outs, returns, member changes, inventory updates) for compliance and operational analysis
 
-15. **FR15:** The system shall support bulk operations for inventory management and member communications
+15. **FR15:** The system shall support internationalization framework for future multi-language and regional preferences as post-MVP enhancement
 
 ## Non-Functional Requirements
 
