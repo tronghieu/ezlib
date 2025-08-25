@@ -20,6 +20,8 @@ The minimalist MVP approach prioritizes immediate operational value for librarie
 | Date | Version | Description | Author |
 |------|---------|-------------|---------|
 | 2025-01-18 | 1.0 | Initial PRD creation from Project Brief | PM John |
+| 2025-01-24 | 1.1 | Added Epic 4: Internationalization & Localization with location-based language detection, user country selection, and cultural formatting requirements | PM John |
+| 2025-08-24 | 1.2 | Updated authentication strategy with passwordless email OTP, single-app registration flow, and cross-domain access requirements | PM John |
 
 ## Requirements
 
@@ -35,6 +37,16 @@ The minimalist MVP approach prioritizes immediate operational value for librarie
 8. **FR8:** The system shall maintain real-time availability status for all books in the collection
 9. **FR9:** The system shall provide basic member lookup functionality for library staff during checkout
 10. **FR10:** The system shall allow library staff to view simple reports of checked out books and member activity
+11. **FR11:** The system shall provide passwordless email authentication using 6-digit OTP codes
+12. **FR12:** The system shall restrict new user registration to the Reader app only (`ezlib.com`)
+13. **FR13:** The system shall require independent login sessions on Reader and Library Management apps
+14. **FR14:** The system shall automatically grant reader access to all authenticated users
+15. **FR15:** The system shall grant library management access only to users with LibAdmin records
+16. **FR16:** The system shall collect user preferences (display name, gender, language, region) during registration
+17. **FR17:** The system shall display interface content in the user's preferred language based on their country selection
+18. **FR18:** The system shall automatically detect and default to the user's geographic location during registration
+19. **FR19:** The system shall allow users to manually change their country/language preferences at any time
+20. **FR20:** The system shall localize date formats, number formats, and cultural conventions based on user's country selection
 
 ### Non Functional
 
@@ -46,6 +58,8 @@ The minimalist MVP approach prioritizes immediate operational value for librarie
 6. **NFR6:** The system shall handle up to 5,000 books and 1,000 active members per library without performance degradation
 7. **NFR7:** The system shall work on both desktop and mobile devices with responsive design
 8. **NFR8:** The system shall provide data backup and recovery capabilities to prevent loss of library records
+9. **NFR9:** The system shall support at least English and Spanish languages initially, with architecture for additional languages
+10. **NFR10:** The system shall maintain consistent user experience across all supported languages without compromising functionality
 
 ## User Interface Design Goals
 
@@ -101,13 +115,15 @@ Single Next.js project containing both library staff interface and reader-facing
 - **Database Technology:** Supabase (PostgreSQL) for all data persistence, user authentication, and real-time subscriptions for availability status updates
 - **Frontend Framework:** Next.js 14+ with TypeScript for type safety and developer experience
 - **Styling Approach:** Tailwind CSS for rapid UI development and consistent design system
-- **Authentication:** Supabase Auth for user management with role-based access (library staff vs readers)
+- **Authentication:** Supabase Auth with passwordless email OTP for unified user management across domains
 - **Deployment Platform:** Vercel for frontend hosting with automatic deployments from Git
 - **Development Environment:** Local development using Supabase CLI for database schema management
 - **Data Validation:** Zod schemas for API request/response validation and type inference
 - **State Management:** React hooks and Context API for simple state needs, avoiding external state management libraries for MVP
 - **Real-time Updates:** Supabase real-time subscriptions for book availability status across multiple concurrent users
 - **Mobile Responsiveness:** Tailwind responsive utilities for mobile-first design approach
+- **Internationalization:** Next.js i18n with react-intl for translation management, IP-based geolocation for automatic language detection, and ICU message formatting for cultural appropriateness
+- **Localization Infrastructure:** Translation key management system, locale-specific routing, and right-to-left (RTL) language support architecture
 
 ## Epic List
 
@@ -119,6 +135,9 @@ Enable library staff to manage books and members with basic CRUD operations and 
 
 **Epic 3: Book Borrowing Workflow**
 Implement the complete borrowing cycle from reader book browsing through staff approval and checkout/checkin processes.
+
+**Epic 4: Internationalization & Localization**
+Enable multi-language support with automatic location-based language detection, user-configurable country preferences, and culturally appropriate localization for global library deployment.
 
 ## Epic 1: Foundation & Authentication
 
@@ -156,22 +175,38 @@ so that the application can store and retrieve books, members, and borrowing dat
 7. Seed data script created for development/testing purposes
 8. Database types generated for TypeScript integration
 
-### Story 1.3: User Authentication System
+### Story 1.3: Passwordless Email OTP Authentication System
 
-As a **library staff member** and **reader**,
-I want to create accounts and login securely,
-so that I can access appropriate features based on my role.
+As a **reader**,
+I want to create an account and login using only my email address,
+so that I can access book discovery and borrowing features without password management.
 
 #### Acceptance Criteria
-1. Supabase Auth integrated with email/password authentication
-2. User registration flow implemented for both staff and readers
-3. Login/logout functionality working correctly
-4. User profiles table linked to auth.users
-5. Role-based access control implemented (library_staff vs reader roles)
-6. Protected routes middleware configured
-7. Authentication state management implemented with React Context
-8. Password reset functionality available
-9. User session persistence across browser sessions
+1. Supabase Auth integrated with email OTP authentication (no passwords)
+2. Registration flow implemented exclusively on Reader app (`ezlib.com`)
+3. OTP verification workflow: email input → 6-digit code → account creation
+4. User profile creation form with display name, gender, language, and region selection
+5. Login functionality on both apps (`ezlib.com` and `manage.ezlib.com`) using email OTP
+6. User profiles table linked to auth.users with preference storage
+7. Role-based access control: authenticated users = readers, LibAdmin records = management access
+8. Protected routes middleware configured for both domains
+9. Authentication state management implemented with React Context across apps
+10. Clear messaging on management app directing users to register on main platform first
+
+### Story 1.3.1: Cross-Domain Authentication Strategy
+
+As a **library staff member**,
+I want to access the management app using my existing reader account,
+so that I can manage library operations without creating a separate account.
+
+#### Acceptance Criteria
+1. Management app (`manage.ezlib.com`) requires login but blocks new registration
+2. Login interface explains users must first register on `ezlib.com`
+3. Independent login sessions for early-stage implementation
+4. LibAdmin table queries determine management app access for authenticated users
+5. Appropriate error handling when authenticated users lack admin privileges
+6. Logout functionality works independently on each domain
+7. User session persistence per domain until cross-domain sharing implemented
 
 ### Story 1.4: Library Registration and Management
 
@@ -324,6 +359,90 @@ so that I can track books and ensure proper collection management.
 6. Complete transaction history linking requests to checkouts to returns
 7. Reader contact information readily available during all transaction phases
 8. Overdue tracking for request-based borrowings with reader notification
+
+## Epic 4: Internationalization & Localization
+
+**Expanded Goal:** Enable EzLib to serve libraries and readers across different countries and language preferences through comprehensive internationalization support. Implement automatic location-based language detection during registration with user-configurable preferences, ensuring culturally appropriate interfaces for both library staff operations and reader experiences.
+
+### Story 4.1: i18n Infrastructure and Configuration
+
+As a **developer**,
+I want to establish the internationalization infrastructure and configuration,
+so that the application can support multiple languages and locales efficiently.
+
+#### Acceptance Criteria
+1. Next.js i18n configuration implemented with locale routing
+2. React-intl integration for message formatting and translation management
+3. Translation key extraction and management system established
+4. Locale detection middleware configured for automatic language selection
+5. ICU message format support for pluralization and number formatting
+6. Development workflow established for adding new translations
+7. Translation file structure organized by feature/page for maintainability
+8. Fallback language configuration (English) for missing translations
+
+### Story 4.2: User Location Detection and Country Selection
+
+As a **reader** and **library staff member**,
+I want the system to automatically detect my location and allow me to select my country preference,
+so that I receive appropriate language and cultural formatting for my region.
+
+#### Acceptance Criteria
+1. IP-based geolocation service integrated for automatic country detection
+2. Country selection interface available during user registration
+3. Location detection runs automatically on first visit with user consent
+4. Manual country selection override available in user profile settings
+5. Country preference stored in user profile and persists across sessions
+6. Geographic location API fallback handling for when detection fails
+7. GDPR-compliant location detection with proper user consent
+8. Country selection affects both language and regional formatting preferences
+
+### Story 4.3: Core Interface Translation (English/Spanish)
+
+As a **library staff member** and **reader**,
+I want to use the system in my preferred language,
+so that I can efficiently perform tasks without language barriers.
+
+#### Acceptance Criteria
+1. All user-facing text translated for English and Spanish languages
+2. Library staff interface fully localized (dashboard, forms, buttons, messages)
+3. Reader interface fully localized (book browser, requests, profile)
+4. Dynamic language switching without page reload
+5. Language selection persists across user sessions
+6. Error messages and validation text translated appropriately
+7. Help text and tooltips available in both languages
+8. Email notifications sent in user's preferred language
+
+### Story 4.4: Cultural and Regional Formatting
+
+As a **user in different countries**,
+I want dates, numbers, and cultural conventions to display in my familiar format,
+so that the system feels natural and professional in my regional context.
+
+#### Acceptance Criteria
+1. Date formatting matches user's country conventions (MM/DD/YYYY vs DD/MM/YYYY vs YYYY-MM-DD)
+2. Number formatting includes appropriate thousands separators and decimal points
+3. Time formatting displays in 12-hour or 24-hour format based on regional preference
+4. Currency display (if applicable) uses appropriate symbols and formatting
+5. Address formatting matches country conventions for library addresses
+6. Phone number formatting and validation matches country-specific patterns
+7. Postal code validation adapts to country-specific formats
+8. Right-to-left (RTL) language architecture prepared for future Arabic/Hebrew support
+
+### Story 4.5: Admin Language Management Interface
+
+As a **system administrator**,
+I want to manage translations and language settings,
+so that I can maintain accurate localization and add new language support.
+
+#### Acceptance Criteria
+1. Translation management interface for administrators
+2. Missing translation detection and reporting
+3. Translation key usage analytics to identify unused strings
+4. Bulk translation import/export functionality (JSON/CSV formats)
+5. Translation approval workflow for community contributors
+6. Language pack version management and deployment
+7. Translation quality metrics and user feedback collection
+8. Automated testing for translation completeness across all supported languages
 
 ## Next Steps
 

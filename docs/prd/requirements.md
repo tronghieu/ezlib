@@ -1,6 +1,6 @@
 # Requirements
 
-### Functional
+## Functional
 
 1. **FR1:** The system shall allow library staff to add books to their collection with title, author, and availability status (available/checked out)
 2. **FR2:** The system shall allow library staff to create and manage member profiles with name and contact information
@@ -10,10 +10,20 @@
 6. **FR6:** The system shall allow readers to request to borrow available books through the digital interface
 7. **FR7:** The system shall notify library staff of reader borrowing requests for approval/decline
 8. **FR8:** The system shall maintain real-time availability status for all books in the collection
-9. **FR9:** The system shall allow library staff to view simple reports of checked out books and member activity
+9. **FR9:** The system shall provide basic member lookup functionality for library staff during checkout
 10. **FR10:** The system shall allow library staff to view simple reports of checked out books and member activity
+11. **FR11:** The system shall provide passwordless email authentication using 6-digit OTP codes
+12. **FR12:** The system shall restrict new user registration to the Reader app only (`ezlib.com`)
+13. **FR13:** The system shall require independent login sessions on Reader and Library Management apps
+14. **FR14:** The system shall automatically grant reader access to all authenticated users
+15. **FR15:** The system shall grant library management access only to users with LibAdmin records
+16. **FR16:** The system shall collect user preferences (display name, gender, language, region) during registration
+17. **FR17:** The system shall display interface content in the user's preferred language based on their country selection
+18. **FR18:** The system shall automatically detect and default to the user's geographic location during registration
+19. **FR19:** The system shall allow users to manually change their country/language preferences at any time
+20. **FR20:** The system shall localize date formats, number formats, and cultural conventions based on user's country selection
 
-### Non Functional
+## Non Functional
 
 1. **NFR1:** The system shall load pages in under 3 seconds on standard broadband connections
 2. **NFR2:** The system shall be accessible via modern web browsers (Chrome 90+, Firefox 85+, Safari 14+, Edge 90+)
@@ -23,3 +33,5 @@
 6. **NFR6:** The system shall handle up to 5,000 books and 1,000 active members per library without performance degradation
 7. **NFR7:** The system shall work on both desktop and mobile devices with responsive design
 8. **NFR8:** The system shall provide data backup and recovery capabilities to prevent loss of library records
+9. **NFR9:** The system shall support at least English and Spanish languages initially, with architecture for additional languages
+10. **NFR10:** The system shall maintain consistent user experience across all supported languages without compromising functionality
