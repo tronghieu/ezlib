@@ -1,33 +1,24 @@
-# CLAUDE.md - EzLib Library Management App
+# CLAUDE.md - Library Management System
 
-This file provides guidance to Claude Code when working with the **Library Management App** subproject within the EzLib monorepo.
+This file provides guidance to Claude Code when working with the **Library Management System**.
 
-## Subproject Overview
+## Project Overview
 
-The **EzLib Library Management System** is a Next.js 14+ web application that enables small/medium libraries to replace manual/spreadsheet systems with ultra-simple digital operations. This admin interface serves library staff for book inventory management, member registration, and circulation operations.
+The **Library Management System** is a standalone Next.js 14+ web application that enables small/medium libraries to replace manual/spreadsheet systems with ultra-simple digital operations. This admin interface serves library staff for book inventory management, member registration, and circulation operations.
 
 ### Current Development State
 
 - ❌ **Project Setup**: Next.js 14+ App Router structure [NOT YET IMPLEMENTED]
-- ❌ **Authentication**: Cross-domain passwordless OTP integration [NOT YET IMPLEMENTED]
+- ❌ **Authentication**: Passwordless OTP integration [NOT YET IMPLEMENTED]
 - ❌ **Core Features**: Ultra-simple book lists, member management, circulation [NOT YET IMPLEMENTED]
 - ✅ **Documentation**: Complete PRD, technical specs, and UX requirements [IMPLEMENTED]
 
-## Subproject Context
-
-### Application Type
+## Application Type
 
 **Frontend Web Application** - Admin dashboard for library staff operations
 
 - **Primary Users**: Library administrators, managers, librarians
-- **Access Point**: `manage.ezlib.com` (cross-domain from main reader app)
 - **Architecture**: Direct Supabase integration with Row Level Security
-
-### Integration Points
-
-- **Main Reader App** (`apps/reader/`): Cross-domain authentication, shared user accounts
-- **Book Crawler Service** (`services/crawler/`): Automatic book metadata enrichment
-- **Shared Database** (`supabase/`): PostgreSQL with multi-tenant RLS policies
 
 ## Tech Stack
 
@@ -43,20 +34,16 @@ The **EzLib Library Management System** is a Next.js 14+ web application that en
 
 ### Development Tools
 
-- **Package Manager**: PNPM (monorepo workspace support)
-- **Build System**: Turbo (optimized monorepo builds)
+- **Package Manager**: PNPM
 - **Code Quality**: ESLint, Prettier, Husky git hooks
 - **Testing**: Jest, Testing Library, Playwright (E2E)
 - **Deployment**: Vercel with global CDN
 
 ## Essential Commands
 
-### Development Setup (Library Management App)
+### Development Setup
 
 ```bash
-# Navigate to library management app
-cd apps/library-management
-
 # Install dependencies
 pnpm install
 
@@ -70,15 +57,11 @@ pnpm dev
 open http://localhost:3000
 ```
 
-## Shared Supabase Backend-as-a-Service
+## Supabase Backend-as-a-Service
 
 ### Overview
 
-EzLib uses a **shared Supabase instance** located at `(monorepo-root)/supabase/` that serves all applications:
-
-- **Reader App** (`apps/reader/`): Public book discovery and social features
-- **Library Management App** (`apps/library-management/`): Admin operations (THIS APP)
-- **Book Crawler Service** (`services/crawler/`): Metadata enrichment service
+This application uses **Supabase** as the backend database service with PostgreSQL and real-time capabilities.
 
 ### Supabase Configuration
 
@@ -100,13 +83,13 @@ supabase/
     └── 12_borrowing_transactions.sql # Transaction samples
 ```
 
-### Database Operations (from monorepo root)
+### Database Operations (from database root)
 
 #### Basic Operations
 
 ```bash
-# ALWAYS run from monorepo root: Example /Users/tronghieuluu/Projects/ezlib/
-cd ../../
+# Navigate to database directory (relative to project root)
+cd ../../supabase
 
 # Start local Supabase stack (includes PostgreSQL, Auth, Realtime, Storage)
 supabase start
@@ -133,11 +116,8 @@ supabase db push
 # View migration status
 supabase migration list
 
-# Generate TypeScript types for Library Management App
-supabase gen types typescript --local > apps/library-management/lib/database.types.ts
-
-# Generate TypeScript types for all apps (run from each app directory)
-supabase gen types typescript --local > lib/database.types.ts
+# Generate TypeScript types for this app (run from database directory)
+supabase gen types typescript --local > ../apps/library-management/lib/database.types.ts
 ```
 
 #### Migration Management
@@ -182,17 +162,17 @@ ls -la supabase/seeds/
 - **Realtime**: ws://localhost:54321/realtime/v1/websocket
 - **Email Testing**: http://localhost:54324 (Inbucket - view sent emails)
 
-### Environment Variables (Library Management App)
+### Environment Variables
 
 ```bash
-# Add to apps/library-management/.env.local
+# Add to .env.local
 
 # Supabase Configuration (Local Development)
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-local-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-local-service-role-key
 
-# Copy keys from: supabase status
+# Copy keys from: supabase status (run from database directory)
 # Or view in Supabase Studio > Settings > API
 ```
 
@@ -278,9 +258,6 @@ pnpm test:coverage          # Test coverage report
 # Build for production
 pnpm build
 
-# Build monorepo (from root)
-turbo build --filter=library-management
-
 # Preview production build
 pnpm start
 ```
@@ -292,7 +269,6 @@ pnpm start
 Always run quality checks before committing:
 
 ```bash
-cd apps/library-management
 pnpm lint:fix
 pnpm format
 pnpm type-check
@@ -302,10 +278,9 @@ pnpm build
 
 ### Authentication Integration Pattern
 
-- **Registration**: Users must first register on main reader app (`ezlib.com`)
-- **Login**: Independent login on `manage.ezlib.com` with email OTP
+- **Registration**: User registration with email OTP
+- **Login**: Email OTP authentication
 - **Access Control**: Role-based permissions (owner, manager, librarian) per library
-- **Cross-Domain**: Independent sessions with planned future session sharing
 
 ### Database Integration Pattern
 
@@ -338,7 +313,7 @@ pnpm build
 ## File Organization
 
 ```
-apps/library-management/
+library-management/
 ├── app/                    # Next.js App Router pages
 │   ├── (auth)/            # Authentication routes
 │   ├── dashboard/         # Main dashboard
@@ -359,16 +334,16 @@ apps/library-management/
 ├── hooks/                 # Custom React hooks
 ├── types/                 # TypeScript type definitions
 ├── stores/               # Zustand stores
-└── docs/                 # Subproject documentation
+└── docs/                 # Project documentation
 ```
 
 ## Key Features & User Stories
 
 ### Epic 1: Foundation & Authentication
 
-- **Story 1.1**: Next.js 14 project setup with monorepo integration
+- **Story 1.1**: Next.js 14 project setup
 - **Story 1.2**: Supabase integration and TypeScript type generation
-- **Story 1.3**: Cross-domain passwordless authentication system
+- **Story 1.3**: Passwordless authentication system
 - **Story 1.4**: Library context management and switching
 - **Story 1.5**: Basic dashboard and navigation structure
 
@@ -568,22 +543,17 @@ export async function requireLibraryAccess(libraryId?: string) {
 #### Book Metadata Enrichment Integration
 
 ```typescript
-// Integration with crawler service for ISBN lookup
+// Integration with external APIs for ISBN lookup
 export async function enrichBookMetadata(isbn: string, libraryId: string) {
   try {
-    // Call crawler service for metadata
+    // Call external API for metadata (e.g., Google Books API)
     const response = await fetch(
-      `${process.env.CRAWLER_API_URL}/api/v1/enrich`,
+      `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`,
       {
-        method: "POST",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.CRAWLER_SERVICE_AUTH_SECRET}`,
         },
-        body: JSON.stringify({
-          isbn_13: isbn,
-          library_id: libraryId,
-        }),
       }
     );
 
@@ -593,8 +563,7 @@ export async function enrichBookMetadata(isbn: string, libraryId: string) {
 
     const enrichmentData = await response.json();
 
-    // The crawler service will update the database directly
-    // We can subscribe to changes or refetch data
+    // Process and save the enriched data
     return { success: true, data: enrichmentData };
   } catch (error) {
     console.error("Book enrichment failed:", error);
@@ -696,28 +665,23 @@ INSERT INTO library_events (id, library_id, event_type, title, description, even
 
 ### Development Workflow Best Practices
 
-#### 1. Always Work from Monorepo Root for Database Operations
+#### 1. Always Work from Database Root for Database Operations
 
 ```bash
-# ❌ WRONG - Don't run from subproject directory
-cd apps/library-management
-supabase start  # This will create a new Supabase project!
+# ❌ WRONG - Don't run from project directory
+supabase start  # This might not find the correct configuration
 
-# ✅ CORRECT - Always from monorepo root
-cd /Users/tronghieuluu/Projects/ezlib
-supabase start  # Uses existing shared configuration
+# ✅ CORRECT - Always from database root
+cd ../../supabase
+supabase start  # Uses existing configuration
 ```
 
 #### 2. Type Generation After Schema Changes
 
 ```bash
-# After any migration or schema change:
-cd /Users/tronghieuluu/Projects/ezlib
-supabase gen types typescript --local > apps/library-management/lib/database.types.ts
-
-# Also regenerate for other apps:
-supabase gen types typescript --local > apps/reader/lib/database.types.ts
-supabase gen types typescript --local > services/crawler/lib/database.types.ts
+# After any migration or schema change (run from database directory):
+cd ../../supabase
+supabase gen types typescript --local > ../apps/library-management/lib/database.types.ts
 ```
 
 #### 3. RLS Policy Testing
@@ -891,13 +855,11 @@ WHERE schemaname = 'public';
 ## Important Notes
 
 - **Ultra-Simple First**: Start with basic functionality, avoid feature creep
-- **Real-Time Critical**: Inventory must sync instantly with reader app
-- **Cross-Domain Auth**: Handle independent sessions between apps gracefully
 - **Multi-Tenant**: All queries must be scoped to selected library context
 - **Responsive Design**: Optimize for desktop primary, tablet secondary
 - **Accessibility**: Meet WCAG 2.1 AA standards for inclusive library staff usage
 - **Performance**: Support up to 5,000 books and 1,000 members per library efficiently
-- **Supabase Integration**: Always run database commands from monorepo root
+- **Supabase Integration**: Always run database commands from database root directory
 - **Type Safety**: Regenerate TypeScript types after every schema change
 
 ## Next Steps
@@ -906,12 +868,10 @@ When starting development:
 
 1. **Project Setup**: Initialize Next.js 14 structure with required dependencies
 2. **Supabase Integration**: Configure database connection and generate types
-3. **Authentication Flow**: Implement cross-domain passwordless OTP system
+3. **Authentication Flow**: Implement passwordless OTP system
 4. **Basic Dashboard**: Create main navigation and library context switching
 5. **Core Operations**: Build ultra-simple book lists and member management
 
 ---
 
-_Library Management App CLAUDE.md - Focused on ultra-simple library operations within EzLib ecosystem_
-
-- Only read files in this folder, do not read documents in the root project folder unless requested
+_Library Management System CLAUDE.md - Standalone library management application_
