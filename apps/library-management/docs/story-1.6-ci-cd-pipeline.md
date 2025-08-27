@@ -18,6 +18,7 @@ so that **code changes are automatically tested, validated, and deployed safely 
 ## Acceptance Criteria
 
 ### 🔧 GitHub Actions Workflow Configuration
+
 1. **GitHub Actions workflow file** (`.github/workflows/library-management.yml`) created with:
    - Trigger on push to `main` branch and pull requests targeting `main`
    - Node.js 18+ environment setup with PNPM caching
@@ -35,6 +36,7 @@ so that **code changes are automatically tested, validated, and deployed safely 
    - Supabase keys properly secured and injected at build time
 
 ### 🚀 Vercel Deployment Configuration
+
 4. **Vercel project setup** with proper monorepo configuration:
    - Build command: `cd apps/library-management && pnpm run build`
    - Output directory: `apps/library-management/.next`
@@ -52,6 +54,7 @@ so that **code changes are automatically tested, validated, and deployed safely 
    - Development previews: Auto-generated Vercel URLs
 
 ### 🛡️ Deployment Safety & Validation
+
 7. **Health check integration** in deployment pipeline:
    - Post-deployment health check hits `/api/health` endpoint
    - Validates database connectivity and essential service availability
@@ -69,6 +72,7 @@ so that **code changes are automatically tested, validated, and deployed safely 
    - Vercel deployment comments on pull requests
 
 ### 📊 Monitoring & Rollback Strategy
+
 10. **Deployment monitoring setup**:
     - Vercel Analytics enabled for performance monitoring
     - Basic error tracking configured for production issues
@@ -85,6 +89,7 @@ so that **code changes are automatically tested, validated, and deployed safely 
     - Bundle size tracking to prevent bloat
 
 ### 🔄 Integration with Existing Infrastructure
+
 13. **Supabase environment alignment**:
     - Development environment connects to local Supabase instance
     - Staging environment connects to dedicated Supabase project
@@ -103,6 +108,7 @@ so that **code changes are automatically tested, validated, and deployed safely 
 ---
 
 ## Definition of Done
+
 - [ ] GitHub Actions workflow successfully deploys to all environments
 - [ ] All quality gates pass consistently in CI pipeline
 - [ ] Health check endpoint validates deployment success
@@ -117,6 +123,7 @@ so that **code changes are automatically tested, validated, and deployed safely 
 ## Technical Implementation Details
 
 ### GitHub Actions Workflow Example
+
 ```yaml
 # .github/workflows/library-management.yml
 name: Library Management CI/CD
@@ -124,10 +131,10 @@ name: Library Management CI/CD
 on:
   push:
     branches: [main]
-    paths: ['apps/library-management/**']
+    paths: ["apps/library-management/**"]
   pull_request:
     branches: [main]
-    paths: ['apps/library-management/**']
+    paths: ["apps/library-management/**"]
 
 jobs:
   quality-gates:
@@ -139,24 +146,24 @@ jobs:
           version: 8
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
-      
+          node-version: "18"
+          cache: "pnpm"
+
       - name: Install dependencies
         run: pnpm install
-      
+
       - name: Lint
         run: cd apps/library-management && pnpm run lint
-      
+
       - name: Type check
         run: cd apps/library-management && pnpm run type-check
-      
+
       - name: Test
         run: cd apps/library-management && pnpm run test:coverage
-      
+
       - name: Build
         run: cd apps/library-management && pnpm run build
-      
+
       - name: Health check (staging)
         if: github.ref == 'refs/heads/main'
         run: |
@@ -164,6 +171,7 @@ jobs:
 ```
 
 ### Vercel Configuration
+
 ```json
 {
   "buildCommand": "cd apps/library-management && pnpm run build",
@@ -198,59 +206,65 @@ jobs:
 ```
 
 ### Health Check Implementation
+
 ```typescript
 // app/api/health/route.ts
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  const startTime = Date.now()
-  
+  const startTime = Date.now();
+
   try {
-    const supabase = createClient()
-    
+    const supabase = createClient();
+
     // Test database connectivity
     const { data, error } = await supabase
-      .from('libraries')
-      .select('id')
-      .limit(1)
-    
-    const dbLatency = Date.now() - startTime
-    
+      .from("libraries")
+      .select("id")
+      .limit(1);
+
+    const dbLatency = Date.now() - startTime;
+
     if (error) {
-      return NextResponse.json({
-        status: 'unhealthy',
-        timestamp: new Date().toISOString(),
-        services: {
-          database: {
-            status: 'unhealthy',
-            error: error.message
-          }
-        }
-      }, { status: 503 })
+      return NextResponse.json(
+        {
+          status: "unhealthy",
+          timestamp: new Date().toISOString(),
+          services: {
+            database: {
+              status: "unhealthy",
+              error: error.message,
+            },
+          },
+        },
+        { status: 503 }
+      );
     }
-    
+
     return NextResponse.json({
-      status: 'healthy',
+      status: "healthy",
       timestamp: new Date().toISOString(),
       services: {
         database: {
-          status: 'healthy',
-          latency_ms: dbLatency
+          status: "healthy",
+          latency_ms: dbLatency,
         },
         realtime: {
-          status: 'healthy',
-          active_subscriptions: 0
-        }
-      }
-    })
-    
+          status: "healthy",
+          active_subscriptions: 0,
+        },
+      },
+    });
   } catch (error) {
-    return NextResponse.json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 503 })
+    return NextResponse.json(
+      {
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 503 }
+    );
   }
 }
 ```
@@ -260,18 +274,21 @@ export async function GET() {
 ## Integration Notes
 
 ### Sequence Dependency Rationale
+
 - **After Story 1.1**: Requires Next.js project structure and basic configuration
 - **After Story 1.2**: Needs Supabase integration for health check validation
 - **Before Story 1.3**: Authentication testing requires deployment pipeline
 - **Before Story 1.4**: Library context switching needs environment validation
 
 ### Monorepo Considerations
+
 - Pipeline only triggers on changes to `apps/library-management/**` paths
 - Uses PNPM workspace features for efficient dependency management
 - Turbo build caching optimizes CI/CD performance
 - Shared configurations from monorepo root properly resolved
 
 ### Security Measures
+
 - All secrets managed through GitHub Secrets and Vercel environment variables
 - Dependency scanning prevents vulnerable package deployment
 - HTTPS enforcement with security headers configured
@@ -279,6 +296,6 @@ export async function GET() {
 
 ---
 
-*Story Created: August 26, 2024*  
-*Epic: Foundation & Passwordless Authentication*  
-*Addresses: Critical infrastructure gap identified in PO validation*
+_Story Created: August 26, 2024_  
+_Epic: Foundation & Passwordless Authentication_  
+_Addresses: Critical infrastructure gap identified in PO validation_

@@ -1,4 +1,4 @@
-# Epic 2: Ultra-Simple Library Operations  
+# Epic 2: Ultra-Simple Library Operations
 
 **Epic Goal:** Implement ultra-simple book lists, basic member management, and one-click checkout/return operations without due dates or complex tracking, enabling library staff to replace manual/spreadsheet systems with digital tools while validating core operational workflows before adding complexity.
 
@@ -9,6 +9,7 @@ I want **to view and manage a simple book list with basic information**,
 so that **I can quickly see what books we have and their availability status without complex features overwhelming the interface**.
 
 **Acceptance Criteria:**
+
 1. Simple book list displays title, author, ISBN, and available/checked-out status only
 2. Basic search functionality across title and author fields with simple text matching
 3. Clear available/checked-out status indicators using color coding (green/red)
@@ -26,6 +27,7 @@ I want **to add new books with minimal required information**,
 so that **I can quickly build our book inventory without complex cataloging workflows**.
 
 **Acceptance Criteria:**
+
 1. Simple add book form with only required fields: title, author, ISBN (optional)
 2. Optional ISBN lookup integration with crawler service for metadata enrichment
 3. Manual entry fallback for books without ISBNs - title and author minimum required
@@ -43,6 +45,7 @@ I want **to view detailed book information and edit book records**,
 so that **I can maintain accurate inventory data and make necessary corrections**.
 
 **Acceptance Criteria:**
+
 1. Book detail view displays complete metadata including description, genre, and publication details
 2. Edit functionality for all book fields except system-generated data
 3. Book location management (shelf, section) with validation against library layout
@@ -60,6 +63,7 @@ I want **to register new library members with basic contact information**,
 so that **I can track who can borrow books without complex member management workflows**.
 
 **Acceptance Criteria:**
+
 1. Simple member registration form: name, email, basic contact information only
 2. Automatic member ID generation (simple auto-increment format)
 3. Basic member search by name and email only
@@ -77,6 +81,7 @@ I want **to check out books to members and check them back in with simple one-cl
 so that **I can track book borrowing without complex due date management or fine calculations**.
 
 **Acceptance Criteria:**
+
 1. One-click checkout: select book, select member, click "Check Out" - no due dates initially
 2. One-click return: scan/select book, click "Check In" - immediate status change to available
 3. Book status instantly updates from "available" to "checked out" and vice versa
@@ -94,6 +99,7 @@ I want **to view detailed member profiles with complete borrowing history**,
 so that **I can assist patrons effectively and make informed decisions about lending policies**.
 
 **Acceptance Criteria:**
+
 1. Complete borrowing history showing current and past transactions
 2. Current checkouts display with due dates, renewal count, and overdue status
 3. Hold/reservation queue with position and estimated availability
@@ -111,6 +117,7 @@ I want **to search across all library data from a single interface**,
 so that **I can quickly find books, members, or transactions without navigating between different sections**.
 
 **Acceptance Criteria:**
+
 1. Global search bar accessible from all pages in main navigation
 2. Search results categorized by type (Books, Members, Transactions) with result counts
 3. Search across book titles, authors, ISBNs, member names, and transaction IDs

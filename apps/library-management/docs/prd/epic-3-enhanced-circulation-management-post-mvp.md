@@ -9,6 +9,7 @@ I want **to check out books to members quickly and accurately**,
 so that **patrons can borrow materials efficiently while maintaining proper inventory tracking**.
 
 **Acceptance Criteria:**
+
 1. Check-out interface supports both member ID lookup and book ISBN/barcode scanning
 2. Member verification displays current checkout status, holds, and any restrictions (overdue items, fines)
 3. Book availability validation prevents checkout of already borrowed or unavailable items
@@ -26,6 +27,7 @@ I want **to process book returns efficiently and accurately**,
 so that **returned items are immediately available for other patrons and any fines are calculated correctly**.
 
 **Acceptance Criteria:**
+
 1. Check-in interface supports book scanning/lookup with immediate status updates
 2. Automatic fine calculation for overdue returns based on library policies
 3. Book condition assessment option (damaged, lost, needs repair) with appropriate processing
@@ -43,6 +45,7 @@ I want **to process book renewals for members**,
 so that **patrons can extend their borrowing period when items are not needed by others**.
 
 **Acceptance Criteria:**
+
 1. Renewal interface displays member's current checkouts with renewal eligibility
 2. Automatic validation against renewal limits (maximum renewals per item)
 3. Hold queue checking - prevents renewal if other members are waiting
@@ -60,6 +63,7 @@ I want **to manage book holds and reservations effectively**,
 so that **members can reserve unavailable books and be notified when they become available**.
 
 **Acceptance Criteria:**
+
 1. Hold placement interface validates member status and item availability
 2. Hold queue display shows position, estimated availability date, and hold placed date
 3. Automatic hold fulfillment when items are returned or become available
@@ -77,6 +81,7 @@ I want **to track overdue items and manage the associated processes**,
 so that **books are returned promptly and library policies are enforced consistently**.
 
 **Acceptance Criteria:**
+
 1. Overdue items dashboard shows all overdue materials with days overdue and fine amounts
 2. Automated overdue notifications sent according to library escalation schedule
 3. Fine calculation engine applies rates based on item type and overdue duration
@@ -94,6 +99,7 @@ I want **a dedicated circulation workspace with real-time operational status**,
 so that **I can efficiently manage all circulation activities from a single interface**.
 
 **Acceptance Criteria:**
+
 1. Real-time statistics display (items checked out today, returns processed, overdues)
 2. Quick action buttons for common tasks (check-out, check-in, member lookup, hold processing)
 3. Recent transactions list with ability to reverse or modify recent actions

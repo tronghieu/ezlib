@@ -10,135 +10,135 @@ This document defines the complete technology stack for the **EzLib Library Mana
 
 ### Core Framework
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Next.js** | 14+ | React framework with App Router | Server-side rendering, optimal admin performance, built-in optimization, Vercel deployment |
-| **React** | 18+ | UI library | Component-based architecture, excellent ecosystem, team expertise |
-| **TypeScript** | 5.0+ | Type safety | Strict mode, error prevention, developer productivity, maintainable codebase |
+| Technology     | Version | Purpose                         | Rationale                                                                                  |
+| -------------- | ------- | ------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Next.js**    | 14+     | React framework with App Router | Server-side rendering, optimal admin performance, built-in optimization, Vercel deployment |
+| **React**      | 18+     | UI library                      | Component-based architecture, excellent ecosystem, team expertise                          |
+| **TypeScript** | 5.0+    | Type safety                     | Strict mode, error prevention, developer productivity, maintainable codebase               |
 
 ### UI & Styling
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **shadcn/ui** | Latest | Component system | Professional admin interface, accessibility by default, highly customizable |
-| **Radix UI** | Latest | Unstyled primitives | Accessibility foundation, keyboard navigation, ARIA support |
-| **Tailwind CSS** | 3.4+ | Utility-first CSS | Rapid development, consistent design system, responsive by default |
-| **Lucide Icons** | Latest | Icon system | Consistent iconography, tree-shakable, extensive library |
-| **Framer Motion** | Latest | Animation library | Smooth transitions for admin workflows, loading states |
+| Technology        | Version | Purpose             | Rationale                                                                   |
+| ----------------- | ------- | ------------------- | --------------------------------------------------------------------------- |
+| **shadcn/ui**     | Latest  | Component system    | Professional admin interface, accessibility by default, highly customizable |
+| **Radix UI**      | Latest  | Unstyled primitives | Accessibility foundation, keyboard navigation, ARIA support                 |
+| **Tailwind CSS**  | 3.4+    | Utility-first CSS   | Rapid development, consistent design system, responsive by default          |
+| **Lucide Icons**  | Latest  | Icon system         | Consistent iconography, tree-shakable, extensive library                    |
+| **Framer Motion** | Latest  | Animation library   | Smooth transitions for admin workflows, loading states                      |
 
 ### State Management
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Zustand** | Latest | Client-side state | Lightweight, simple API, perfect for UI state management |
-| **React Query** | Latest | Server state | Optimized caching for admin operations, background updates, offline support |
-| **React Hook Form** | Latest | Form state | Performance optimization, minimal re-renders, excellent DX |
+| Technology          | Version | Purpose           | Rationale                                                                   |
+| ------------------- | ------- | ----------------- | --------------------------------------------------------------------------- |
+| **Zustand**         | Latest  | Client-side state | Lightweight, simple API, perfect for UI state management                    |
+| **React Query**     | Latest  | Server state      | Optimized caching for admin operations, background updates, offline support |
+| **React Hook Form** | Latest  | Form state        | Performance optimization, minimal re-renders, excellent DX                  |
 
 ### Form & Validation
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Zod** | Latest | Schema validation | Type-safe validation, runtime type checking, form integration |
-| **React Hook Form** | Latest | Form management | Performance focused, uncontrolled components, validation integration |
+| Technology          | Version | Purpose           | Rationale                                                            |
+| ------------------- | ------- | ----------------- | -------------------------------------------------------------------- |
+| **Zod**             | Latest  | Schema validation | Type-safe validation, runtime type checking, form integration        |
+| **React Hook Form** | Latest  | Form management   | Performance focused, uncontrolled components, validation integration |
 
 ## Database & Backend
 
 ### Database
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Supabase** | Latest | PostgreSQL BaaS | Real-time subscriptions, Row Level Security, authentication, direct client connection |
-| **PostgreSQL** | 15+ | Relational database | ACID compliance, JSON support, full-text search, scalability |
+| Technology     | Version | Purpose             | Rationale                                                                             |
+| -------------- | ------- | ------------------- | ------------------------------------------------------------------------------------- |
+| **Supabase**   | Latest  | PostgreSQL BaaS     | Real-time subscriptions, Row Level Security, authentication, direct client connection |
+| **PostgreSQL** | 15+     | Relational database | ACID compliance, JSON support, full-text search, scalability                          |
 
 ### Authentication
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Supabase Auth** | Latest | Authentication service | Passwordless OTP, JWT tokens, role-based access, cross-domain support |
-| **NextAuth.js** | Latest | Session management | Cross-domain session handling, provider integration |
+| Technology        | Version | Purpose                | Rationale                                                             |
+| ----------------- | ------- | ---------------------- | --------------------------------------------------------------------- |
+| **Supabase Auth** | Latest  | Authentication service | Passwordless OTP, JWT tokens, role-based access, cross-domain support |
+| **NextAuth.js**   | Latest  | Session management     | Cross-domain session handling, provider integration                   |
 
 ### Real-time
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Supabase Realtime** | Latest | Live updates | Inventory synchronization, WebSocket connections, automatic reconnection |
+| Technology            | Version | Purpose      | Rationale                                                                |
+| --------------------- | ------- | ------------ | ------------------------------------------------------------------------ |
+| **Supabase Realtime** | Latest  | Live updates | Inventory synchronization, WebSocket connections, automatic reconnection |
 
 ## Development Tools
 
 ### Build & Bundling
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Turbo** | Latest | Monorepo build system | Fast builds, intelligent caching, optimized for monorepos |
-| **PNPM** | Latest | Package manager | Fast installs, efficient disk usage, monorepo workspace support |
-| **SWC** | Latest | JavaScript compiler | Fast compilation, built into Next.js, better than Babel |
+| Technology | Version | Purpose               | Rationale                                                       |
+| ---------- | ------- | --------------------- | --------------------------------------------------------------- |
+| **Turbo**  | Latest  | Monorepo build system | Fast builds, intelligent caching, optimized for monorepos       |
+| **PNPM**   | Latest  | Package manager       | Fast installs, efficient disk usage, monorepo workspace support |
+| **SWC**    | Latest  | JavaScript compiler   | Fast compilation, built into Next.js, better than Babel         |
 
 ### Code Quality
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **ESLint** | Latest | Code linting | Code quality, consistency, best practices enforcement |
-| **Prettier** | Latest | Code formatting | Consistent formatting, automated style enforcement |
-| **Husky** | Latest | Git hooks | Pre-commit quality checks, automated testing |
-| **lint-staged** | Latest | Staged file processing | Only lint/format changed files |
+| Technology      | Version | Purpose                | Rationale                                             |
+| --------------- | ------- | ---------------------- | ----------------------------------------------------- |
+| **ESLint**      | Latest  | Code linting           | Code quality, consistency, best practices enforcement |
+| **Prettier**    | Latest  | Code formatting        | Consistent formatting, automated style enforcement    |
+| **Husky**       | Latest  | Git hooks              | Pre-commit quality checks, automated testing          |
+| **lint-staged** | Latest  | Staged file processing | Only lint/format changed files                        |
 
 ### Testing
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Jest** | Latest | Unit testing | Comprehensive testing framework, snapshot testing, mocking |
-| **Testing Library** | Latest | Component testing | User-focused testing, accessibility testing, React integration |
-| **Playwright** | Latest | E2E testing | Cross-browser testing, critical workflow validation |
-| **MSW** | Latest | API mocking | Service mocking for tests, consistent API responses |
+| Technology          | Version | Purpose           | Rationale                                                      |
+| ------------------- | ------- | ----------------- | -------------------------------------------------------------- |
+| **Jest**            | Latest  | Unit testing      | Comprehensive testing framework, snapshot testing, mocking     |
+| **Testing Library** | Latest  | Component testing | User-focused testing, accessibility testing, React integration |
+| **Playwright**      | Latest  | E2E testing       | Cross-browser testing, critical workflow validation            |
+| **MSW**             | Latest  | API mocking       | Service mocking for tests, consistent API responses            |
 
 ## Deployment & Infrastructure
 
 ### Hosting
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Vercel** | Latest | Frontend hosting | Next.js optimization, edge caching, global CDN, seamless deployments |
-| **Supabase Cloud** | Latest | Backend hosting | Managed PostgreSQL, auto-scaling, global edge network |
+| Technology         | Version | Purpose          | Rationale                                                            |
+| ------------------ | ------- | ---------------- | -------------------------------------------------------------------- |
+| **Vercel**         | Latest  | Frontend hosting | Next.js optimization, edge caching, global CDN, seamless deployments |
+| **Supabase Cloud** | Latest  | Backend hosting  | Managed PostgreSQL, auto-scaling, global edge network                |
 
 ### Monitoring
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Vercel Analytics** | Latest | Web analytics | Built-in performance monitoring, user insights |
-| **Sentry** | Latest | Error tracking | Real-time error monitoring, performance tracking, alerting |
+| Technology           | Version | Purpose        | Rationale                                                  |
+| -------------------- | ------- | -------------- | ---------------------------------------------------------- |
+| **Vercel Analytics** | Latest  | Web analytics  | Built-in performance monitoring, user insights             |
+| **Sentry**           | Latest  | Error tracking | Real-time error monitoring, performance tracking, alerting |
 
 ## Integration Services
 
 ### Book Metadata
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **EzLib Crawler Service** | Latest | Book metadata enrichment | ISBN lookup, automated cataloging, FastAPI integration |
+| Technology                | Version | Purpose                  | Rationale                                              |
+| ------------------------- | ------- | ------------------------ | ------------------------------------------------------ |
+| **EzLib Crawler Service** | Latest  | Book metadata enrichment | ISBN lookup, automated cataloging, FastAPI integration |
 
 ### Communication
 
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **Resend** | Latest | Transactional email | Reliable delivery, developer-friendly API, authentication emails |
+| Technology | Version | Purpose             | Rationale                                                        |
+| ---------- | ------- | ------------------- | ---------------------------------------------------------------- |
+| **Resend** | Latest  | Transactional email | Reliable delivery, developer-friendly API, authentication emails |
 
 ## Development Environment
 
 ### Required Tools
 
-| Tool | Version | Purpose | Installation |
-|------|---------|---------|--------------|
-| **Node.js** | 18+ | JavaScript runtime | [nodejs.org](https://nodejs.org) |
-| **PNPM** | 8+ | Package manager | `npm install -g pnpm` |
-| **Supabase CLI** | Latest | Database management | `npm install -g supabase` |
-| **Turbo CLI** | Latest | Monorepo management | `npm install -g turbo` |
-| **Git** | Latest | Version control | System package manager |
+| Tool             | Version | Purpose             | Installation                     |
+| ---------------- | ------- | ------------------- | -------------------------------- |
+| **Node.js**      | 18+     | JavaScript runtime  | [nodejs.org](https://nodejs.org) |
+| **PNPM**         | 8+      | Package manager     | `npm install -g pnpm`            |
+| **Supabase CLI** | Latest  | Database management | `npm install -g supabase`        |
+| **Turbo CLI**    | Latest  | Monorepo management | `npm install -g turbo`           |
+| **Git**          | Latest  | Version control     | System package manager           |
 
 ### Editor Setup
 
-| Tool | Purpose | Extensions/Plugins |
-|------|---------|-------------------|
-| **VS Code** | Code editor | TypeScript, Tailwind CSS IntelliSense, Prettier, ESLint |
-| **Cursor** | AI-powered editor | Built-in AI assistance, same extensions as VS Code |
+| Tool        | Purpose           | Extensions/Plugins                                      |
+| ----------- | ----------------- | ------------------------------------------------------- |
+| **VS Code** | Code editor       | TypeScript, Tailwind CSS IntelliSense, Prettier, ESLint |
+| **Cursor**  | AI-powered editor | Built-in AI assistance, same extensions as VS Code      |
 
 ## Environment Configuration
 
@@ -190,7 +190,7 @@ NEXT_PUBLIC_DEBUG_MODE=false
 {
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
-    "@radix-ui/react-dropdown-menu": "^2.0.6", 
+    "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-toast": "^1.1.5",
@@ -253,6 +253,7 @@ NEXT_PUBLIC_DEBUG_MODE=false
 ### Why Next.js 14+ App Router?
 
 **Benefits:**
+
 - **Server-Side Rendering**: Improved SEO and initial load performance
 - **Built-in Optimization**: Image optimization, font optimization, bundle splitting
 - **File-based Routing**: Intuitive routing with layouts and nested routes
@@ -260,6 +261,7 @@ NEXT_PUBLIC_DEBUG_MODE=false
 - **Vercel Integration**: Seamless deployment and edge caching
 
 **Trade-offs:**
+
 - **Learning Curve**: New App Router patterns vs traditional routing
 - **Bundle Size**: Larger initial bundle compared to pure React
 - **Server Dependencies**: Requires Node.js server environment
@@ -267,6 +269,7 @@ NEXT_PUBLIC_DEBUG_MODE=false
 ### Why Supabase over Custom Backend?
 
 **Benefits:**
+
 - **Real-time Subscriptions**: Built-in WebSocket connections for inventory sync
 - **Row Level Security**: Database-level multi-tenancy without custom logic
 - **Authentication**: Passwordless OTP, JWT tokens, role-based access
@@ -274,6 +277,7 @@ NEXT_PUBLIC_DEBUG_MODE=false
 - **Direct Client Connection**: No API layer needed, reduced latency
 
 **Trade-offs:**
+
 - **Vendor Lock-in**: Tied to Supabase ecosystem and pricing
 - **Limited Customization**: Database functions limited to PostgreSQL
 - **Cost Scaling**: Per-user pricing may become expensive at scale
@@ -281,24 +285,28 @@ NEXT_PUBLIC_DEBUG_MODE=false
 ### Why Zustand + React Query?
 
 **Benefits:**
+
 - **Separation of Concerns**: Client state vs server state clearly separated
 - **Performance**: Minimal re-renders, selective subscriptions
 - **Developer Experience**: Simple APIs, excellent TypeScript support
 - **Caching Strategy**: Intelligent background updates and stale-while-revalidate
 
 **Trade-offs:**
+
 - **Learning Curve**: Two state management libraries vs single solution
 - **Bundle Size**: Additional dependencies vs built-in React state
 
 ### Why shadcn/ui over Material-UI?
 
 **Benefits:**
+
 - **Customization**: Complete control over component styling and behavior
 - **Bundle Size**: Tree-shakable, only include what you use
 - **Design System**: Professional admin interface out of the box
 - **Accessibility**: Built on Radix UI primitives with ARIA support
 
 **Trade-offs:**
+
 - **Component Library**: Smaller ecosystem vs mature Material-UI
 - **Custom Styling**: More setup required vs theme-based customization
 
@@ -337,11 +345,12 @@ CREATE INDEX idx_users_name_search ON users USING gin(to_tsvector('english', dis
 ```typescript
 // Debounced updates for high-frequency changes
 const debouncedInventoryUpdate = useMemo(
-  () => debounce((updates: InventoryUpdate[]) => {
-    queryClient.setQueryData(['inventory', libraryId], updates)
-  }, 100),
+  () =>
+    debounce((updates: InventoryUpdate[]) => {
+      queryClient.setQueryData(["inventory", libraryId], updates);
+    }, 100),
   [libraryId, queryClient]
-)
+);
 ```
 
 ## Security Considerations
@@ -354,7 +363,7 @@ sequenceDiagram
     participant LibraryApp as manage.ezlib.com
     participant ReaderApp as ezlib.com
     participant Supabase
-    
+
     User->>LibraryApp: Access library management
     LibraryApp->>User: Redirect to login
     User->>LibraryApp: Enter email
@@ -371,7 +380,7 @@ sequenceDiagram
 ### Data Protection
 
 - **Row Level Security**: All database operations filtered by library membership
-- **JWT Validation**: Server-side token verification for all protected routes  
+- **JWT Validation**: Server-side token verification for all protected routes
 - **HTTPS Everywhere**: All communication encrypted in transit
 - **Input Sanitization**: All user inputs validated and sanitized
 - **CORS Configuration**: Strict origin validation for cross-domain requests
@@ -384,7 +393,7 @@ sequenceDiagram
 // Feature flag system for progressive enhancement
 export const FEATURE_FLAGS = {
   DUE_DATES: process.env.NEXT_PUBLIC_ENABLE_DUE_DATES === 'true',
-  FINES: process.env.NEXT_PUBLIC_ENABLE_FINES === 'true', 
+  FINES: process.env.NEXT_PUBLIC_ENABLE_FINES === 'true',
   HOLDS: process.env.NEXT_PUBLIC_ENABLE_HOLDS === 'true',
   ADVANCED_SEARCH: process.env.NEXT_PUBLIC_ENABLE_ADVANCED_SEARCH === 'true'
 } as const

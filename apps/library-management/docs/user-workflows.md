@@ -4,9 +4,9 @@
 
 ## Change Log
 
-| Date | Version | Description | Author |
-|------|---------|-------------|---------|
-| 2025-08-24 | 1.0 | Initial user workflows documentation according to BMad Method | BMad Orchestrator |
+| Date       | Version | Description                                                   | Author            |
+| ---------- | ------- | ------------------------------------------------------------- | ----------------- |
+| 2025-08-24 | 1.0     | Initial user workflows documentation according to BMad Method | BMad Orchestrator |
 
 ## Introduction
 
@@ -15,7 +15,7 @@ This document outlines the key user workflows and use cases for library staff us
 ### Workflow Design Principles
 
 - **Efficiency**: Minimize clicks and reduce cognitive load for staff
-- **Consistency**: Standardized patterns across all administrative functions  
+- **Consistency**: Standardized patterns across all administrative functions
 - **Accessibility**: Mobile-responsive design for tablet-based operations
 - **Real-time**: Live updates for collaborative staff environments
 - **Error Prevention**: Validation and confirmation for critical operations
@@ -23,16 +23,19 @@ This document outlines the key user workflows and use cases for library staff us
 ## Primary User Roles
 
 ### Library Owner
+
 - **Responsibilities**: Full administrative access, staff management, library settings
 - **Permissions**: All permissions enabled
 - **Typical Tasks**: Setting up library, managing staff, configuring policies
 
-### Library Manager  
+### Library Manager
+
 - **Responsibilities**: Operational management, member oversight, inventory control
 - **Permissions**: Manage books, manage members, view analytics
 - **Typical Tasks**: Processing transactions, managing collections, member support
 
 ### Librarian
+
 - **Responsibilities**: Day-to-day operations, book handling, member assistance
 - **Permissions**: Manage books, basic member operations
 - **Typical Tasks**: Check-in/check-out, shelf management, helping patrons
@@ -44,6 +47,7 @@ This document outlines the key user workflows and use cases for library staff us
 **Goal**: Provide library staff with an at-a-glance view of current operations and pending tasks.
 
 #### Workflow Steps:
+
 1. **Login & Library Selection**
    - Staff member signs in with their EzLib account
    - If managing multiple libraries, select the active library
@@ -61,6 +65,7 @@ This document outlines the key user workflows and use cases for library staff us
    - Handle any system alerts or notifications
 
 #### Interface Elements:
+
 ```
 Dashboard Layout:
 ┌─────────────────────────────────────────────────┐
@@ -68,7 +73,7 @@ Dashboard Layout:
 │ • 3 Pending Requests | 2 Overdue | 5 Due Today │
 │                                                 │
 │ 🔔 Priority Tasks                               │
-│ • [URGENT] 2 requests > 24hrs                  │  
+│ • [URGENT] 2 requests > 24hrs                  │
 │ • [ACTION] Contact 2 overdue members           │
 │ • [INFO] 3 new member applications             │
 │                                                 │
@@ -132,10 +137,11 @@ Dashboard Layout:
    - Adds to inventory with specified details
 
 #### Interface Flow:
+
 ```
 Add Book Workflow:
 ISBN Entry → Validation → Metadata Preview → Physical Details → Collections → Confirm
-     │              │                                    
+     │              │
      └── Manual Entry → Basic Info → Physical Details → Collections → Confirm
 ```
 
@@ -347,21 +353,25 @@ ISBN Entry → Validation → Metadata Preview → Physical Details → Collecti
 ## Workflow Optimization Features
 
 ### Real-Time Updates
+
 - Dashboard refreshes automatically with new requests
 - Live inventory updates across all staff terminals
 - Instant notifications for urgent situations
 
 ### Mobile Responsiveness
+
 - All workflows optimized for tablet use
 - Quick actions accessible on mobile devices
 - Barcode scanning support on mobile cameras
 
 ### Keyboard Shortcuts
+
 - Common actions accessible via hotkeys
 - Quick book lookup and member search
 - Rapid transaction processing shortcuts
 
 ### Batch Operations
+
 - Bulk book processing for new acquisitions
 - Mass member communication tools
 - Batch collection updates and reorganization

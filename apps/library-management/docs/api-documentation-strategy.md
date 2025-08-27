@@ -11,7 +11,7 @@ This document outlines the comprehensive API documentation strategy for the EzLi
 Based on architectural analysis, the Library Management App requires documentation for **four critical API integration points**:
 
 1. **Supabase Database Schema & Types** - Generated TypeScript interfaces for type-safe database operations
-2. **Crawler Service Integration** - External ISBN lookup API for book metadata enrichment  
+2. **Crawler Service Integration** - External ISBN lookup API for book metadata enrichment
 3. **Next.js API Routes** - Internal service endpoints for health checks and system monitoring
 4. **Real-time Subscriptions** - WebSocket event contracts for cross-app synchronization
 
@@ -20,12 +20,14 @@ Based on architectural analysis, the Library Management App requires documentati
 ## 🏗️ Strategic Framework
 
 ### Multi-Layered Documentation Approach
+
 - **Layer 1**: Auto-generated schemas (Supabase types, database relationships)
 - **Layer 2**: Service contracts (Crawler API, Real-time events, health endpoints)
 - **Layer 3**: Integration guides (Developer handbooks, error handling patterns)
 - **Layer 4**: Live examples (Code samples, integration testing patterns)
 
 ### Documentation-as-Code Philosophy
+
 - Version controlled alongside source code in `docs/api/` directory
 - Automated generation from TypeScript interfaces and database schema
 - CI/CD integration for consistency validation and automatic updates
@@ -38,46 +40,50 @@ Based on architectural analysis, the Library Management App requires documentati
 ### 1. Supabase Schema Documentation ⭐ **HIGHEST PRIORITY**
 
 **Auto-Generated TypeScript Types:**
+
 ```typescript
 // lib/supabase/types.ts (Auto-generated via supabase gen types)
 export interface Database {
   public: {
     Tables: {
       libraries: {
-        Row: LibraryRow
-        Insert: LibraryInsert
-        Update: LibraryUpdate
-      }
+        Row: LibraryRow;
+        Insert: LibraryInsert;
+        Update: LibraryUpdate;
+      };
       book_copies: {
-        Row: BookCopyRow
-        Insert: BookCopyInsert  
-        Update: BookCopyUpdate
-      }
+        Row: BookCopyRow;
+        Insert: BookCopyInsert;
+        Update: BookCopyUpdate;
+      };
       library_members: {
-        Row: LibraryMemberRow
-        Insert: LibraryMemberInsert
-        Update: LibraryMemberUpdate
-      }
+        Row: LibraryMemberRow;
+        Insert: LibraryMemberInsert;
+        Update: LibraryMemberUpdate;
+      };
       borrowing_transactions: {
-        Row: BorrowingTransactionRow
-        Insert: BorrowingTransactionInsert
-        Update: BorrowingTransactionUpdate
-      }
-    }
-  }
+        Row: BorrowingTransactionRow;
+        Insert: BorrowingTransactionInsert;
+        Update: BorrowingTransactionUpdate;
+      };
+    };
+  };
 }
 ```
 
 **Human-Readable Schema Documentation:**
+
 ```markdown
 # docs/api/database-schema.md
 
 ## Core Tables Overview
 
 ### Libraries
+
 Primary tenant entities for multi-library support.
 
 **Key Fields:**
+
 - `id` (UUID): Primary key, tenant identifier
 - `name` (TEXT): Library display name (e.g., "Brooklyn Public Library")
 - `code` (TEXT): Unique identifier (e.g., "BPL-MAIN")
@@ -86,19 +92,23 @@ Primary tenant entities for multi-library support.
   - `fine_rates`: Overdue fine calculations
   - `policies`: Library-specific operational rules
 
-**Row Level Security:** 
+**Row Level Security:**
+
 - Admin access enforced via `library_staff.library_id = libraries.id`
 - Complete tenant isolation - no cross-library data access
 - Real-time subscriptions automatically filtered by library context
 
 ### Book Copies
+
 Physical inventory items with real-time availability tracking.
 
 **Relationships:**
+
 - `library_id` → `libraries.id` (enforces tenant scope)
 - `book_edition_id` → `book_editions.id` (links to metadata)
 
 **Real-time Events:**
+
 - `availability` JSONB field changes trigger reader app sync
 - Transaction updates automatically affect circulation status
 - Optimistic updates supported for instant UI feedback
@@ -109,6 +119,7 @@ available → checked_out → overdue → available (post-MVP)
 ```
 
 **Database Relationship Diagram:**
+
 ```mermaid
 erDiagram
     libraries ||--o{ library_staff : "admin access"
@@ -120,6 +131,7 @@ erDiagram
 ```
 
 **Implementation Commands:**
+
 ```bash
 # Generate TypeScript types
 supabase gen types typescript --local > lib/supabase/types.ts
@@ -134,55 +146,66 @@ npm run docs:validate
 ### 2. Crawler Service Integration Documentation
 
 **Service Contract Definition:**
+
 ```typescript
 // lib/integrations/crawler-api.types.ts
 export interface CrawlerEnrichmentRequest {
-  isbn_13: string                    // Valid 13-digit ISBN
-  library_id: string                 // Target library UUID for RLS
-  enrichment_priority?: 'high' | 'normal' | 'low'  // Optional queue priority
+  isbn_13: string; // Valid 13-digit ISBN
+  library_id: string; // Target library UUID for RLS
+  enrichment_priority?: "high" | "normal" | "low"; // Optional queue priority
 }
 
 export interface CrawlerEnrichmentResponse {
-  success: boolean
+  success: boolean;
   book_metadata?: {
-    title: string
-    authors: string[]                 // Primary and secondary authors
-    description?: string              // Editorial description
-    cover_image_url?: string          // High-resolution cover image
-    publication_date?: string         // ISO date format
-    genre_tags: string[]             // Categorization tags
-    publisher?: string               // Publishing house
-    page_count?: number              // Physical page count
-  }
+    title: string;
+    authors: string[]; // Primary and secondary authors
+    description?: string; // Editorial description
+    cover_image_url?: string; // High-resolution cover image
+    publication_date?: string; // ISO date format
+    genre_tags: string[]; // Categorization tags
+    publisher?: string; // Publishing house
+    page_count?: number; // Physical page count
+  };
   error_details?: {
-    code: 'ISBN_NOT_FOUND' | 'RATE_LIMITED' | 'SERVICE_UNAVAILABLE' | 'INVALID_ISBN'
-    message: string                  // Human-readable error description
-    retry_after?: number             // Seconds to wait before retry (for rate limiting)
-  }
+    code:
+      | "ISBN_NOT_FOUND"
+      | "RATE_LIMITED"
+      | "SERVICE_UNAVAILABLE"
+      | "INVALID_ISBN";
+    message: string; // Human-readable error description
+    retry_after?: number; // Seconds to wait before retry (for rate limiting)
+  };
 }
 ```
 
 **Integration Documentation:**
-```markdown
+
+````markdown
 # docs/api/crawler-integration.md
 
 ## Book Metadata Enrichment Service
 
 ### Service Endpoint
+
 **Base URL**: `http://localhost:8000` (development) | `https://crawler.ezlib.com` (production)  
 **Endpoint**: `POST /api/v1/enrich`
 
 ### Authentication
+
 Service uses shared authentication secret in request headers:
+
 ```http
 Authorization: Bearer ${CRAWLER_SERVICE_AUTH_SECRET}
 Content-Type: application/json
 X-Library-Context: ${library_id}
 ```
+````
 
 ### Request/Response Examples
 
 **Successful Enrichment:**
+
 ```json
 // Request
 {
@@ -208,6 +231,7 @@ X-Library-Context: ${library_id}
 ```
 
 **Error Scenarios:**
+
 ```json
 // ISBN Not Found (404 Not Found)
 {
@@ -218,7 +242,7 @@ X-Library-Context: ${library_id}
   }
 }
 
-// Rate Limited (429 Too Many Requests)  
+// Rate Limited (429 Too Many Requests)
 {
   "success": false,
   "error_details": {
@@ -232,48 +256,53 @@ X-Library-Context: ${library_id}
 ### Integration Patterns
 
 **Graceful Degradation:**
+
 ```typescript
 // components/inventory/isbn-lookup.tsx
 export async function enrichBookMetadata(isbn: string, libraryId: string) {
   try {
-    const response = await fetch(`${process.env.CRAWLER_API_URL}/api/v1/enrich`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.CRAWLER_SERVICE_AUTH_SECRET}`
-      },
-      body: JSON.stringify({ isbn_13: isbn, library_id: libraryId })
-    })
+    const response = await fetch(
+      `${process.env.CRAWLER_API_URL}/api/v1/enrich`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.CRAWLER_SERVICE_AUTH_SECRET}`,
+        },
+        body: JSON.stringify({ isbn_13: isbn, library_id: libraryId }),
+      }
+    );
 
     if (!response.ok) {
       // Handle specific error codes
       if (response.status === 404) {
-        return { success: false, fallback: 'manual_entry' }
+        return { success: false, fallback: "manual_entry" };
       }
       if (response.status === 429) {
-        const data = await response.json()
-        return { success: false, retry_after: data.error_details?.retry_after }
+        const data = await response.json();
+        return { success: false, retry_after: data.error_details?.retry_after };
       }
-      throw new Error(`Enrichment failed: ${response.status}`)
+      throw new Error(`Enrichment failed: ${response.status}`);
     }
 
-    const data = await response.json()
-    return { success: true, metadata: data.book_metadata }
-
+    const data = await response.json();
+    return { success: true, metadata: data.book_metadata };
   } catch (error) {
     // Network errors, service unavailable, etc.
-    console.error('Book enrichment failed:', error)
-    return { success: false, fallback: 'manual_entry' }
+    console.error("Book enrichment failed:", error);
+    return { success: false, fallback: "manual_entry" };
   }
 }
 ```
 
 **Error Handling Strategy:**
+
 - **ISBN Not Found**: Show manual entry form with ISBN pre-filled
 - **Rate Limited**: Display countdown timer, cache request for retry
 - **Service Unavailable**: Allow manual entry, queue enrichment for later
 - **Invalid ISBN**: Show ISBN validation error, request correction
-```
+
+````
 
 ### 3. Real-Time Event Documentation
 
@@ -292,7 +321,7 @@ export type InventoryUpdateEvent = {
   timestamp: string                  // Event occurrence time
 }
 
-// Reader App → Library Management App notifications  
+// Reader App → Library Management App notifications
 export type HoldRequestEvent = {
   type: 'hold_requested'             // Future enhancement
   book_id: string
@@ -310,57 +339,65 @@ export type CrossAppSyncEvent = {
   changes: Record<string, any>       // Changed fields and new values
   timestamp: string
 }
-```
+````
 
 **Real-Time Integration Guide:**
-```markdown
+
+````markdown
 # docs/api/realtime-events.md
 
 ## Supabase Real-Time Integration
 
 ### Subscription Architecture
+
 The Library Management App uses Supabase's real-time capabilities for instant cross-app synchronization.
 
 **Channel Subscription Pattern:**
+
 ```typescript
 // lib/services/realtime-service.ts
 export class RealtimeService {
-  private supabase = createClient()
+  private supabase = createClient();
 
-  subscribeToInventoryChanges(libraryId: string, onUpdate: InventoryUpdateCallback) {
+  subscribeToInventoryChanges(
+    libraryId: string,
+    onUpdate: InventoryUpdateCallback
+  ) {
     const channel = this.supabase
       .channel(`library-${libraryId}-inventory`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',                        // Listen to INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'book_copies',
-          filter: `library_id=eq.${libraryId}`  // Automatic tenant filtering
+          event: "*", // Listen to INSERT, UPDATE, DELETE
+          schema: "public",
+          table: "book_copies",
+          filter: `library_id=eq.${libraryId}`, // Automatic tenant filtering
         },
         (payload) => {
           // Transform database event to application event
           const event: InventoryUpdateEvent = {
-            type: 'availability_changed',
+            type: "availability_changed",
             book_id: payload.new.book_edition_id,
             library_id: payload.new.library_id,
             status: payload.new.availability.status,
             borrower_id: payload.new.availability.current_borrower_id,
-            timestamp: new Date().toISOString()
-          }
-          onUpdate(event)
+            timestamp: new Date().toISOString(),
+          };
+          onUpdate(event);
         }
       )
-      .subscribe()
+      .subscribe();
 
-    return () => this.supabase.removeChannel(channel)
+    return () => this.supabase.removeChannel(channel);
   }
 }
 ```
+````
 
 ### Cross-App Data Flow
 
 **Library Management → Reader App:**
+
 1. Library staff processes book checkout in admin interface
 2. `book_copies.availability` updated in shared database
 3. PostgreSQL trigger fires real-time event
@@ -368,59 +405,62 @@ export class RealtimeService {
 5. Book availability instantly updates on public interface (ezlib.com)
 
 **Event Filtering & Security:**
+
 - All real-time events filtered by `library_id` for tenant isolation
 - Row Level Security policies apply to real-time subscriptions
 - WebSocket authentication uses same Supabase JWT tokens
 - Rate limiting prevents subscription abuse
 
 **Error Handling:**
+
 ```typescript
 // Real-time connection management with reconnection logic
 export function useRealtimeConnection(libraryId: string) {
   const [connectionStatus, setConnectionStatus] = useState<
-    'connecting' | 'connected' | 'disconnected' | 'error'
-  >('connecting')
+    "connecting" | "connected" | "disconnected" | "error"
+  >("connecting");
 
   useEffect(() => {
-    const realtimeService = new RealtimeService()
-    let reconnectAttempts = 0
-    const maxReconnectAttempts = 3
+    const realtimeService = new RealtimeService();
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
 
     const subscribe = () => {
       const unsubscribe = realtimeService.subscribeToInventoryChanges(
         libraryId,
         (event) => {
-          setConnectionStatus('connected')
-          reconnectAttempts = 0
-          handleInventoryUpdate(event)
+          setConnectionStatus("connected");
+          reconnectAttempts = 0;
+          handleInventoryUpdate(event);
         }
-      )
+      );
 
-      return unsubscribe
-    }
+      return unsubscribe;
+    };
 
-    let unsubscribe = subscribe()
+    let unsubscribe = subscribe();
 
     // Reconnection logic for network issues
     const handleReconnect = () => {
       if (reconnectAttempts < maxReconnectAttempts) {
-        setConnectionStatus('connecting')
-        reconnectAttempts++
+        setConnectionStatus("connecting");
+        reconnectAttempts++;
         setTimeout(() => {
-          unsubscribe = subscribe()
-        }, 1000 * reconnectAttempts) // Exponential backoff
+          unsubscribe = subscribe();
+        }, 1000 * reconnectAttempts); // Exponential backoff
       } else {
-        setConnectionStatus('error')
+        setConnectionStatus("error");
       }
-    }
+    };
 
-    return unsubscribe
-  }, [libraryId])
+    return unsubscribe;
+  }, [libraryId]);
 
-  return { connectionStatus }
+  return { connectionStatus };
 }
 ```
-```
+
+````
 
 ### 4. Next.js API Routes Documentation
 
@@ -461,11 +501,12 @@ interface HealthCheckResponse {
     }
   }
 }
-```
+````
 
 ### Response Examples
 
 **Healthy System:**
+
 ```json
 {
   "status": "healthy",
@@ -490,6 +531,7 @@ interface HealthCheckResponse {
 ```
 
 **Degraded System:**
+
 ```json
 {
   "status": "degraded",
@@ -513,54 +555,62 @@ interface HealthCheckResponse {
 ```
 
 ### Use Cases
+
 - **CI/CD Pipeline**: Deployment validation and rollback triggers
-- **Load Balancer**: Health check endpoint for traffic routing  
+- **Load Balancer**: Health check endpoint for traffic routing
 - **Monitoring Systems**: Integration with Datadog, New Relic, etc.
 - **Operations Dashboard**: Real-time system status visibility
 - **Incident Response**: Quick triage and status verification
 
 ### Implementation Example
+
 ```typescript
 // app/api/health/route.ts
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  const startTime = Date.now()
-  let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy'
-  
+  const startTime = Date.now();
+  let overallStatus: "healthy" | "degraded" | "unhealthy" = "healthy";
+
   try {
-    const supabase = createClient()
-    
+    const supabase = createClient();
+
     // Database health check
-    const dbStart = Date.now()
+    const dbStart = Date.now();
     const { data: dbTest, error: dbError } = await supabase
-      .from('libraries')
-      .select('id')
-      .limit(1)
-    
-    const dbLatency = Date.now() - dbStart
-    
+      .from("libraries")
+      .select("id")
+      .limit(1);
+
+    const dbLatency = Date.now() - dbStart;
+
     // Determine database status
-    const dbStatus = dbError ? 'unhealthy' : 
-                     dbLatency > 1000 ? 'degraded' : 'healthy'
-    
-    if (dbStatus !== 'healthy') {
-      overallStatus = dbStatus === 'unhealthy' ? 'unhealthy' : 'degraded'
+    const dbStatus = dbError
+      ? "unhealthy"
+      : dbLatency > 1000
+        ? "degraded"
+        : "healthy";
+
+    if (dbStatus !== "healthy") {
+      overallStatus = dbStatus === "unhealthy" ? "unhealthy" : "degraded";
     }
 
     // Crawler service check (optional)
-    let crawlerStatus = 'healthy'
+    let crawlerStatus = "healthy";
     try {
-      const crawlerResponse = await fetch(`${process.env.CRAWLER_API_URL}/health`, {
-        timeout: 2000
-      })
-      crawlerStatus = crawlerResponse.ok ? 'healthy' : 'degraded'
+      const crawlerResponse = await fetch(
+        `${process.env.CRAWLER_API_URL}/health`,
+        {
+          timeout: 2000,
+        }
+      );
+      crawlerStatus = crawlerResponse.ok ? "healthy" : "degraded";
     } catch {
-      crawlerStatus = 'unavailable'
-      overallStatus = 'degraded'
+      crawlerStatus = "unavailable";
+      overallStatus = "degraded";
     }
-    
+
     const response = {
       status: overallStatus,
       timestamp: new Date().toISOString(),
@@ -569,30 +619,32 @@ export async function GET() {
         database: {
           status: dbStatus,
           latency_ms: dbLatency,
-          ...(dbError && { error: dbError.message })
+          ...(dbError && { error: dbError.message }),
         },
         realtime: {
-          status: 'healthy',  // Assume healthy if DB is healthy
-          active_subscriptions: 0  // Would track actual connections
+          status: "healthy", // Assume healthy if DB is healthy
+          active_subscriptions: 0, // Would track actual connections
         },
         ...(process.env.CRAWLER_API_URL && {
           crawler_service: {
-            status: crawlerStatus
-          }
-        })
-      }
-    }
-    
+            status: crawlerStatus,
+          },
+        }),
+      },
+    };
+
     return NextResponse.json(response, {
-      status: overallStatus === 'unhealthy' ? 503 : 200
-    })
-    
+      status: overallStatus === "unhealthy" ? 503 : 200,
+    });
   } catch (error) {
-    return NextResponse.json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown system error'
-    }, { status: 503 })
+    return NextResponse.json(
+      {
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : "Unknown system error",
+      },
+      { status: 503 }
+    );
   }
 }
 ```
@@ -602,6 +654,7 @@ export async function GET() {
 ## 📁 Documentation Structure Integration
 
 ### File Organization
+
 ```
 apps/library-management/docs/
 ├── api/                           # API Documentation Hub
@@ -619,6 +672,7 @@ apps/library-management/docs/
 ```
 
 ### Build Process Integration
+
 ```json
 // package.json - Enhanced scripts for documentation
 {
@@ -635,13 +689,14 @@ apps/library-management/docs/
 ```
 
 ### CI/CD Integration Points
+
 ```yaml
 # .github/workflows/library-management.yml (addition to Story 1.6)
 - name: Generate API Documentation
   run: |
     cd apps/library-management
     pnpm run docs:generate
-  
+
 - name: Validate API Documentation
   run: |
     cd apps/library-management
@@ -659,26 +714,30 @@ apps/library-management/docs/
 ## 📋 Implementation Timeline & Priorities
 
 ### Phase 1: Foundation (Epic 1 - Week 1) ✅ **CRITICAL PATH**
+
 - **Story 1.2 Enhancement**: Add auto-generated Supabase TypeScript types
 - **Story 1.6 Integration**: Include documentation generation in CI/CD pipeline
 - Basic health check endpoint documentation
 - Database schema documentation structure
 
-### Phase 2: External Integration (Epic 1 - Week 2) ⭐ **HIGH PRIORITY**  
+### Phase 2: External Integration (Epic 1 - Week 2) ⭐ **HIGH PRIORITY**
+
 - **Story 2.2 Enhancement**: Add crawler service API contract documentation
 - Real-time event type definitions and integration patterns
 - Error handling and graceful degradation documentation
 - Integration testing patterns with external services
 
 ### Phase 3: Developer Experience (Epic 2 - Week 3) 📚 **QUALITY ENHANCEMENT**
+
 - Interactive API examples and code samples
 - Integration patterns guide with common scenarios
 - Troubleshooting guides for common issues
 - Performance optimization recommendations
 
 ### Phase 4: Maintenance (Ongoing) 🔄 **CONTINUOUS**
+
 - Automated documentation updates on schema changes
-- API documentation versioning for breaking changes  
+- API documentation versioning for breaking changes
 - Integration testing with documentation examples
 - Community contribution guidelines for API extensions
 
@@ -687,18 +746,21 @@ apps/library-management/docs/
 ## 🎯 Success Metrics & Validation
 
 ### Documentation Quality Indicators
+
 - **Coverage**: 100% of integration points documented
 - **Accuracy**: All code examples validate in CI/CD pipeline
 - **Freshness**: Documentation auto-updates within 24 hours of changes
 - **Usability**: New developers can integrate successfully using only documentation
 
 ### Integration Success Metrics
+
 - **Crawler Service**: <5% integration failure rate with documented patterns
 - **Real-time Events**: 100% event type coverage with TypeScript validation
 - **Health Checks**: 99.9% monitoring reliability with documented endpoints
 - **Database Operations**: Type-safe queries with auto-generated schema
 
 ### Developer Experience KPIs
+
 - **Time to First Integration**: <30 minutes using provided examples
 - **Documentation Findability**: All APIs discoverable from central README
 - **Error Resolution Speed**: Common issues resolved <10 minutes with guides
@@ -713,12 +775,14 @@ This comprehensive API Documentation Strategy directly addresses the second crit
 **Problem Resolved**: "No clear API documentation approach for external integrations"
 
 **Solution Delivered**:
+
 - **Complete Coverage**: All four API integration points comprehensively documented
 - **Developer-Centric Approach**: TypeScript-first with executable examples
 - **Automation-Ready**: CI/CD integration ensures documentation accuracy
 - **Production-Grade**: Error handling, monitoring, and troubleshooting coverage
 
 **Integration with Story Enhancements**:
+
 - Story 1.2: Database schema documentation and type generation
 - Story 1.6: Documentation pipeline integration with CI/CD
 - Story 2.2: Crawler service integration contracts and error handling
@@ -727,6 +791,6 @@ The Library Management App now has complete technical foundation documentation e
 
 ---
 
-*Strategy Document Created: August 26, 2024*  
-*Integration Target: Epic 1 Stories (Foundation)*  
-*Addresses: PO validation critical issue #2 - API documentation strategy*
+_Strategy Document Created: August 26, 2024_  
+_Integration Target: Epic 1 Stories (Foundation)_  
+_Addresses: PO validation critical issue #2 - API documentation strategy_

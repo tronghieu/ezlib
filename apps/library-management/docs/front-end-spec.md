@@ -33,10 +33,11 @@ The specification focuses on the **ultra-simple MVP** administrative web applica
 5. **Ship Fast, Learn Fast** - Rapid deployment over feature completeness; design for iteration based on actual usage patterns
 
 #### Change Log
-| Date | Version | Description | Author |
-|------|---------|-------------|--------|
-| 2024-08-24 | 1.0 | Initial UI/UX specification creation | Sally (UX Expert) |
-| 2024-08-26 | 1.1 | Updated to ultra-simple MVP approach | Sally (UX Expert) |
+
+| Date       | Version | Description                          | Author            |
+| ---------- | ------- | ------------------------------------ | ----------------- |
+| 2024-08-24 | 1.0     | Initial UI/UX specification creation | Sally (UX Expert) |
+| 2024-08-26 | 1.1     | Updated to ultra-simple MVP approach | Sally (UX Expert) |
 
 ## Information Architecture (IA)
 
@@ -48,19 +49,19 @@ graph TD
     B --> C[🔄 Circulation Hub]
     B --> D[📚 Management]
     B --> E[⚙️ Admin]
-    
+
     C --> C1[📤 Quick Checkout]
     C --> C2[📥 Quick Return]
     C --> C3[📋 Current Transactions]
     C --> C4[➕ Register New Member]
-    
+
     D --> D1[📖 Book Inventory]
     D --> D2[➕ Add New Book]
     D --> D3[👥 Member Directory]
-    
+
     E --> E1[🏢 Library Settings]
     E --> E2[👨‍💼 Staff Management]
-    
+
     style C fill:#e1f5fe
     style C1 fill:#f3e5f5
     style C2 fill:#f3e5f5
@@ -69,8 +70,9 @@ graph TD
 ```
 
 ### ❌ POST-MVP Features (Deliberately Excluded)
+
 - Due dates & overdue processing
-- Fines & fee management  
+- Fines & fee management
 - Holds & reservation system
 - Renewals management
 - Reports & analytics
@@ -82,6 +84,7 @@ graph TD
 ### Navigation Structure
 
 **Primary Navigation:** Simple 4-section navigation optimized for workflow-based operations:
+
 - **Dashboard** - Operational overview and quick stats
 - **Circulation Hub** - Unified checkout/return workspace (primary interface)
 - **Management** - Book inventory and member directory (batch operations)
@@ -118,12 +121,13 @@ graph TD
     I --> J[Update Inventory Status]
     J --> K[Real-time Sync]
     K --> L[Transaction Complete - Ready for Next]
-    
+
     style I fill:#4caf50,color:#fff
     style L fill:#e8f5e8
 ```
 
 #### MVP Edge Cases & Error Handling:
+
 - Member not found - provide quick "Register New Member" option without leaving checkout flow
 - Book not available - simple "Not Available" message with "Try Another Book" action
 - Network connectivity issues - queue transaction for sync when connection restored
@@ -169,6 +173,7 @@ graph TD
 ```
 
 #### Edge Cases & Error Handling:
+
 - Search query too short - show helpful message with minimum character requirement
 - Network delay - show loading indicator and allow query cancellation
 - Large result sets - implement pagination with clear navigation
@@ -189,6 +194,7 @@ graph TD
 **Purpose:** Simple operational overview and direct access to Circulation Hub
 
 **Key Elements:**
+
 - **Header Bar**: Library name, user profile, simple navigation
 - **Quick Stats Cards**: Today's checkouts, returns, total active members (basic counts only)
 - **Primary Action**: Large "Go to Circulation Hub" button (primary workflow)
@@ -196,6 +202,7 @@ graph TD
 - **Recent Activity**: Simple list of last 5 transactions
 
 **MVP Simplifications:**
+
 - ❌ No overdue items (no due dates yet)
 - ❌ No holds awaiting pickup (no holds system yet)
 - ❌ No customizable widgets (fixed layout)
@@ -210,6 +217,7 @@ graph TD
 **Purpose:** Unified interface for all patron transactions - checkout and return in single screen
 
 **Key Elements:**
+
 - **Split Interface**: "Checkout" and "Return" sections side-by-side or tabbed
 - **Member Search**: Prominent search box with instant results (embedded, not separate page)
 - **Book Search**: Prominent search box with availability status (embedded, not separate page)
@@ -218,6 +226,7 @@ graph TD
 - **Status Indicators**: Simple "Available"/"Checked Out" status only
 
 **MVP Simplifications:**
+
 - ❌ No transaction cart (one book at a time initially)
 - ❌ No hold processing (no holds system)
 - ❌ No renewals (no due dates)
@@ -233,12 +242,14 @@ graph TD
 **Purpose:** Basic book inventory with simple add/edit capabilities
 
 **Key Elements:**
+
 - **Simple Book List**: Title, author, status (Available/Checked Out) only
 - **Basic Search**: Search by title or author (no advanced filters)
 - **Add Book Form**: Simple form with Title, Author, ISBN (optional auto-populate)
 - **Status Toggle**: Click to mark book as "Available" or "Not Available"
 
 **MVP Simplifications:**
+
 - ❌ No advanced filters (genre, acquisition date, condition)
 - ❌ No grid view (simple list only)
 - ❌ No bulk operations (one book at a time)
@@ -292,51 +303,56 @@ graph TD
 
 ### Color Palette (shadcn/ui Theme)
 
-| Color Type | CSS Variable | Tailwind Class | Usage |
-|------------|--------------|----------------|-------|
-| Primary | hsl(var(--primary)) | bg-primary, text-primary | Primary actions, CTA buttons |
-| Primary Foreground | hsl(var(--primary-foreground)) | text-primary-foreground | Text on primary backgrounds |
-| Secondary | hsl(var(--secondary)) | bg-secondary | Secondary buttons, subtle backgrounds |
-| Muted | hsl(var(--muted)) | bg-muted | Card backgrounds, disabled states |
-| Success | hsl(142.1 76.2% 36.3%) | text-green-600 | Available books, successful operations |
-| Destructive | hsl(var(--destructive)) | text-destructive | Errors, overdue items, delete actions |
-| Warning | hsl(38 92% 50%) | text-amber-500 | Overdue warnings, important notices |
-| Border | hsl(var(--border)) | border | Default borders |
-| Accent | hsl(var(--accent)) | bg-accent | Hover states, subtle highlights |
+| Color Type         | CSS Variable                   | Tailwind Class           | Usage                                  |
+| ------------------ | ------------------------------ | ------------------------ | -------------------------------------- |
+| Primary            | hsl(var(--primary))            | bg-primary, text-primary | Primary actions, CTA buttons           |
+| Primary Foreground | hsl(var(--primary-foreground)) | text-primary-foreground  | Text on primary backgrounds            |
+| Secondary          | hsl(var(--secondary))          | bg-secondary             | Secondary buttons, subtle backgrounds  |
+| Muted              | hsl(var(--muted))              | bg-muted                 | Card backgrounds, disabled states      |
+| Success            | hsl(142.1 76.2% 36.3%)         | text-green-600           | Available books, successful operations |
+| Destructive        | hsl(var(--destructive))        | text-destructive         | Errors, overdue items, delete actions  |
+| Warning            | hsl(38 92% 50%)                | text-amber-500           | Overdue warnings, important notices    |
+| Border             | hsl(var(--border))             | border                   | Default borders                        |
+| Accent             | hsl(var(--accent))             | bg-accent                | Hover states, subtle highlights        |
 
 ### Typography (Tailwind CSS Classes)
 
 #### Font Families
+
 - **Primary:** Default shadcn/ui font stack (Inter/system fonts)
 - **Monospace:** `font-mono` for IDs, ISBNs, technical data
 
 #### Type Scale (Tailwind Classes)
-| Element | Tailwind Class | Usage |
-|---------|----------------|-------|
-| Display | `text-4xl font-bold` | Page titles, major headings |
-| H1 | `text-3xl font-semibold` | Section headings |
-| H2 | `text-2xl font-semibold` | Subsection headings |
-| H3 | `text-xl font-medium` | Component titles |
-| H4 | `text-lg font-medium` | Card headers |
-| Body | `text-base` | Default body text |
-| Small | `text-sm` | Captions, secondary info |
-| Tiny | `text-xs` | Labels, metadata |
+
+| Element | Tailwind Class           | Usage                       |
+| ------- | ------------------------ | --------------------------- |
+| Display | `text-4xl font-bold`     | Page titles, major headings |
+| H1      | `text-3xl font-semibold` | Section headings            |
+| H2      | `text-2xl font-semibold` | Subsection headings         |
+| H3      | `text-xl font-medium`    | Component titles            |
+| H4      | `text-lg font-medium`    | Card headers                |
+| Body    | `text-base`              | Default body text           |
+| Small   | `text-sm`                | Captions, secondary info    |
+| Tiny    | `text-xs`                | Labels, metadata            |
 
 ### Iconography
 
 **Icon Library:** Lucide React (default shadcn/ui icon library)
 
-**Usage Guidelines:** 
+**Usage Guidelines:**
+
 - Small icons: `size={16}` (`w-4 h-4`)
-- Medium icons: `size={20}` (`w-5 h-5`) 
+- Medium icons: `size={20}` (`w-5 h-5`)
 - Large icons: `size={24}` (`w-6 h-6`)
 
 ### Spacing & Layout (Tailwind CSS)
 
 **Spacing Scale:** Tailwind's default scale (0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 56, 64)
+
 - `p-4` (16px), `m-6` (24px), `gap-8` (32px), etc.
 
 **Grid System:** CSS Grid with Tailwind utilities
+
 - `grid`, `grid-cols-12`, `col-span-*`, `gap-*`
 
 **Component Spacing:** Follow shadcn/ui component spacing conventions
@@ -344,37 +360,43 @@ graph TD
 ## Accessibility Requirements
 
 ### Compliance Target
+
 **Standard:** WCAG 2.1 AA compliance for all interfaces
 
 ### Key Requirements
 
 **Visual:**
+
 - Color contrast ratios: 4.5:1 minimum for normal text, 3:1 for large text
 - Focus indicators: Visible 2px outline with high contrast
 - Text sizing: Responsive text that scales to 200% without horizontal scrolling
 
 **Interaction:**
+
 - Keyboard navigation: Full functionality available via keyboard
 - Screen reader support: Semantic HTML, proper ARIA labels, live regions for updates
 - Touch targets: Minimum 44px for all interactive elements
 
 **Content:**
+
 - Alternative text: Descriptive alt text for all images and icons
 - Heading structure: Logical h1-h6 hierarchy for screen readers
 - Form labels: Explicit labels for all form inputs with error messaging
 
 ### Testing Strategy
+
 Regular accessibility audits using axe-core, manual keyboard testing, and screen reader validation with NVDA/JAWS
 
 ## Responsiveness Strategy
 
 ### Breakpoints
-| Breakpoint | Min Width | Max Width | Target Devices |
-|------------|-----------|-----------|----------------|
-| Mobile | 320px | 767px | Phones (limited functionality) |
-| Tablet | 768px | 1023px | iPads, circulation desk tablets |
-| Desktop | 1024px | 1439px | Standard library workstations |
-| Wide | 1440px | - | Large monitors, multi-display setups |
+
+| Breakpoint | Min Width | Max Width | Target Devices                       |
+| ---------- | --------- | --------- | ------------------------------------ |
+| Mobile     | 320px     | 767px     | Phones (limited functionality)       |
+| Tablet     | 768px     | 1023px    | iPads, circulation desk tablets      |
+| Desktop    | 1024px    | 1439px    | Standard library workstations        |
+| Wide       | 1440px    | -         | Large monitors, multi-display setups |
 
 ### Adaptation Patterns
 
@@ -389,6 +411,7 @@ Regular accessibility audits using axe-core, manual keyboard testing, and screen
 ## Next Steps
 
 ### Immediate Actions
+
 1. **MVP Implementation Focus**: Begin with ultra-simple 4-operation interface
 2. Set up design system in codebase with shadcn/ui + minimal custom components
 3. Build Circulation Hub as primary interface (80% of usage)
@@ -397,6 +420,7 @@ Regular accessibility audits using axe-core, manual keyboard testing, and screen
 6. Deploy MVP for real library staff testing within 2 weeks
 
 ### MVP Implementation Checklist
+
 - [x] Ultra-simple user flows documented (checkout, return, add book, add member)
 - [x] Essential component inventory (SearchBar, StatusIndicator, ActionButton)
 - [x] Accessibility requirements defined (WCAG 2.1 AA)
@@ -407,9 +431,11 @@ Regular accessibility audits using axe-core, manual keyboard testing, and screen
 - [ ] Real library staff identified for testing
 
 ## MVP Implementation Status
-This specification has been **updated to focus on ultra-simple MVP launch**. The original comprehensive features (holds, due dates, fines, reports) are documented but **deliberately excluded from Phase 1**. 
+
+This specification has been **updated to focus on ultra-simple MVP launch**. The original comprehensive features (holds, due dates, fines, reports) are documented but **deliberately excluded from Phase 1**.
 
 **Next Phase Strategy:**
+
 - **Phase 1 (MVP)**: 4 core operations only - ship in 2-3 weeks
 - **Phase 2**: Add due dates based on real library feedback
 - **Phase 3**: Add holds system if libraries actually request it

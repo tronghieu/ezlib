@@ -4,18 +4,19 @@
 
 ## Change Log
 
-| Date | Version | Description | Author |
-|------|---------|-------------|---------|
-| 2025-08-25 | 2.0 | Complete architectural overhaul: Ultra-simple MVP, passwordless authentication, cross-domain access, real-time sync | Winston (Architect) |
-| 2025-08-24 | 1.0 | Initial frontend architecture for Library Management App | BMad Orchestrator |
+| Date       | Version | Description                                                                                                         | Author              |
+| ---------- | ------- | ------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| 2025-08-25 | 2.0     | Complete architectural overhaul: Ultra-simple MVP, passwordless authentication, cross-domain access, real-time sync | Winston (Architect) |
+| 2025-08-24 | 1.0     | Initial frontend architecture for Library Management App                                                            | BMad Orchestrator   |
 
 ## Introduction
 
 This document defines the **ultra-simple first** frontend architecture for the **EzLib Library Management System** within the monorepo. This administrative web application serves small/medium libraries (1-3 staff, up to 5K books, 1K members) with a **dashboard-centric, search-first** interface that prioritizes operational efficiency over feature complexity.
 
 ### Bounded Context & MVP Philosophy
+
 - **Domain**: Ultra-simple library operations replacing manual/spreadsheet systems
-- **Users**: Library staff (owners, managers, librarians) with varying technical comfort levels  
+- **Users**: Library staff (owners, managers, librarians) with varying technical comfort levels
 - **Access**: `manage.ezlib.com` with passwordless email OTP authentication
 - **Integration**: Direct Supabase connection with real-time sync to reader app
 - **MVP Approach**: Basic book lists → simple checkout/return → enhanced features later
@@ -24,22 +25,22 @@ This document defines the **ultra-simple first** frontend architecture for the *
 
 ### Core Technology Decisions
 
-| Category | Technology | Version | Purpose | Rationale |
-|----------|------------|---------|---------|-----------| 
-| **Framework** | Next.js | 14+ | React with App Router | Server-side rendering, optimal admin performance, Vercel deployment |
-| **Language** | TypeScript | 5.0+ | Type safety | Strict mode, error prevention, developer productivity |
-| **UI Foundation** | shadcn/ui | Latest | Component system | Professional admin interface, accessibility, customization |
-| **Styling** | Tailwind CSS | 3.4+ | Utility-first CSS | Rapid development, consistent design, responsive by default |
-| **Database** | Supabase Client | Latest | PostgreSQL integration | Real-time subscriptions, Row Level Security, direct connection |
-| **State Management** | Zustand + React Query | Latest | Client + Server state | Lightweight UI state, optimized caching for admin operations |
-| **Forms** | React Hook Form + Zod | Latest | Type-safe forms | Performance optimization, schema validation |
-| **Authentication** | Supabase Auth | Latest | Passwordless OTP | Cross-domain sessions, role-based access control |
-| **Real-time** | Supabase Subscriptions | Latest | Live updates | Inventory sync with reader app, transaction updates |
+| Category             | Technology             | Version | Purpose                | Rationale                                                           |
+| -------------------- | ---------------------- | ------- | ---------------------- | ------------------------------------------------------------------- |
+| **Framework**        | Next.js                | 14+     | React with App Router  | Server-side rendering, optimal admin performance, Vercel deployment |
+| **Language**         | TypeScript             | 5.0+    | Type safety            | Strict mode, error prevention, developer productivity               |
+| **UI Foundation**    | shadcn/ui              | Latest  | Component system       | Professional admin interface, accessibility, customization          |
+| **Styling**          | Tailwind CSS           | 3.4+    | Utility-first CSS      | Rapid development, consistent design, responsive by default         |
+| **Database**         | Supabase Client        | Latest  | PostgreSQL integration | Real-time subscriptions, Row Level Security, direct connection      |
+| **State Management** | Zustand + React Query  | Latest  | Client + Server state  | Lightweight UI state, optimized caching for admin operations        |
+| **Forms**            | React Hook Form + Zod  | Latest  | Type-safe forms        | Performance optimization, schema validation                         |
+| **Authentication**   | Supabase Auth          | Latest  | Passwordless OTP       | Cross-domain sessions, role-based access control                    |
+| **Real-time**        | Supabase Subscriptions | Latest  | Live updates           | Inventory sync with reader app, transaction updates                 |
 
 ### Architecture Principles
 
 1. **Ultra-Simple First**: Start with basic functionality, add complexity incrementally
-2. **Search-First Interface**: Prominent search across all data types with autocomplete  
+2. **Search-First Interface**: Prominent search across all data types with autocomplete
 3. **Dashboard-Centric Navigation**: Operational overview with quick access to common tasks
 4. **Real-time Synchronization**: Live inventory updates between admin and reader apps
 5. **Mobile-Responsive Admin**: Tablet-optimized for circulation desk operations
@@ -52,7 +53,7 @@ apps/library-management/
 ├── docs/                               # Architecture documentation
 ├── src/
 │   ├── app/                           # Next.js 14 App Router
-│   │   ├── (auth)/                    # Authentication group  
+│   │   ├── (auth)/                    # Authentication group
 │   │   │   ├── login/                 # Cross-domain passwordless login
 │   │   │   └── layout.tsx             # Auth layout with registration messaging
 │   │   ├── (admin)/                   # Admin-protected routes
@@ -67,7 +68,7 @@ apps/library-management/
 │   │   │   │   └── [id]/page.tsx      # Member profile
 │   │   │   ├── transactions/          # Ultra-simple checkout/return
 │   │   │   │   ├── checkout/page.tsx  # One-click checkout interface
-│   │   │   │   ├── return/page.tsx    # One-click return interface  
+│   │   │   │   ├── return/page.tsx    # One-click return interface
 │   │   │   │   └── history/page.tsx   # Basic transaction log
 │   │   │   └── settings/              # Library configuration (post-MVP)
 │   │   ├── globals.css                # Global styles with admin theme
@@ -95,7 +96,7 @@ apps/library-management/
 │   │   │   ├── add-book-form.tsx      # Simple add book form
 │   │   │   ├── book-search.tsx        # Book search with real-time results
 │   │   │   └── isbn-lookup.tsx        # Optional crawler integration
-│   │   ├── members/                   # Basic member components  
+│   │   ├── members/                   # Basic member components
 │   │   │   ├── member-list.tsx        # Simple member table
 │   │   │   ├── member-form.tsx        # Registration/edit form
 │   │   │   └── member-search.tsx      # Member search functionality
@@ -159,64 +160,66 @@ apps/library-management/
 ```typescript
 // lib/auth/admin-auth.ts
 export class AdminAuthService {
-  private supabase = createClient()
+  private supabase = createClient();
 
   // Validate user exists from reader platform registration
   async validateUserFromReaderPlatform(email: string): Promise<boolean> {
     const { data } = await this.supabase
-      .from('users')
-      .select('id, email')
-      .eq('email', email)
-      .single()
-    
-    return !!data
+      .from("users")
+      .select("id, email")
+      .eq("email", email)
+      .single();
+
+    return !!data;
   }
 
   // Cross-domain login with existing account verification
   async signInWithExistingAccount(email: string): Promise<AuthResult> {
     // Verify user exists from reader platform
-    const userExists = await this.validateUserFromReaderPlatform(email)
-    
+    const userExists = await this.validateUserFromReaderPlatform(email);
+
     if (!userExists) {
       throw new AuthError(
-        'Please register first at ezlib.com before accessing library management'
-      )
+        "Please register first at ezlib.com before accessing library management"
+      );
     }
 
     // Send passwordless OTP
     const { error } = await this.supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-      }
-    })
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      },
+    });
 
-    if (error) throw new AuthError(error.message)
-    
-    return { success: true, message: 'Check your email for login code' }
+    if (error) throw new AuthError(error.message);
+
+    return { success: true, message: "Check your email for login code" };
   }
 
   // Verify admin access for specific library
   async requireAdminAccess(libraryId: string): Promise<AdminRole> {
-    const { data: { user } } = await this.supabase.auth.getUser()
-    
+    const {
+      data: { user },
+    } = await this.supabase.auth.getUser();
+
     if (!user) {
-      throw new AuthError('Authentication required')
+      throw new AuthError("Authentication required");
     }
 
     const { data: adminRole } = await this.supabase
-      .from('lib_admins')
-      .select('role, permissions')
-      .eq('user_id', user.id)
-      .eq('library_id', libraryId)
-      .eq('status', 'active')
-      .single()
+      .from("lib_admins")
+      .select("role, permissions")
+      .eq("user_id", user.id)
+      .eq("library_id", libraryId)
+      .eq("status", "active")
+      .single();
 
     if (!adminRole) {
-      throw new AuthError('Library admin access required')
+      throw new AuthError("Library admin access required");
     }
 
-    return adminRole
+    return adminRole;
   }
 }
 ```
@@ -225,47 +228,62 @@ export class AdminAuthService {
 
 ```typescript
 // lib/auth/permissions.ts
-export type AdminRole = 'owner' | 'manager' | 'librarian'
-export type AdminPermission = 
-  | 'manage_books' 
-  | 'manage_members' 
-  | 'process_transactions'
-  | 'view_reports'
-  | 'manage_settings'
+export type AdminRole = "owner" | "manager" | "librarian";
+export type AdminPermission =
+  | "manage_books"
+  | "manage_members"
+  | "process_transactions"
+  | "view_reports"
+  | "manage_settings";
 
 const ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
-  owner: ['manage_books', 'manage_members', 'process_transactions', 'view_reports', 'manage_settings'],
-  manager: ['manage_books', 'manage_members', 'process_transactions', 'view_reports'],
-  librarian: ['manage_books', 'manage_members', 'process_transactions']
-}
+  owner: [
+    "manage_books",
+    "manage_members",
+    "process_transactions",
+    "view_reports",
+    "manage_settings",
+  ],
+  manager: [
+    "manage_books",
+    "manage_members",
+    "process_transactions",
+    "view_reports",
+  ],
+  librarian: ["manage_books", "manage_members", "process_transactions"],
+};
 
-export function hasPermission(role: AdminRole, permission: AdminPermission): boolean {
-  return ROLE_PERMISSIONS[role].includes(permission)
+export function hasPermission(
+  role: AdminRole,
+  permission: AdminPermission
+): boolean {
+  return ROLE_PERMISSIONS[role].includes(permission);
 }
 
 // Hook for component-level permission checking
 export function useAdminPermissions(libraryId: string) {
-  const [permissions, setPermissions] = useState<AdminPermission[]>([])
-  
+  const [permissions, setPermissions] = useState<AdminPermission[]>([]);
+
   useEffect(() => {
     const checkPermissions = async () => {
       try {
-        const adminRole = await adminAuthService.requireAdminAccess(libraryId)
-        setPermissions(ROLE_PERMISSIONS[adminRole.role])
+        const adminRole = await adminAuthService.requireAdminAccess(libraryId);
+        setPermissions(ROLE_PERMISSIONS[adminRole.role]);
       } catch (error) {
-        setPermissions([])
+        setPermissions([]);
       }
-    }
-    
-    checkPermissions()
-  }, [libraryId])
-  
+    };
+
+    checkPermissions();
+  }, [libraryId]);
+
   return {
     permissions,
-    hasPermission: (permission: AdminPermission) => permissions.includes(permission),
-    canManageBooks: permissions.includes('manage_books'),
-    canProcessTransactions: permissions.includes('process_transactions')
-  }
+    hasPermission: (permission: AdminPermission) =>
+      permissions.includes(permission),
+    canManageBooks: permissions.includes("manage_books"),
+    canProcessTransactions: permissions.includes("process_transactions"),
+  };
 }
 ```
 
@@ -276,14 +294,14 @@ export function useAdminPermissions(libraryId: string) {
 ```typescript
 // store/library-store.ts
 interface LibraryState {
-  selectedLibrary: Library | null
-  availableLibraries: Library[]
-  isLoading: boolean
-  
+  selectedLibrary: Library | null;
+  availableLibraries: Library[];
+  isLoading: boolean;
+
   // Actions
-  setSelectedLibrary: (library: Library) => void
-  loadUserLibraries: (userId: string) => Promise<void>
-  switchLibrary: (libraryId: string) => void
+  setSelectedLibrary: (library: Library) => void;
+  loadUserLibraries: (userId: string) => Promise<void>;
+  switchLibrary: (libraryId: string) => void;
 }
 
 export const useLibraryStore = create<LibraryState>()((set, get) => ({
@@ -292,36 +310,38 @@ export const useLibraryStore = create<LibraryState>()((set, get) => ({
   isLoading: false,
 
   setSelectedLibrary: (library) => {
-    set({ selectedLibrary: library })
+    set({ selectedLibrary: library });
     // Persist to localStorage for session continuity
-    localStorage.setItem('selectedLibraryId', library.id)
+    localStorage.setItem("selectedLibraryId", library.id);
   },
 
   loadUserLibraries: async (userId) => {
-    set({ isLoading: true })
+    set({ isLoading: true });
     try {
-      const libraries = await adminService.getUserLibraries(userId)
-      set({ availableLibraries: libraries, isLoading: false })
-      
+      const libraries = await adminService.getUserLibraries(userId);
+      set({ availableLibraries: libraries, isLoading: false });
+
       // Auto-select first library if none selected
       if (!get().selectedLibrary && libraries.length > 0) {
-        get().setSelectedLibrary(libraries[0])
+        get().setSelectedLibrary(libraries[0]);
       }
     } catch (error) {
-      set({ isLoading: false })
-      throw error
+      set({ isLoading: false });
+      throw error;
     }
   },
 
   switchLibrary: (libraryId) => {
-    const library = get().availableLibraries.find(lib => lib.id === libraryId)
+    const library = get().availableLibraries.find(
+      (lib) => lib.id === libraryId
+    );
     if (library) {
-      get().setSelectedLibrary(library)
+      get().setSelectedLibrary(library);
       // Clear related queries when switching libraries
-      queryClient.removeQueries(['inventory', 'members', 'transactions'])
+      queryClient.removeQueries(["inventory", "members", "transactions"]);
     }
-  }
-}))
+  },
+}));
 ```
 
 ### Global Search Store
@@ -329,54 +349,55 @@ export const useLibraryStore = create<LibraryState>()((set, get) => ({
 ```typescript
 // store/search-store.ts
 interface SearchState {
-  query: string
-  isSearching: boolean
+  query: string;
+  isSearching: boolean;
   results: {
-    books: BookResult[]
-    members: MemberResult[]
-    transactions: TransactionResult[]
-  }
-  
+    books: BookResult[];
+    members: MemberResult[];
+    transactions: TransactionResult[];
+  };
+
   // Actions
-  setQuery: (query: string) => void
-  performGlobalSearch: (libraryId: string) => Promise<void>
-  clearSearch: () => void
+  setQuery: (query: string) => void;
+  performGlobalSearch: (libraryId: string) => Promise<void>;
+  clearSearch: () => void;
 }
 
 export const useSearchStore = create<SearchState>()((set, get) => ({
-  query: '',
+  query: "",
   isSearching: false,
   results: { books: [], members: [], transactions: [] },
 
   setQuery: (query) => set({ query }),
 
   performGlobalSearch: async (libraryId) => {
-    const { query } = get()
-    if (!query.trim()) return
+    const { query } = get();
+    if (!query.trim()) return;
 
-    set({ isSearching: true })
+    set({ isSearching: true });
     try {
       const [books, members, transactions] = await Promise.all([
         inventoryService.searchBooks(libraryId, query),
         memberService.searchMembers(libraryId, query),
-        transactionService.searchTransactions(libraryId, query)
-      ])
+        transactionService.searchTransactions(libraryId, query),
+      ]);
 
       set({
         results: { books, members, transactions },
-        isSearching: false
-      })
+        isSearching: false,
+      });
     } catch (error) {
-      set({ isSearching: false })
-      throw error
+      set({ isSearching: false });
+      throw error;
     }
   },
 
-  clearSearch: () => set({ 
-    query: '', 
-    results: { books: [], members: [], transactions: [] } 
-  })
-}))
+  clearSearch: () =>
+    set({
+      query: "",
+      results: { books: [], members: [], transactions: [] },
+    }),
+}));
 ```
 
 ## Real-Time Synchronization Architecture
@@ -386,101 +407,106 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
 ```typescript
 // lib/services/sync-service.ts
 export class InventorySyncService {
-  private supabase = createClient()
-  private subscriptions: Map<string, RealtimeChannel> = new Map()
+  private supabase = createClient();
+  private subscriptions: Map<string, RealtimeChannel> = new Map();
 
   // Subscribe to inventory changes for real-time updates
-  subscribeToInventoryUpdates(libraryId: string, onUpdate: InventoryUpdateCallback) {
+  subscribeToInventoryUpdates(
+    libraryId: string,
+    onUpdate: InventoryUpdateCallback
+  ) {
     const channel = this.supabase
       .channel(`inventory-${libraryId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'book_inventory',
-          filter: `library_id=eq.${libraryId}`
+          event: "*",
+          schema: "public",
+          table: "book_inventory",
+          filter: `library_id=eq.${libraryId}`,
         },
         (payload) => {
           // Handle inventory status changes
-          this.handleInventoryChange(payload, onUpdate)
+          this.handleInventoryChange(payload, onUpdate);
         }
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*', 
-          schema: 'public',
-          table: 'borrowing_transactions',
-          filter: `library_id=eq.${libraryId}`
+          event: "*",
+          schema: "public",
+          table: "borrowing_transactions",
+          filter: `library_id=eq.${libraryId}`,
         },
         (payload) => {
           // Handle transaction updates that affect availability
-          this.handleTransactionChange(payload, onUpdate)
+          this.handleTransactionChange(payload, onUpdate);
         }
       )
-      .subscribe()
+      .subscribe();
 
-    this.subscriptions.set(libraryId, channel)
-    return () => this.unsubscribe(libraryId)
+    this.subscriptions.set(libraryId, channel);
+    return () => this.unsubscribe(libraryId);
   }
 
   private handleInventoryChange(
     payload: RealtimePayload,
     onUpdate: InventoryUpdateCallback
   ) {
-    const { eventType, new: newRecord, old: oldRecord } = payload
-    
+    const { eventType, new: newRecord, old: oldRecord } = payload;
+
     switch (eventType) {
-      case 'UPDATE':
+      case "UPDATE":
         // Availability status changed
         if (newRecord.availability.status !== oldRecord.availability.status) {
           onUpdate({
-            type: 'availability_changed',
+            type: "availability_changed",
             bookId: newRecord.book_edition_id,
             status: newRecord.availability.status,
-            borrowerId: newRecord.availability.current_borrower_id
-          })
+            borrowerId: newRecord.availability.current_borrower_id,
+          });
         }
-        break
-        
-      case 'INSERT':
+        break;
+
+      case "INSERT":
         // New book added to inventory
         onUpdate({
-          type: 'book_added',
+          type: "book_added",
           bookId: newRecord.book_edition_id,
-          libraryId: newRecord.library_id
-        })
-        break
+          libraryId: newRecord.library_id,
+        });
+        break;
     }
   }
 
   // Sync inventory status with reader app
-  async syncWithReaderApp(libraryId: string, bookId: string, status: InventoryStatus) {
+  async syncWithReaderApp(
+    libraryId: string,
+    bookId: string,
+    status: InventoryStatus
+  ) {
     // Update book availability in shared database
     const { error } = await this.supabase
-      .from('book_inventory')
+      .from("book_inventory")
       .update({
         availability: {
           ...status,
-          last_updated: new Date().toISOString()
-        }
+          last_updated: new Date().toISOString(),
+        },
       })
-      .eq('library_id', libraryId)
-      .eq('book_edition_id', bookId)
+      .eq("library_id", libraryId)
+      .eq("book_edition_id", bookId);
 
     if (error) {
-      throw new SyncError(`Failed to sync inventory: ${error.message}`)
+      throw new SyncError(`Failed to sync inventory: ${error.message}`);
     }
 
     // Trigger real-time update to reader app
-    await this.supabase
-      .channel('reader-inventory-sync')
-      .send({
-        type: 'broadcast',
-        event: 'inventory_updated',
-        payload: { libraryId, bookId, status }
-      })
+    await this.supabase.channel("reader-inventory-sync").send({
+      type: "broadcast",
+      event: "inventory_updated",
+      payload: { libraryId, bookId, status },
+    });
   }
 }
 ```
@@ -490,47 +516,57 @@ export class InventorySyncService {
 ```typescript
 // hooks/use-real-time-inventory.ts
 export function useRealTimeInventory(libraryId: string) {
-  const queryClient = useQueryClient()
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
+  const queryClient = useQueryClient();
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connecting" | "connected" | "disconnected"
+  >("connecting");
 
   useEffect(() => {
-    if (!libraryId) return
+    if (!libraryId) return;
 
-    const syncService = new InventorySyncService()
-    
+    const syncService = new InventorySyncService();
+
     const unsubscribe = syncService.subscribeToInventoryUpdates(
       libraryId,
       (update) => {
         // Optimistically update React Query cache
         switch (update.type) {
-          case 'availability_changed':
+          case "availability_changed":
             queryClient.setQueryData(
-              ['inventory', libraryId],
+              ["inventory", libraryId],
               (oldData: BookInventory[]) => {
-                return oldData?.map(book => 
-                  book.book_edition_id === update.bookId
-                    ? { ...book, availability: { ...book.availability, status: update.status } }
-                    : book
-                ) || []
+                return (
+                  oldData?.map((book) =>
+                    book.book_edition_id === update.bookId
+                      ? {
+                          ...book,
+                          availability: {
+                            ...book.availability,
+                            status: update.status,
+                          },
+                        }
+                      : book
+                  ) || []
+                );
               }
-            )
-            break
-            
-          case 'book_added':
+            );
+            break;
+
+          case "book_added":
             // Invalidate inventory query to refetch with new book
-            queryClient.invalidateQueries(['inventory', libraryId])
-            break
+            queryClient.invalidateQueries(["inventory", libraryId]);
+            break;
         }
-        
+
         // Update connection status
-        setConnectionStatus('connected')
+        setConnectionStatus("connected");
       }
-    )
+    );
 
-    return unsubscribe
-  }, [libraryId, queryClient])
+    return unsubscribe;
+  }, [libraryId, queryClient]);
 
-  return { connectionStatus }
+  return { connectionStatus };
 }
 ```
 
@@ -555,24 +591,24 @@ export function QuickStats({ libraryId }: QuickStatsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <StatCard 
-        title="Total Books" 
+      <StatCard
+        title="Total Books"
         value={stats?.totalBooks || 0}
         icon="📚"
       />
-      <StatCard 
-        title="Available" 
+      <StatCard
+        title="Available"
         value={stats?.availableBooks || 0}
         icon="✅"
         trend={stats?.availableTrend}
       />
-      <StatCard 
-        title="Checked Out" 
+      <StatCard
+        title="Checked Out"
         value={stats?.checkedOutBooks || 0}
         icon="📖"
       />
-      <StatCard 
-        title="Active Members" 
+      <StatCard
+        title="Active Members"
         value={stats?.activeMembers || 0}
         icon="👥"
       />
@@ -600,7 +636,7 @@ export function BookList({ libraryId }: { libraryId: string }) {
     <div className="space-y-4">
       {/* Ultra-simple search */}
       <BookSearch libraryId={libraryId} />
-      
+
       {/* Basic book table */}
       <div className="rounded-md border">
         <Table>
@@ -648,7 +684,7 @@ export function BookList({ libraryId }: { libraryId: string }) {
 export function CheckoutForm({ libraryId }: { libraryId: string }) {
   const [selectedBook, setSelectedBook] = useState<BookInventory | null>(null)
   const [selectedMember, setSelectedMember] = useState<LibraryMember | null>(null)
-  
+
   const checkoutMutation = useMutation({
     mutationFn: (data: CheckoutData) => transactionService.processCheckout(data),
     onSuccess: () => {
@@ -677,7 +713,7 @@ export function CheckoutForm({ libraryId }: { libraryId: string }) {
   return (
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4">Quick Checkout</h2>
-      
+
       <div className="space-y-4">
         {/* Book Selection */}
         <div>
@@ -726,7 +762,7 @@ const createTestWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } }
   })
-  
+
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       {children}
@@ -743,8 +779,8 @@ describe('BookList', () => {
   })
 
   it('renders book list with ultra-simple columns', async () => {
-    render(<BookList libraryId="test-library" />, { 
-      wrapper: createTestWrapper() 
+    render(<BookList libraryId="test-library" />, {
+      wrapper: createTestWrapper()
     })
 
     // Verify ultra-simple table headers
@@ -752,7 +788,7 @@ describe('BookList', () => {
     expect(screen.getByText('Author')).toBeInTheDocument()
     expect(screen.getByText('ISBN')).toBeInTheDocument()
     expect(screen.getByText('Status')).toBeInTheDocument()
-    
+
     // Should NOT have complex columns in MVP
     expect(screen.queryByText('Due Date')).not.toBeInTheDocument()
     expect(screen.queryByText('Fine Amount')).not.toBeInTheDocument()
@@ -782,7 +818,7 @@ describe('BookList', () => {
 NEXT_PUBLIC_SITE_URL=https://manage.ezlib.com
 NEXT_PUBLIC_READER_APP_URL=https://ezlib.com
 
-# Supabase Configuration  
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
@@ -798,7 +834,7 @@ CRAWLER_SERVICE_AUTH_SECRET=your-crawler-auth-secret
 
 # Feature Flags (MVP Progression)
 NEXT_PUBLIC_ENABLE_DUE_DATES=false
-NEXT_PUBLIC_ENABLE_FINES=false  
+NEXT_PUBLIC_ENABLE_FINES=false
 NEXT_PUBLIC_ENABLE_HOLDS=false
 NEXT_PUBLIC_ENABLE_ADVANCED_SEARCH=false
 
@@ -834,7 +870,7 @@ supabase gen types typescript --local  # Regenerate types
 ### Critical Coding Standards
 
 1. **Ultra-Simple First**: Start with basic functionality, no complex features
-2. **Real-time by Default**: All inventory changes must sync immediately  
+2. **Real-time by Default**: All inventory changes must sync immediately
 3. **Search-First Interface**: Every list component needs prominent search
 4. **Mobile-Responsive Admin**: All interfaces must work on tablets
 5. **Cross-Domain Auth**: Always validate user exists from reader platform
@@ -850,7 +886,7 @@ supabase gen types typescript --local  # Regenerate types
 
 1. **Authentication Flow Implementation**: Build cross-domain passwordless login
 2. **Real-time Sync Setup**: Implement inventory synchronization with reader app
-3. **Ultra-Simple Dashboard**: Create operational overview with basic statistics  
+3. **Ultra-Simple Dashboard**: Create operational overview with basic statistics
 4. **Basic Book Management**: Implement title/author/status tracking only
 5. **One-Click Operations**: Build checkout/return without due date complexity
 

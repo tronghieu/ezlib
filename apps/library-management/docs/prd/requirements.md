@@ -18,7 +18,7 @@
 
 8. **FR8:** The system shall support enhanced overdue management (automated tracking, fine calculations, notifications) as post-MVP functionality
 
-9. **FR9:** The system shall support automated member communications (email notifications, overdue notices) as post-MVP functionality  
+9. **FR9:** The system shall support automated member communications (email notifications, overdue notices) as post-MVP functionality
 
 10. **FR10:** The system shall provide basic search capabilities across books (title, author) and members (name, email) with enhanced filtering as post-MVP functionality
 
@@ -36,7 +36,7 @@
 
 1. **NFR1:** The system shall achieve 99.9% uptime with response times under 2 seconds for all core operations
 
-2. **NFR2:** The system shall support concurrent usage by up to 10 staff members per library without performance degradation  
+2. **NFR2:** The system shall support concurrent usage by up to 10 staff members per library without performance degradation
 
 3. **NFR3:** The system shall ensure data security through HTTPS encryption, secure authentication, and SOC 2 compliance via Supabase
 

@@ -9,6 +9,7 @@ I want **to establish the Next.js 14 project structure with essential dependenci
 so that **the development team has a solid technical foundation for building the library management application**.
 
 **Acceptance Criteria:**
+
 1. Next.js 14 App Router project created in `apps/library-management/` within the monorepo structure
 2. TypeScript 5.0+ configuration with strict mode enabled and proper path aliases configured
 3. Essential dependencies installed: shadcn/ui, Tailwind CSS, Supabase client libraries, React Query, Zustand, Zod
@@ -25,6 +26,7 @@ I want **to establish secure Supabase connection with generated TypeScript types
 so that **the application has type-safe database access and proper integration with the existing EzLib schema**.
 
 **Acceptance Criteria:**
+
 1. Supabase client configuration established with proper environment variables
 2. TypeScript types generated from existing Supabase schema using `supabase gen types`
 3. Database connection validated through health check endpoint
@@ -41,6 +43,7 @@ I want **to access the library management system using my existing ezlib.com acc
 so that **I can safely manage library operations through a unified authentication strategy while maintaining platform identity**.
 
 **Acceptance Criteria:**
+
 1. Management app displays "Login with existing account" with clear messaging that registration occurs on ezlib.com
 2. Passwordless email OTP authentication integration using `supabase.auth.signInWithOtp()`
 3. Cross-domain authentication that validates existing user accounts from reader platform
@@ -59,6 +62,7 @@ I want **to select which library I'm currently managing**,
 so that **all subsequent operations are scoped to the correct library context**.
 
 **Acceptance Criteria:**
+
 1. Library selection component displays all libraries where user has admin permissions
 2. Selected library context persisted in URL parameters and local state
 3. Library-specific data queries automatically filtered by selected library ID
@@ -75,6 +79,7 @@ I want **to see a dashboard overview and navigate between different management s
 so that **I have immediate visibility into library operations and can efficiently access different administrative functions**.
 
 **Acceptance Criteria:**
+
 1. Main dashboard displays basic library statistics (total books, active members, pending transactions)
 2. Navigation sidebar with links to all major sections (Inventory, Members, Transactions, Reports, Settings)
 3. Responsive layout that works on desktop and tablet devices

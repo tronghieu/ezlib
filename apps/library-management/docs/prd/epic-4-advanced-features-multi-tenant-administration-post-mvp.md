@@ -1,4 +1,4 @@
-# Epic 4: Advanced Features & Multi-tenant Administration (Post-MVP)  
+# Epic 4: Advanced Features & Multi-tenant Administration (Post-MVP)
 
 **Epic Goal:** Complete the professional library management system with comprehensive reporting capabilities, bulk operations, internationalization support, advanced administrative features, and system configuration tools that enable library directors to generate compliance reports, analyze operational performance, and configure library-specific policies for diverse library needs and regional requirements.
 
@@ -9,6 +9,7 @@ I want **to generate standard operational and compliance reports**,
 so that **I can monitor library performance, satisfy board reporting requirements, and make data-driven operational decisions**.
 
 **Acceptance Criteria:**
+
 1. Circulation statistics report (monthly/quarterly/annual) with checkout trends and popular titles
 2. Member activity report showing registration trends, active vs. inactive members, and demographics
 3. Overdue items report with fine collection status and chronic offender identification
@@ -26,6 +27,7 @@ I want **to access visual analytics and operational insights**,
 so that **I can understand library usage patterns, identify improvement opportunities, and demonstrate library impact to stakeholders**.
 
 **Acceptance Criteria:**
+
 1. Visual dashboard with charts showing circulation trends, member growth, and collection utilization
 2. Popular items analysis identifying high-demand books and genres for acquisition planning
 3. Member engagement metrics tracking borrowing frequency, renewal patterns, and member retention
@@ -43,6 +45,7 @@ I want **to perform bulk operations on books and members efficiently**,
 so that **I can manage large-scale updates, imports, and maintenance tasks without repetitive manual work**.
 
 **Acceptance Criteria:**
+
 1. Bulk book import functionality with CSV template and validation for new acquisitions
 2. Batch book metadata updates when publisher information or cataloging standards change
 3. Mass member communication tools for library announcements, policy changes, and event notifications
@@ -60,6 +63,7 @@ I want **to configure library-specific policies and operational parameters**,
 so that **the system enforces our unique library rules, loan periods, and operational procedures**.
 
 **Acceptance Criteria:**
+
 1. Loan period configuration by item type (books, media, reference materials) with different durations
 2. Fine structure setup with different rates for various item types and overdue durations
 3. Renewal policy configuration including maximum renewals per item and renewal restrictions
@@ -77,6 +81,7 @@ I want **to manage staff accounts and assign appropriate permissions**,
 so that **different staff members have access levels appropriate to their roles while maintaining system security**.
 
 **Acceptance Criteria:**
+
 1. Staff account creation with role assignment (owner, manager, librarian) and permission configuration
 2. Permission matrix showing which roles can access specific functions and data
 3. Staff activity monitoring and audit logs for accountability and security purposes
@@ -94,6 +99,7 @@ I want **to monitor system health and perform maintenance operations**,
 so that **the library management system runs reliably and efficiently for daily operations**.
 
 **Acceptance Criteria:**
+
 1. System health dashboard showing database performance, API response times, and error rates
 2. Data integrity monitoring with alerts for database inconsistencies or synchronization issues
 3. Integration status monitoring for crawler service, reader app sync, and external API connections
@@ -111,6 +117,7 @@ I want **the system to support multiple languages and regional preferences**,
 so that **our library staff and community can use the system in their preferred language with culturally appropriate formats**.
 
 **Acceptance Criteria:**
+
 1. Multi-language interface support with automatic location-based language detection
 2. User-configurable language preferences with manual override capability
 3. Localized date/time formats based on regional settings and user preferences

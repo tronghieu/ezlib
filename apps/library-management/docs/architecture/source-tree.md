@@ -20,7 +20,7 @@ apps/library-management/
 │   ├── project-brief.md                # Project overview
 │   └── prd.md                          # Product requirements document
 ├── src/                                # 🚀 Source code
-├── public/                             # 🌐 Static assets  
+├── public/                             # 🌐 Static assets
 ├── tests/                              # 🧪 Test files
 ├── package.json                        # 📦 Dependencies & scripts
 ├── next.config.js                      # ⚙️ Next.js configuration
@@ -446,57 +446,62 @@ tests/
 module.exports = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
         // Admin theme colors
-        'admin-sidebar': 'hsl(var(--admin-sidebar))',
-        'admin-header': 'hsl(var(--admin-header))',
-        'admin-nav': 'hsl(var(--admin-nav))',
-      }
-    }
-  }
-}
+        "admin-sidebar": "hsl(var(--admin-sidebar))",
+        "admin-header": "hsl(var(--admin-header))",
+        "admin-nav": "hsl(var(--admin-nav))",
+      },
+    },
+  },
+};
 ```
 
 ## File Naming Conventions
 
 ### Component Files
+
 - **Components**: `kebab-case.tsx` (e.g., `book-list.tsx`, `member-form.tsx`)
 - **Pages**: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`
 - **API Routes**: `route.ts`
 
 ### Utility Files
+
 - **Hooks**: `use-kebab-case.ts` (e.g., `use-admin-permissions.ts`)
 - **Services**: `kebab-case-service.ts` (e.g., `inventory-service.ts`)
 - **Utils**: `kebab-case-utils.ts` (e.g., `date-utils.ts`)
 - **Types**: `kebab-case.ts` (e.g., `admin-types.ts`)
 
 ### Directory Names
+
 - **All directories**: `kebab-case` (e.g., `data-tables`, `real-time`)
 - **Route groups**: `(group-name)` (e.g., `(auth)`, `(admin)`)
 
 ## Import Path Structure
 
 ### Absolute Imports (Preferred)
+
 ```typescript
 // ✅ Good: Use absolute imports
-import { Button } from '@/components/ui/button'
-import { useAdminPermissions } from '@/hooks/use-admin-permissions'
-import { inventoryService } from '@/lib/services/inventory-service'
-import type { BookInventory } from '@/types/admin'
+import { Button } from "@/components/ui/button";
+import { useAdminPermissions } from "@/hooks/use-admin-permissions";
+import { inventoryService } from "@/lib/services/inventory-service";
+import type { BookInventory } from "@/types/admin";
 ```
 
 ### Relative Imports (Avoid)
+
 ```typescript
 // ❌ Bad: Avoid relative imports
-import { Button } from '../../../components/ui/button'
-import { useAdminPermissions } from '../../hooks/use-admin-permissions'
+import { Button } from "../../../components/ui/button";
+import { useAdminPermissions } from "../../hooks/use-admin-permissions";
 ```
 
 ## Development Workflow
@@ -515,7 +520,7 @@ import { useAdminPermissions } from '../../hooks/use-admin-permissions'
 ```plaintext
 MVP Structure (Ultra-Simple):
 ├── inventory/page.tsx           # Basic book list (title, author, status)
-├── members/page.tsx             # Simple member list  
+├── members/page.tsx             # Simple member list
 └── transactions/checkout/       # One-click checkout (no due dates)
 
 Post-MVP Additions:

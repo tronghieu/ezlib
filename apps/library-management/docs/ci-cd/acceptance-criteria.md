@@ -1,6 +1,7 @@
 # Acceptance Criteria
 
 ## 🔧 GitHub Actions Workflow Configuration
+
 1. **GitHub Actions workflow file** (`.github/workflows/library-management.yml`) created with:
    - Trigger on push to `main` branch and pull requests targeting `main`
    - Node.js 18+ environment setup with PNPM caching
@@ -18,6 +19,7 @@
    - Supabase keys properly secured and injected at build time
 
 ## 🚀 Vercel Deployment Configuration
+
 4. **Vercel project setup** with proper monorepo configuration:
    - Build command: `cd apps/library-management && pnpm run build`
    - Output directory: `apps/library-management/.next`
@@ -35,6 +37,7 @@
    - Development previews: Auto-generated Vercel URLs
 
 ## 🛡️ Deployment Safety & Validation
+
 7. **Health check integration** in deployment pipeline:
    - Post-deployment health check hits `/api/health` endpoint
    - Validates database connectivity and essential service availability
@@ -52,6 +55,7 @@
    - Vercel deployment comments on pull requests
 
 ## 📊 Monitoring & Rollback Strategy
+
 10. **Deployment monitoring setup**:
     - Vercel Analytics enabled for performance monitoring
     - Basic error tracking configured for production issues
@@ -68,6 +72,7 @@
     - Bundle size tracking to prevent bloat
 
 ## 🔄 Integration with Existing Infrastructure
+
 13. **Supabase environment alignment**:
     - Development environment connects to local Supabase instance
     - Staging environment connects to dedicated Supabase project

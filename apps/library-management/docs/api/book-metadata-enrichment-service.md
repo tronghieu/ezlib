@@ -1,11 +1,14 @@
 # Book Metadata Enrichment Service
 
 ## Service Endpoint
+
 **Base URL**: `http://localhost:8000` (development) | `https://crawler.ezlib.com` (production)  
 **Endpoint**: `POST /api/v1/enrich`
 
 ## Authentication
+
 Service uses shared authentication secret in request headers:
+
 ```http
 Authorization: Bearer ${CRAWLER_SERVICE_AUTH_SECRET}
 Content-Type: application/json
@@ -15,6 +18,7 @@ X-Library-Context: ${library_id}
 ## Request/Response Examples
 
 **Successful Enrichment:**
+
 ```json
 // Request
 {
@@ -40,6 +44,7 @@ X-Library-Context: ${library_id}
 ```
 
 **Error Scenarios:**
+
 ```json
 // ISBN Not Found (404 Not Found)
 {
@@ -50,7 +55,7 @@ X-Library-Context: ${library_id}
   }
 }
 
-// Rate Limited (429 Too Many Requests)  
+// Rate Limited (429 Too Many Requests)
 {
   "success": false,
   "error_details": {
@@ -64,48 +69,53 @@ X-Library-Context: ${library_id}
 ## Integration Patterns
 
 **Graceful Degradation:**
+
 ```typescript
 // components/inventory/isbn-lookup.tsx
 export async function enrichBookMetadata(isbn: string, libraryId: string) {
   try {
-    const response = await fetch(`${process.env.CRAWLER_API_URL}/api/v1/enrich`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.CRAWLER_SERVICE_AUTH_SECRET}`
-      },
-      body: JSON.stringify({ isbn_13: isbn, library_id: libraryId })
-    })
+    const response = await fetch(
+      `${process.env.CRAWLER_API_URL}/api/v1/enrich`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.CRAWLER_SERVICE_AUTH_SECRET}`,
+        },
+        body: JSON.stringify({ isbn_13: isbn, library_id: libraryId }),
+      }
+    );
 
     if (!response.ok) {
       // Handle specific error codes
       if (response.status === 404) {
-        return { success: false, fallback: 'manual_entry' }
+        return { success: false, fallback: "manual_entry" };
       }
       if (response.status === 429) {
-        const data = await response.json()
-        return { success: false, retry_after: data.error_details?.retry_after }
+        const data = await response.json();
+        return { success: false, retry_after: data.error_details?.retry_after };
       }
-      throw new Error(`Enrichment failed: ${response.status}`)
+      throw new Error(`Enrichment failed: ${response.status}`);
     }
 
-    const data = await response.json()
-    return { success: true, metadata: data.book_metadata }
-
+    const data = await response.json();
+    return { success: true, metadata: data.book_metadata };
   } catch (error) {
     // Network errors, service unavailable, etc.
-    console.error('Book enrichment failed:', error)
-    return { success: false, fallback: 'manual_entry' }
+    console.error("Book enrichment failed:", error);
+    return { success: false, fallback: "manual_entry" };
   }
 }
 ```
 
 **Error Handling Strategy:**
+
 - **ISBN Not Found**: Show manual entry form with ISBN pre-filled
 - **Rate Limited**: Display countdown timer, cache request for retry
 - **Service Unavailable**: Allow manual entry, queue enrichment for later
 - **Invalid ISBN**: Show ISBN validation error, request correction
-```
+
+````
 
 ## 3. Real-Time Event Documentation
 
@@ -124,7 +134,7 @@ export type InventoryUpdateEvent = {
   timestamp: string                  // Event occurrence time
 }
 
-// Reader App → Library Management App notifications  
+// Reader App → Library Management App notifications
 export type HoldRequestEvent = {
   type: 'hold_requested'             // Future enhancement
   book_id: string
@@ -142,7 +152,10 @@ export type CrossAppSyncEvent = {
   changes: Record<string, any>       // Changed fields and new values
   timestamp: string
 }
-```
+````
 
 **Real-Time Integration Guide:**
+
 ```markdown
+
+```

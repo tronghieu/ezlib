@@ -4,19 +4,21 @@
 
 ## Change Log
 
-| Date | Version | Description | Author |
-|------|---------|-------------|---------|
-| 2025-08-24 | 1.1 | Restructured as legacy documentation according to BMad Method | BMad Orchestrator |
-| 2025-08-24 | 1.0 | Initial technical specification | Original Author |
+| Date       | Version | Description                                                   | Author            |
+| ---------- | ------- | ------------------------------------------------------------- | ----------------- |
+| 2025-08-24 | 1.1     | Restructured as legacy documentation according to BMad Method | BMad Orchestrator |
+| 2025-08-24 | 1.0     | Initial technical specification                               | Original Author   |
 
 ## ⚠️ Legacy Document Notice
 
 **This document has been superseded by BMad Method-compliant documentation:**
+
 - **Primary Reference**: [Frontend Architecture](./frontend-architecture.md) - Current implementation patterns
 - **Integration Details**: [API Integration](./api-integration.md) - Service connections and data access
 - **User Experience**: [User Workflows](./user-workflows.md) - Staff interaction patterns
 
 **This document remains for:**
+
 - Historical reference
 - Migration planning
 - Code examples and implementation details not yet moved to new structure
@@ -43,7 +45,7 @@ apps/library-management/
 │   │   ├── (auth)/                   # Authentication group
 │   │   ├── dashboard/                # Main dashboard
 │   │   ├── inventory/                # Book management
-│   │   ├── members/                  # Member management  
+│   │   ├── members/                  # Member management
 │   │   ├── transactions/             # Borrowing operations
 │   │   ├── collections/              # Collection management
 │   │   ├── analytics/                # Reports and insights
@@ -70,20 +72,21 @@ apps/library-management/
 
 ```typescript
 // lib/supabase/admin-client.ts
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import type { Database } from '@/types/database'
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/types/database";
 
 export const createAdminClient = () => {
-  return createClientComponentClient<Database>()
-}
+  return createClientComponentClient<Database>();
+};
 
 // Enhanced with admin-specific queries
 export const adminQueries = {
   getLibraryInventory: async (libraryId: string) => {
-    const supabase = createAdminClient()
+    const supabase = createAdminClient();
     return supabase
-      .from('book_inventory')
-      .select(`
+      .from("book_inventory")
+      .select(
+        `
         *,
         book_edition:book_editions(
           title,
@@ -97,10 +100,11 @@ export const adminQueries = {
             )
           )
         )
-      `)
-      .eq('library_id', libraryId)
-  }
-}
+      `
+      )
+      .eq("library_id", libraryId);
+  },
+};
 ```
 
 #### 2. Role-Based Data Access
@@ -108,29 +112,28 @@ export const adminQueries = {
 ```typescript
 // lib/permissions/admin-permissions.ts
 export const AdminPermissions = {
-  canManageBooks: (userRole: LibAdminRole) => 
-    ['owner', 'manager', 'librarian'].includes(userRole),
-  
+  canManageBooks: (userRole: LibAdminRole) =>
+    ["owner", "manager", "librarian"].includes(userRole),
+
   canManageMembers: (userRole: LibAdminRole) =>
-    ['owner', 'manager'].includes(userRole),
-    
-  canManageStaff: (userRole: LibAdminRole) =>
-    ['owner'].includes(userRole)
-}
+    ["owner", "manager"].includes(userRole),
+
+  canManageStaff: (userRole: LibAdminRole) => ["owner"].includes(userRole),
+};
 
 // Hook for permission checking
 export const useAdminPermissions = (libraryId: string) => {
   const { data: adminRole } = useQuery({
-    queryKey: ['admin-role', libraryId],
-    queryFn: () => getAdminRole(libraryId)
-  })
-  
+    queryKey: ["admin-role", libraryId],
+    queryFn: () => getAdminRole(libraryId),
+  });
+
   return {
     canManageBooks: AdminPermissions.canManageBooks(adminRole?.role),
     canManageMembers: AdminPermissions.canManageMembers(adminRole?.role),
-    canManageStaff: AdminPermissions.canManageStaff(adminRole?.role)
-  }
-}
+    canManageStaff: AdminPermissions.canManageStaff(adminRole?.role),
+  };
+};
 ```
 
 ### Component Architecture
@@ -156,7 +159,7 @@ export function InventoryTable({ libraryId }: { libraryId: string }) {
     // Optimistic update
     await addBookToInventory(libraryId, bookData)
     refreshInventory()
-    
+
     // Trigger crawler enrichment
     await triggerBookEnrichment(bookData.isbn_13)
   }
@@ -197,7 +200,7 @@ export const useRealTimeTransactions = (libraryId: string) => {
           // Update relevant queries
           queryClient.invalidateQueries(['transactions', libraryId])
           queryClient.invalidateQueries(['inventory', libraryId])
-          
+
           // Show notification for new requests
           if (payload.eventType === 'INSERT' && payload.new.status === 'requested') {
             toast({
@@ -277,56 +280,56 @@ export function AddBookForm({ onSubmit }: { onSubmit: (data: AddBookFormData) =>
 export const adminQueries = {
   // Library inventory
   inventory: (libraryId: string) => ({
-    queryKey: ['inventory', libraryId],
+    queryKey: ["inventory", libraryId],
     queryFn: () => getLibraryInventory(libraryId),
     staleTime: 5 * 60 * 1000, // 5 minutes
   }),
 
-  // Active borrowing requests  
+  // Active borrowing requests
   pendingTransactions: (libraryId: string) => ({
-    queryKey: ['transactions', libraryId, 'pending'],
+    queryKey: ["transactions", libraryId, "pending"],
     queryFn: () => getPendingTransactions(libraryId),
     refetchInterval: 30 * 1000, // 30 seconds for active requests
   }),
 
   // Member list
   members: (libraryId: string) => ({
-    queryKey: ['members', libraryId],
+    queryKey: ["members", libraryId],
     queryFn: () => getLibraryMembers(libraryId),
     staleTime: 10 * 60 * 1000, // 10 minutes
-  })
-}
+  }),
+};
 ```
 
 #### 2. Zustand for UI State
 
 ```typescript
 // lib/store/admin-store.ts
-import { create } from 'zustand'
+import { create } from "zustand";
 
 interface AdminState {
-  selectedLibrary: string | null
-  activeView: 'dashboard' | 'inventory' | 'members' | 'transactions'
+  selectedLibrary: string | null;
+  activeView: "dashboard" | "inventory" | "members" | "transactions";
   filters: {
-    inventory: InventoryFilters
-    members: MemberFilters
-    transactions: TransactionFilters
-  }
-  setSelectedLibrary: (id: string) => void
-  setActiveView: (view: AdminState['activeView']) => void
-  updateFilters: <T extends keyof AdminState['filters']>(
-    category: T, 
-    filters: Partial<AdminState['filters'][T]>
-  ) => void
+    inventory: InventoryFilters;
+    members: MemberFilters;
+    transactions: TransactionFilters;
+  };
+  setSelectedLibrary: (id: string) => void;
+  setActiveView: (view: AdminState["activeView"]) => void;
+  updateFilters: <T extends keyof AdminState["filters"]>(
+    category: T,
+    filters: Partial<AdminState["filters"][T]>
+  ) => void;
 }
 
 export const useAdminStore = create<AdminState>((set) => ({
   selectedLibrary: null,
-  activeView: 'dashboard',
+  activeView: "dashboard",
   filters: {
     inventory: {},
     members: {},
-    transactions: {}
+    transactions: {},
   },
   setSelectedLibrary: (id) => set({ selectedLibrary: id }),
   setActiveView: (view) => set({ activeView: view }),
@@ -334,10 +337,10 @@ export const useAdminStore = create<AdminState>((set) => ({
     set((state) => ({
       filters: {
         ...state.filters,
-        [category]: { ...state.filters[category], ...newFilters }
-      }
-    }))
-}))
+        [category]: { ...state.filters[category], ...newFilters },
+      },
+    })),
+}));
 ```
 
 ### Integration with External Services
@@ -347,44 +350,44 @@ export const useAdminStore = create<AdminState>((set) => ({
 ```typescript
 // lib/services/crawler-service.ts
 export class CrawlerService {
-  private baseUrl = process.env.NEXT_PUBLIC_CRAWLER_API_URL
+  private baseUrl = process.env.NEXT_PUBLIC_CRAWLER_API_URL;
 
-  async enrichBook(bookData: { 
-    isbn_13?: string
-    book_edition_id: string
-    general_book_id: string 
+  async enrichBook(bookData: {
+    isbn_13?: string;
+    book_edition_id: string;
+    general_book_id: string;
   }) {
     const response = await fetch(`${this.baseUrl}/crawler/enrich-book`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${await getServiceToken()}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${await getServiceToken()}`,
       },
       body: JSON.stringify({
         ...bookData,
-        force_refresh: false
-      })
-    })
+        force_refresh: false,
+      }),
+    });
 
     if (!response.ok) {
-      throw new CrawlerError('Failed to trigger book enrichment')
+      throw new CrawlerError("Failed to trigger book enrichment");
     }
 
-    return response.json()
+    return response.json();
   }
 
   async validateISBN(isbn: string): Promise<ISBNValidationResult> {
     const response = await fetch(`${this.baseUrl}/crawler/validate-isbn`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isbn })
-    })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isbn }),
+    });
 
-    return response.json()
+    return response.json();
   }
 }
 
-export const crawlerService = new CrawlerService()
+export const crawlerService = new CrawlerService();
 ```
 
 ### Performance Optimizations
@@ -396,7 +399,7 @@ export const crawlerService = new CrawlerService()
 export const useOptimizedInventory = (libraryId: string, filters: InventoryFilters) => {
   return useInfiniteQuery({
     queryKey: ['inventory', libraryId, filters],
-    queryFn: ({ pageParam = 0 }) => 
+    queryFn: ({ pageParam = 0 }) =>
       getInventoryPage(libraryId, filters, pageParam),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     staleTime: 5 * 60 * 1000,
@@ -408,7 +411,7 @@ export const useOptimizedInventory = (libraryId: string, filters: InventoryFilte
 // Virtualized tables for large datasets
 export const VirtualizedInventoryTable = ({ libraryId }: { libraryId: string }) => {
   const { data, fetchNextPage, hasNextPage } = useOptimizedInventory(libraryId, {})
-  
+
   return (
     <VirtualizedTable
       data={data?.pages.flat() ?? []}
@@ -426,46 +429,54 @@ export const VirtualizedInventoryTable = ({ libraryId }: { libraryId: string }) 
 ```typescript
 // hooks/use-optimistic-transactions.ts
 export const useOptimisticTransactions = (libraryId: string) => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const approveRequest = useMutation({
-    mutationFn: (transactionId: string) => 
+    mutationFn: (transactionId: string) =>
       approveTransactionRequest(transactionId),
-    
+
     onMutate: async (transactionId) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries(['transactions', libraryId])
+      await queryClient.cancelQueries(["transactions", libraryId]);
 
       // Snapshot previous value
-      const previousTransactions = queryClient.getQueryData(['transactions', libraryId])
+      const previousTransactions = queryClient.getQueryData([
+        "transactions",
+        libraryId,
+      ]);
 
       // Optimistically update
-      queryClient.setQueryData(['transactions', libraryId], (old: Transaction[]) =>
-        old.map(t => 
-          t.id === transactionId 
-            ? { ...t, status: 'approved', approved_at: new Date() }
-            : t
-        )
-      )
+      queryClient.setQueryData(
+        ["transactions", libraryId],
+        (old: Transaction[]) =>
+          old.map((t) =>
+            t.id === transactionId
+              ? { ...t, status: "approved", approved_at: new Date() }
+              : t
+          )
+      );
 
-      return { previousTransactions }
+      return { previousTransactions };
     },
 
     onError: (err, variables, context) => {
       // Rollback on error
       if (context?.previousTransactions) {
-        queryClient.setQueryData(['transactions', libraryId], context.previousTransactions)
+        queryClient.setQueryData(
+          ["transactions", libraryId],
+          context.previousTransactions
+        );
       }
     },
 
     onSettled: () => {
       // Always refetch after mutation
-      queryClient.invalidateQueries(['transactions', libraryId])
-    }
-  })
+      queryClient.invalidateQueries(["transactions", libraryId]);
+    },
+  });
 
-  return { approveRequest }
-}
+  return { approveRequest };
+};
 ```
 
 ### Security Implementation
@@ -479,13 +490,13 @@ export async function requireAdminAccess(
   requiredPermission?: AdminPermission
 ) {
   const session = await getServerSession()
-  
+
   if (!session?.user) {
     redirect('/auth/signin')
   }
 
   const adminRole = await getAdminRole(session.user.id, libraryId)
-  
+
   if (!adminRole) {
     throw new Error('Access denied: Not a library administrator')
   }
@@ -498,13 +509,13 @@ export async function requireAdminAccess(
 }
 
 // app/inventory/page.tsx
-export default async function InventoryPage({ 
-  params 
-}: { 
-  params: { libraryId: string } 
+export default async function InventoryPage({
+  params
+}: {
+  params: { libraryId: string }
 }) {
   await requireAdminAccess(params.libraryId, 'manage_books')
-  
+
   return <InventoryPageClient libraryId={params.libraryId} />
 }
 ```

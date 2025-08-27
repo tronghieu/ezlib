@@ -20,6 +20,7 @@ This document defines the coding standards for the **EzLib Library Management Sy
 ## TypeScript Standards
 
 ### Strict Configuration
+
 ```json
 // tsconfig.json
 {
@@ -35,64 +36,67 @@ This document defines the coding standards for the **EzLib Library Management Sy
 ```
 
 ### Type Definitions
+
 ```typescript
 // ✅ Good: Comprehensive interface definitions
 interface BookInventory {
-  id: string
-  book_edition_id: string
-  library_id: string
+  id: string;
+  book_edition_id: string;
+  library_id: string;
   availability: {
-    status: 'available' | 'checked_out' | 'reserved' | 'maintenance'
-    total_copies: number
-    available_copies: number
-    current_borrower_id: string | null
-    due_date: string | null
-  }
+    status: "available" | "checked_out" | "reserved" | "maintenance";
+    total_copies: number;
+    available_copies: number;
+    current_borrower_id: string | null;
+    due_date: string | null;
+  };
   physical_details: {
-    shelf_location?: string
-    condition: 'new' | 'good' | 'fair' | 'poor'
-    acquisition_date: string
-    acquisition_cost?: number
-    barcode?: string
-  }
-  created_at: string
-  updated_at: string
+    shelf_location?: string;
+    condition: "new" | "good" | "fair" | "poor";
+    acquisition_date: string;
+    acquisition_cost?: number;
+    barcode?: string;
+  };
+  created_at: string;
+  updated_at: string;
 }
 
 // ❌ Bad: Using any or incomplete types
 interface BadBookInventory {
-  id: string
-  data: any // Never use any!
-  status?: string // Be specific with union types
+  id: string;
+  data: any; // Never use any!
+  status?: string; // Be specific with union types
 }
 ```
 
 ### Component Props
+
 ```typescript
 // ✅ Good: Explicit prop interfaces with documentation
 interface BookListProps {
   /** Library ID for filtering books */
-  libraryId: string
+  libraryId: string;
   /** Optional search query for filtering */
-  searchQuery?: string
+  searchQuery?: string;
   /** Callback when book is selected */
-  onBookSelect?: (book: BookInventory) => void
+  onBookSelect?: (book: BookInventory) => void;
   /** Show only available books */
-  filterAvailable?: boolean
-  className?: string
+  filterAvailable?: boolean;
+  className?: string;
 }
 
 // ❌ Bad: Unclear or missing prop types
 interface BadBookListProps {
-  libraryId: string
-  data?: any
-  onClick?: Function
+  libraryId: string;
+  data?: any;
+  onClick?: Function;
 }
 ```
 
 ## React Component Standards
 
 ### Component Structure
+
 ```typescript
 // ✅ Good: Proper component structure with forwardRef
 'use client'
@@ -110,7 +114,7 @@ const BookList = forwardRef<HTMLDivElement, BookListProps>(
   ({ libraryId, className, ...props }, ref) => {
     // Permission check first
     const { canManageBooks } = useAdminPermissions(libraryId)
-    
+
     // Early return for permissions
     if (!canManageBooks) {
       return <div>Access denied</div>
@@ -135,88 +139,94 @@ export type { BookListProps }
 ```
 
 ### Hooks Usage
+
 ```typescript
 // ✅ Good: Proper hook usage with error handling
 export function useLibraryInventory(libraryId: string) {
-  const { data: books, isLoading, error } = useQuery({
-    queryKey: ['inventory', libraryId],
+  const {
+    data: books,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["inventory", libraryId],
     queryFn: () => inventoryService.getLibraryInventory(libraryId),
     enabled: !!libraryId,
     staleTime: 30000, // 30 seconds
-    refetchOnWindowFocus: false
-  })
+    refetchOnWindowFocus: false,
+  });
 
   // Real-time updates
-  useRealTimeInventory(libraryId)
+  useRealTimeInventory(libraryId);
 
   return {
     books: books || [],
     isLoading,
     error,
-    isEmpty: !isLoading && (!books || books.length === 0)
-  }
+    isEmpty: !isLoading && (!books || books.length === 0),
+  };
 }
 
 // ❌ Bad: No error handling, unclear return type
 export function useBadInventory(libraryId: string) {
-  const { data } = useQuery(['inventory', libraryId], () => 
+  const { data } = useQuery(["inventory", libraryId], () =>
     inventoryService.getLibraryInventory(libraryId)
-  )
-  return data
+  );
+  return data;
 }
 ```
 
 ## Service Layer Standards
 
 ### Service Classes
+
 ```typescript
 // ✅ Good: Comprehensive service with error handling
 export class InventoryService {
-  private supabase = createAdminClient()
+  private supabase = createAdminClient();
 
   async addBookToInventory(data: AddBookInventoryData): Promise<BookInventory> {
     try {
       // Validate input
-      const validatedData = addBookInventorySchema.parse(data)
-      
+      const validatedData = addBookInventorySchema.parse(data);
+
       // Database operation
       const { data: inventory, error } = await this.supabase
-        .from('book_inventory')
+        .from("book_inventory")
         .insert({
           book_edition_id: validatedData.book_edition_id,
           library_id: validatedData.library_id,
           availability: {
-            status: 'available',
+            status: "available",
             total_copies: validatedData.total_copies,
             available_copies: validatedData.total_copies,
             current_borrower_id: null,
-            due_date: null
-          }
+            due_date: null,
+          },
         })
         .select()
-        .single()
+        .single();
 
       if (error) {
-        throw new InventoryError(`Failed to add book: ${error.message}`)
+        throw new InventoryError(`Failed to add book: ${error.message}`);
       }
 
       // Real-time sync with reader app
       await this.syncWithReaderApp(
-        validatedData.library_id, 
-        inventory.book_edition_id, 
+        validatedData.library_id,
+        inventory.book_edition_id,
         inventory.availability
-      )
+      );
 
-      return inventory
+      return inventory;
     } catch (error) {
-      if (error instanceof InventoryError) throw error
-      throw new InventoryError('Unexpected error adding book to inventory')
+      if (error instanceof InventoryError) throw error;
+      throw new InventoryError("Unexpected error adding book to inventory");
     }
   }
 
   private async syncWithReaderApp(
-    libraryId: string, 
-    bookId: string, 
+    libraryId: string,
+    bookId: string,
     availability: InventoryStatus
   ): Promise<void> {
     // Implementation for real-time sync
@@ -225,6 +235,7 @@ export class InventoryService {
 ```
 
 ### Error Handling
+
 ```typescript
 // ✅ Good: Custom error classes with context
 export class InventoryError extends Error {
@@ -233,28 +244,28 @@ export class InventoryError extends Error {
     public code?: string,
     public context?: Record<string, unknown>
   ) {
-    super(message)
-    this.name = 'InventoryError'
+    super(message);
+    this.name = "InventoryError";
   }
 }
 
 export class AuthenticationError extends Error {
   constructor(message: string) {
-    super(message)
-    this.name = 'AuthenticationError'
+    super(message);
+    this.name = "AuthenticationError";
   }
 }
 
 // Usage in components
 try {
-  await inventoryService.addBook(bookData)
+  await inventoryService.addBook(bookData);
 } catch (error) {
   if (error instanceof InventoryError) {
-    toast.error(`Inventory Error: ${error.message}`)
+    toast.error(`Inventory Error: ${error.message}`);
   } else if (error instanceof AuthenticationError) {
-    router.push('/login')
+    router.push("/login");
   } else {
-    toast.error('An unexpected error occurred')
+    toast.error("An unexpected error occurred");
   }
 }
 ```
@@ -262,12 +273,16 @@ try {
 ## Database Integration Standards
 
 ### Query Patterns
+
 ```typescript
 // ✅ Good: Efficient queries with proper filtering
-export async function getLibraryInventory(libraryId: string): Promise<BookInventoryWithDetails[]> {
+export async function getLibraryInventory(
+  libraryId: string
+): Promise<BookInventoryWithDetails[]> {
   const { data, error } = await supabase
-    .from('book_inventory')
-    .select(`
+    .from("book_inventory")
+    .select(
+      `
       id,
       availability,
       physical_details,
@@ -285,109 +300,115 @@ export async function getLibraryInventory(libraryId: string): Promise<BookInvent
           first_publication_year
         )
       )
-    `)
-    .eq('library_id', libraryId)
-    .order('created_at', { ascending: false })
+    `
+    )
+    .eq("library_id", libraryId)
+    .order("created_at", { ascending: false });
 
-  if (error) throw new DatabaseError(error.message)
-  return data || []
+  if (error) throw new DatabaseError(error.message);
+  return data || [];
 }
 
 // ❌ Bad: Over-fetching, no error handling
 export async function getBadInventory(libraryId: string) {
   const { data } = await supabase
-    .from('book_inventory')
-    .select('*') // Over-fetching
-    .eq('library_id', libraryId)
-  
-  return data // No error handling
+    .from("book_inventory")
+    .select("*") // Over-fetching
+    .eq("library_id", libraryId);
+
+  return data; // No error handling
 }
 ```
 
 ### Real-time Subscriptions
+
 ```typescript
 // ✅ Good: Managed subscriptions with cleanup
 export function useRealTimeInventory(libraryId: string) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!libraryId) return
+    if (!libraryId) return;
 
     const channel = supabase
       .channel(`inventory-${libraryId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'book_inventory',
-          filter: `library_id=eq.${libraryId}`
+          event: "*",
+          schema: "public",
+          table: "book_inventory",
+          filter: `library_id=eq.${libraryId}`,
         },
         (payload) => {
           // Update React Query cache optimistically
           queryClient.setQueryData(
-            ['inventory', libraryId],
+            ["inventory", libraryId],
             (oldData: BookInventory[] | undefined) => {
-              if (!oldData) return oldData
-              
+              if (!oldData) return oldData;
+
               switch (payload.eventType) {
-                case 'UPDATE':
-                  return oldData.map(book => 
-                    book.id === payload.new.id ? payload.new as BookInventory : book
-                  )
-                case 'INSERT':
-                  return [...oldData, payload.new as BookInventory]
-                case 'DELETE':
-                  return oldData.filter(book => book.id !== payload.old.id)
+                case "UPDATE":
+                  return oldData.map((book) =>
+                    book.id === payload.new.id
+                      ? (payload.new as BookInventory)
+                      : book
+                  );
+                case "INSERT":
+                  return [...oldData, payload.new as BookInventory];
+                case "DELETE":
+                  return oldData.filter((book) => book.id !== payload.old.id);
                 default:
-                  return oldData
+                  return oldData;
               }
             }
-          )
+          );
         }
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [libraryId, queryClient])
+      supabase.removeChannel(channel);
+    };
+  }, [libraryId, queryClient]);
 }
 ```
 
 ## Form Validation Standards
 
 ### Zod Schemas
+
 ```typescript
 // ✅ Good: Comprehensive validation schemas
-import { z } from 'zod'
+import { z } from "zod";
 
 export const addBookInventorySchema = z.object({
-  book_edition_id: z.string().uuid('Invalid book edition ID'),
-  library_id: z.string().uuid('Invalid library ID'),
-  total_copies: z.number().min(1, 'Must have at least 1 copy'),
+  book_edition_id: z.string().uuid("Invalid book edition ID"),
+  library_id: z.string().uuid("Invalid library ID"),
+  total_copies: z.number().min(1, "Must have at least 1 copy"),
   shelf_location: z.string().optional(),
-  condition: z.enum(['new', 'good', 'fair', 'poor']).default('good'),
+  condition: z.enum(["new", "good", "fair", "poor"]).default("good"),
   acquisition_date: z.string().datetime(),
   acquisition_cost: z.number().positive().optional(),
-  barcode: z.string().optional()
-})
+  barcode: z.string().optional(),
+});
 
-export type AddBookInventoryData = z.infer<typeof addBookInventorySchema>
+export type AddBookInventoryData = z.infer<typeof addBookInventorySchema>;
 
 // Form usage
 const form = useForm<AddBookInventoryData>({
   resolver: zodResolver(addBookInventorySchema),
   defaultValues: {
-    condition: 'good',
-    total_copies: 1
-  }
-})
+    condition: "good",
+    total_copies: 1,
+  },
+});
 ```
 
 ## UI/UX Standards
 
 ### Ultra-Simple MVP Interface
+
 ```typescript
 // ✅ Good: Ultra-simple table for MVP
 <Table>
@@ -433,6 +454,7 @@ const form = useForm<AddBookInventoryData>({
 ```
 
 ### Loading States & Error Boundaries
+
 ```typescript
 // ✅ Good: Comprehensive loading and error states
 export function BookList({ libraryId }: BookListProps) {
@@ -480,6 +502,7 @@ export function BookList({ libraryId }: BookListProps) {
 ## Testing Standards
 
 ### Component Testing
+
 ```typescript
 // ✅ Good: Comprehensive component test
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
@@ -491,7 +514,7 @@ const createTestWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } }
   })
-  
+
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       {children}
@@ -503,7 +526,7 @@ jest.mock('@/lib/services/inventory-service')
 
 describe('BookList', () => {
   const mockLibraryId = 'lib-123'
-  
+
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -515,9 +538,9 @@ describe('BookList', () => {
 
     // Verify MVP columns
     expect(screen.getByText('Title')).toBeInTheDocument()
-    expect(screen.getByText('Author')).toBeInTheDocument() 
+    expect(screen.getByText('Author')).toBeInTheDocument()
     expect(screen.getByText('Status')).toBeInTheDocument()
-    
+
     // Ensure complex columns are NOT present in MVP
     expect(screen.queryByText('Due Date')).not.toBeInTheDocument()
     expect(screen.queryByText('Fine Amount')).not.toBeInTheDocument()
@@ -541,27 +564,29 @@ describe('BookList', () => {
 ## Performance Standards
 
 ### Query Optimization
+
 ```typescript
 // ✅ Good: Optimized React Query usage
 const { data: books } = useQuery({
-  queryKey: ['inventory', libraryId, searchQuery],
+  queryKey: ["inventory", libraryId, searchQuery],
   queryFn: () => inventoryService.searchBooks(libraryId, searchQuery),
   enabled: !!libraryId,
   staleTime: 30000, // 30 seconds
   cacheTime: 300000, // 5 minutes
   refetchOnWindowFocus: false,
-  keepPreviousData: true // For smooth pagination
-})
+  keepPreviousData: true, // For smooth pagination
+});
 
 // ❌ Bad: No optimization, frequent refetching
 const { data: books } = useQuery(
-  ['inventory'],
+  ["inventory"],
   () => inventoryService.getBooks()
   // No optimization options
-)
+);
 ```
 
 ### Bundle Optimization
+
 ```typescript
 // ✅ Good: Lazy loading for non-critical components
 const ReportsPage = lazy(() => import('@/pages/reports'))
@@ -582,6 +607,7 @@ const ChartLibrary = dynamic(() => import('recharts'), {
 ## Security Standards
 
 ### Permission Validation
+
 ```typescript
 // ✅ Good: Server-side permission validation
 export async function requireAdminAccess(
@@ -589,13 +615,13 @@ export async function requireAdminAccess(
   requiredPermission?: AdminPermission
 ): Promise<AdminRole> {
   const session = await getServerSession()
-  
+
   if (!session?.user) {
     redirect('/auth/signin')
   }
 
   const adminRole = await getAdminRole(session.user.id, libraryId)
-  
+
   if (!adminRole) {
     throw new Error('Library admin access required')
   }
@@ -615,13 +641,14 @@ export default async function InventoryPage({ params }: { params: { libraryId: s
 ```
 
 ### Data Sanitization
+
 ```typescript
 // ✅ Good: Input sanitization and validation
 export function sanitizeBookTitle(title: string): string {
   return title
     .trim()
-    .replace(/<[^>]*>/g, '') // Remove HTML tags
-    .slice(0, 255) // Limit length
+    .replace(/<[^>]*>/g, "") // Remove HTML tags
+    .slice(0, 255); // Limit length
 }
 
 // Form submission
@@ -629,16 +656,17 @@ const handleSubmit = (data: AddBookData) => {
   const sanitizedData = {
     ...data,
     title: sanitizeBookTitle(data.title),
-    isbn: data.isbn?.replace(/[^0-9X]/g, '') // Only numbers and X
-  }
-  
-  submitBook(sanitizedData)
-}
+    isbn: data.isbn?.replace(/[^0-9X]/g, ""), // Only numbers and X
+  };
+
+  submitBook(sanitizedData);
+};
 ```
 
 ## Code Organization Standards
 
 ### File Structure
+
 ```
 src/
 ├── app/                    # Next.js App Router pages
@@ -658,67 +686,74 @@ src/
 ```
 
 ### Import Organization
+
 ```typescript
 // ✅ Good: Organized imports
 // React imports first
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
 // External library imports
-import { useQuery } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // Internal imports (absolute paths)
-import { Button } from '@/components/ui/button'
-import { useAdminPermissions } from '@/hooks/use-admin-permissions'
-import { inventoryService } from '@/lib/services/inventory-service'
-import type { BookInventory } from '@/types/admin'
+import { Button } from "@/components/ui/button";
+import { useAdminPermissions } from "@/hooks/use-admin-permissions";
+import { inventoryService } from "@/lib/services/inventory-service";
+import type { BookInventory } from "@/types/admin";
 
 // ❌ Bad: Mixed import order, relative paths
-import type { BookInventory } from '../../../types/admin'
-import { Button } from '@/components/ui/button'
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import type { BookInventory } from "../../../types/admin";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 ```
 
 ## Documentation Standards
 
 ### Component Documentation
-```typescript
+
+````typescript
 /**
  * BookList displays the library's book inventory with search and filtering capabilities.
- * 
+ *
  * @remarks
  * This component follows the ultra-simple MVP philosophy:
  * - Shows only essential columns (Title, Author, ISBN, Status)
  * - Real-time updates via Supabase subscriptions
  * - Search-first interface with prominent search bar
  * - Mobile-responsive for tablet use at circulation desk
- * 
+ *
  * @param libraryId - The ID of the library to display books for
  * @param searchQuery - Optional search query to filter books
  * @param onBookSelect - Callback when a book is selected
- * 
+ *
  * @example
  * ```tsx
- * <BookList 
+ * <BookList
  *   libraryId="lib-123"
  *   searchQuery="harry potter"
  *   onBookSelect={(book) => console.log('Selected:', book.title)}
  * />
  * ```
  */
-export function BookList({ libraryId, searchQuery, onBookSelect }: BookListProps) {
+export function BookList({
+  libraryId,
+  searchQuery,
+  onBookSelect,
+}: BookListProps) {
   // Implementation
 }
-```
+````
 
 ## Version Control Standards
 
 ### Commit Messages
+
 ```bash
 # ✅ Good: Clear, descriptive commit messages
 feat(inventory): add real-time book availability sync with reader app
-fix(auth): resolve cross-domain login session persistence issue  
+fix(auth): resolve cross-domain login session persistence issue
 refactor(search): optimize global search performance for large inventories
 docs(api): update inventory service documentation
 
@@ -730,6 +765,7 @@ wip
 ```
 
 ### Branch Naming
+
 ```bash
 # ✅ Good: Descriptive branch names
 feature/ultra-simple-checkout-flow
@@ -746,6 +782,7 @@ update
 ## Performance Monitoring
 
 ### Key Metrics to Track
+
 - **Page Load Time**: < 3 seconds for dashboard
 - **API Response Time**: < 500ms for inventory queries
 - **Real-time Update Latency**: < 100ms for status changes

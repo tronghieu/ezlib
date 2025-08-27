@@ -7,6 +7,7 @@ This file provides guidance to Claude Code when working with the **Library Manag
 The **EzLib Library Management System** is a Next.js 14+ web application that enables small/medium libraries to replace manual/spreadsheet systems with ultra-simple digital operations. This admin interface serves library staff for book inventory management, member registration, and circulation operations.
 
 ### Current Development State
+
 - ❌ **Project Setup**: Next.js 14+ App Router structure [NOT YET IMPLEMENTED]
 - ❌ **Authentication**: Cross-domain passwordless OTP integration [NOT YET IMPLEMENTED]
 - ❌ **Core Features**: Ultra-simple book lists, member management, circulation [NOT YET IMPLEMENTED]
@@ -15,12 +16,15 @@ The **EzLib Library Management System** is a Next.js 14+ web application that en
 ## Subproject Context
 
 ### Application Type
+
 **Frontend Web Application** - Admin dashboard for library staff operations
+
 - **Primary Users**: Library administrators, managers, librarians
 - **Access Point**: `manage.ezlib.com` (cross-domain from main reader app)
 - **Architecture**: Direct Supabase integration with Row Level Security
 
 ### Integration Points
+
 - **Main Reader App** (`apps/reader/`): Cross-domain authentication, shared user accounts
 - **Book Crawler Service** (`services/crawler/`): Automatic book metadata enrichment
 - **Shared Database** (`supabase/`): PostgreSQL with multi-tenant RLS policies
@@ -28,6 +32,7 @@ The **EzLib Library Management System** is a Next.js 14+ web application that en
 ## Tech Stack
 
 ### Core Technologies
+
 - **Framework**: Next.js 14+ with App Router (TypeScript, strict mode)
 - **UI Components**: shadcn/ui with Radix UI primitives
 - **Styling**: Tailwind CSS with responsive design
@@ -37,6 +42,7 @@ The **EzLib Library Management System** is a Next.js 14+ web application that en
 - **Real-time**: Supabase subscriptions for live inventory updates
 
 ### Development Tools
+
 - **Package Manager**: PNPM (monorepo workspace support)
 - **Build System**: Turbo (optimized monorepo builds)
 - **Code Quality**: ESLint, Prettier, Husky git hooks
@@ -46,6 +52,7 @@ The **EzLib Library Management System** is a Next.js 14+ web application that en
 ## Essential Commands
 
 ### Development Setup (Library Management App)
+
 ```bash
 # Navigate to library management app
 cd apps/library-management
@@ -66,12 +73,15 @@ open http://localhost:3000
 ## Shared Supabase Backend-as-a-Service
 
 ### Overview
+
 EzLib uses a **shared Supabase instance** located at `(monorepo-root)/supabase/` that serves all applications:
+
 - **Reader App** (`apps/reader/`): Public book discovery and social features
 - **Library Management App** (`apps/library-management/`): Admin operations (THIS APP)
 - **Book Crawler Service** (`services/crawler/`): Metadata enrichment service
 
 ### Supabase Configuration
+
 ```
 supabase/
 ├── config.toml              # Supabase local development configuration
@@ -93,6 +103,7 @@ supabase/
 ### Database Operations (from monorepo root)
 
 #### Basic Operations
+
 ```bash
 # ALWAYS run from monorepo root: Example /Users/tronghieuluu/Projects/ezlib/
 cd ../../
@@ -111,6 +122,7 @@ open http://localhost:54323
 ```
 
 #### Database Management
+
 ```bash
 # Reset database with ALL migrations and seeds (DESTRUCTIVE)
 supabase db reset
@@ -129,6 +141,7 @@ supabase gen types typescript --local > lib/database.types.ts
 ```
 
 #### Migration Management
+
 ```bash
 # Create new migration file
 supabase migration new "descriptive_migration_name"
@@ -147,6 +160,7 @@ supabase db push
 ```
 
 #### Seeding Data Management
+
 ```bash
 # Reseed database (runs automatically with db reset)
 supabase db reset
@@ -161,6 +175,7 @@ ls -la supabase/seeds/
 ```
 
 ### Service URLs (Local Development)
+
 - **Supabase Studio**: http://localhost:54323 (Database GUI)
 - **Database Direct**: postgresql://postgres:postgres@127.0.0.1:54322/postgres
 - **API Gateway**: http://localhost:54321
@@ -168,6 +183,7 @@ ls -la supabase/seeds/
 - **Email Testing**: http://localhost:54324 (Inbucket - view sent emails)
 
 ### Environment Variables (Library Management App)
+
 ```bash
 # Add to apps/library-management/.env.local
 
@@ -183,6 +199,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-local-service-role-key
 ### Key Database Tables (Library Management)
 
 #### Core Tables
+
 ```sql
 -- Libraries (organizations)
 libraries {
@@ -231,13 +248,16 @@ borrowing_transactions {
 ```
 
 #### Multi-Tenant Architecture
+
 All tables include `library_id` for **Row Level Security (RLS)** isolation:
+
 - Each library's data is completely isolated
 - Staff can only access their assigned library's data
 - Real-time subscriptions filtered by library context
 - Database policies enforce access control automatically
 
 ### Code Quality & Testing
+
 ```bash
 # Format and lint code
 pnpm lint:fix
@@ -253,6 +273,7 @@ pnpm test:coverage          # Test coverage report
 ```
 
 ### Build & Deployment
+
 ```bash
 # Build for production
 pnpm build
@@ -267,7 +288,9 @@ pnpm start
 ## Development Workflow
 
 ### Before Task Completion
+
 Always run quality checks before committing:
+
 ```bash
 cd apps/library-management
 pnpm lint:fix
@@ -278,12 +301,14 @@ pnpm build
 ```
 
 ### Authentication Integration Pattern
+
 - **Registration**: Users must first register on main reader app (`ezlib.com`)
 - **Login**: Independent login on `manage.ezlib.com` with email OTP
 - **Access Control**: Role-based permissions (owner, manager, librarian) per library
 - **Cross-Domain**: Independent sessions with planned future session sharing
 
 ### Database Integration Pattern
+
 - **Direct Connection**: Use Supabase client directly (no API layer)
 - **Row Level Security**: Multi-tenant isolation enforced at database level
 - **Real-time Updates**: Supabase subscriptions for live inventory synchronization
@@ -292,17 +317,20 @@ pnpm build
 ## Architecture Principles
 
 ### Ultra-Simple MVP Approach
+
 - **Phase 1**: Basic book lists, member registration, one-click checkout/return
 - **No Due Dates Initially**: Focus on core operational validation
 - **Progressive Enhancement**: Feature flags enable advanced features post-MVP
 
 ### Dashboard-Centric Design
+
 - **Primary Dashboard**: Operational overview with quick access to common tasks
 - **Search-First**: Prominent search for books and members with autocomplete
 - **Modal Workflows**: Complex operations use focused modals to maintain context
 - **Keyboard-Friendly**: Support shortcuts and tab navigation for power users
 
 ### Multi-Tenant Architecture
+
 - **Library Context**: All operations scoped to selected library
 - **Role-Based Access**: Granular permissions per library for different staff roles
 - **Data Isolation**: Complete separation between libraries via RLS policies
@@ -337,6 +365,7 @@ apps/library-management/
 ## Key Features & User Stories
 
 ### Epic 1: Foundation & Authentication
+
 - **Story 1.1**: Next.js 14 project setup with monorepo integration
 - **Story 1.2**: Supabase integration and TypeScript type generation
 - **Story 1.3**: Cross-domain passwordless authentication system
@@ -344,17 +373,20 @@ apps/library-management/
 - **Story 1.5**: Basic dashboard and navigation structure
 
 ### Epic 2: Ultra-Simple Operations
+
 - **Story 2.1**: Simple book list interface with search
 - **Story 2.2**: Add new books with optional ISBN lookup
 - **Story 2.3**: Basic member registration and management
 - **Story 2.4**: One-click checkout/return operations (no due dates)
 
 ### Epic 3: Enhanced Circulation (Post-MVP)
+
 - **Story 3.1**: Due date tracking and renewal system
 - **Story 3.2**: Holds and reservation management
 - **Story 3.3**: Overdue tracking and fine calculations
 
 ### Epic 4: Advanced Features (Post-MVP)
+
 - **Story 4.1**: Reporting and analytics dashboard
 - **Story 4.2**: Bulk operations and data management
 - **Story 4.3**: Multi-library administration
@@ -365,94 +397,99 @@ apps/library-management/
 ### Supabase Integration Patterns
 
 #### Database Client Setup
+
 ```typescript
 // lib/supabase/client.ts
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Database } from '@/lib/database.types'
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Database } from "@/lib/database.types";
 
-export const supabase = createClientComponentClient<Database>()
+export const supabase = createClientComponentClient<Database>();
 
 // lib/supabase/server.ts
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 
 export const createServerClient = () => {
   return createServerComponentClient<Database>({
     cookies,
-  })
-}
+  });
+};
 ```
 
 #### Real-Time Synchronization
+
 ```typescript
 // Real-time book inventory updates
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 
 export function useBookInventory(libraryId: string) {
-  const [books, setBooks] = useState<BookCopy[]>([])
+  const [books, setBooks] = useState<BookCopy[]>([]);
 
   useEffect(() => {
     // Initial data fetch
     const fetchBooks = async () => {
       const { data } = await supabase
-        .from('book_copies')
-        .select(`
+        .from("book_copies")
+        .select(
+          `
           *,
           book_editions (
             title,
             authors,
             isbn_13
           )
-        `)
-        .eq('library_id', libraryId)
+        `
+        )
+        .eq("library_id", libraryId);
 
-      setBooks(data || [])
-    }
+      setBooks(data || []);
+    };
 
     // Real-time subscription
     const subscription = supabase
-      .channel('book_inventory_changes')
+      .channel("book_inventory_changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'book_copies',
-          filter: `library_id=eq.${libraryId}`
+          event: "*",
+          schema: "public",
+          table: "book_copies",
+          filter: `library_id=eq.${libraryId}`,
         },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setBooks(current => [...current, payload.new as BookCopy])
+          if (payload.eventType === "INSERT") {
+            setBooks((current) => [...current, payload.new as BookCopy]);
           }
-          if (payload.eventType === 'UPDATE') {
-            setBooks(current =>
-              current.map(book =>
-                book.id === payload.new.id ? payload.new as BookCopy : book
+          if (payload.eventType === "UPDATE") {
+            setBooks((current) =>
+              current.map((book) =>
+                book.id === payload.new.id ? (payload.new as BookCopy) : book
               )
-            )
+            );
           }
-          if (payload.eventType === 'DELETE') {
-            setBooks(current =>
-              current.filter(book => book.id !== payload.old.id)
-            )
+          if (payload.eventType === "DELETE") {
+            setBooks((current) =>
+              current.filter((book) => book.id !== payload.old.id)
+            );
           }
         }
       )
-      .subscribe()
+      .subscribe();
 
-    fetchBooks()
+    fetchBooks();
 
     return () => {
-      supabase.removeChannel(subscription)
-    }
-  }, [libraryId])
+      supabase.removeChannel(subscription);
+    };
+  }, [libraryId]);
 
-  return books
+  return books;
 }
 ```
 
 #### Row Level Security (Multi-Tenant)
+
 ```typescript
 // Row Level Security automatically enforced by database policies
 // All queries are filtered by current user's library access
@@ -460,14 +497,16 @@ export function useBookInventory(libraryId: string) {
 export async function getLibraryBooks(libraryId: string) {
   // RLS automatically filters to only books for this library
   const { data, error } = await supabase
-    .from('book_copies')
-    .select(`
+    .from("book_copies")
+    .select(
+      `
       *,
       book_editions (*)
-    `)
-    .eq('library_id', libraryId) // Explicit filter + RLS enforcement
+    `
+    )
+    .eq("library_id", libraryId); // Explicit filter + RLS enforcement
 
-  return { data, error }
+  return { data, error };
 }
 
 export async function checkoutBook(
@@ -476,101 +515,113 @@ export async function checkoutBook(
   libraryId: string
 ) {
   // Multi-step transaction with RLS
-  const { data, error } = await supabase.rpc('process_book_checkout', {
+  const { data, error } = await supabase.rpc("process_book_checkout", {
     p_book_copy_id: bookCopyId,
     p_member_id: memberId,
     p_library_id: libraryId,
-    p_due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days
-  })
+    p_due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+  });
 
-  return { data, error }
+  return { data, error };
 }
 ```
 
 #### Cross-Domain Authentication
+
 ```typescript
 // Authentication middleware for library management
-import { createServerClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { createServerClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 export async function requireLibraryAccess(libraryId?: string) {
-  const supabase = createServerClient()
+  const supabase = createServerClient();
 
   // Check user authentication
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
   if (error || !user) {
-    redirect('/auth/login')
+    redirect("/auth/login");
   }
 
   // Check library admin access
   const { data: staffAccess } = await supabase
-    .from('library_staff')
-    .select('role, permissions, library_id')
-    .eq('user_id', user.id)
-    .eq('library_id', libraryId)
-    .single()
+    .from("library_staff")
+    .select("role, permissions, library_id")
+    .eq("user_id", user.id)
+    .eq("library_id", libraryId)
+    .single();
 
   if (!staffAccess) {
-    redirect('/unauthorized')
+    redirect("/unauthorized");
   }
 
   return {
     user,
-    libraryAccess: staffAccess
-  }
+    libraryAccess: staffAccess,
+  };
 }
 ```
 
 #### Book Metadata Enrichment Integration
+
 ```typescript
 // Integration with crawler service for ISBN lookup
 export async function enrichBookMetadata(isbn: string, libraryId: string) {
   try {
     // Call crawler service for metadata
-    const response = await fetch(`${process.env.CRAWLER_API_URL}/api/v1/enrich`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.CRAWLER_SERVICE_AUTH_SECRET}`
-      },
-      body: JSON.stringify({
-        isbn_13: isbn,
-        library_id: libraryId
-      })
-    })
+    const response = await fetch(
+      `${process.env.CRAWLER_API_URL}/api/v1/enrich`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.CRAWLER_SERVICE_AUTH_SECRET}`,
+        },
+        body: JSON.stringify({
+          isbn_13: isbn,
+          library_id: libraryId,
+        }),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error('Enrichment failed')
+      throw new Error("Enrichment failed");
     }
 
-    const enrichmentData = await response.json()
+    const enrichmentData = await response.json();
 
     // The crawler service will update the database directly
     // We can subscribe to changes or refetch data
-    return { success: true, data: enrichmentData }
-
+    return { success: true, data: enrichmentData };
   } catch (error) {
-    console.error('Book enrichment failed:', error)
-    return { success: false, error: error.message }
+    console.error("Book enrichment failed:", error);
+    return { success: false, error: error.message };
   }
 }
 ```
 
 #### Database Queries with TypeScript Types
+
 ```typescript
 // Generated types from: supabase gen types typescript --local
-import { Database } from '@/lib/database.types'
+import { Database } from "@/lib/database.types";
 
-type BookCopy = Database['public']['Tables']['book_copies']['Row']
-type BookEdition = Database['public']['Tables']['book_editions']['Row']
-type BorrowingTransaction = Database['public']['Tables']['borrowing_transactions']['Row']
+type BookCopy = Database["public"]["Tables"]["book_copies"]["Row"];
+type BookEdition = Database["public"]["Tables"]["book_editions"]["Row"];
+type BorrowingTransaction =
+  Database["public"]["Tables"]["borrowing_transactions"]["Row"];
 
 // Type-safe queries
-export async function getActiveLoans(libraryId: string): Promise<BorrowingTransaction[]> {
+export async function getActiveLoans(
+  libraryId: string
+): Promise<BorrowingTransaction[]> {
   const { data, error } = await supabase
-    .from('borrowing_transactions')
-    .select(`
+    .from("borrowing_transactions")
+    .select(
+      `
       *,
       book_copies (
         barcode,
@@ -583,17 +634,19 @@ export async function getActiveLoans(libraryId: string): Promise<BorrowingTransa
         member_id,
         personal_info
       )
-    `)
-    .eq('library_id', libraryId)
-    .eq('transaction_type', 'checkout')
-    .is('return_date', null)
+    `
+    )
+    .eq("library_id", libraryId)
+    .eq("transaction_type", "checkout")
+    .is("return_date", null);
 
-  if (error) throw error
-  return data || []
+  if (error) throw error;
+  return data || [];
 }
 ```
 
 #### Migration Workflow Example
+
 ```sql
 -- Example migration: supabase/migrations/YYYYMMDDHHMMSS_add_library_events.sql
 
@@ -624,6 +677,7 @@ CREATE INDEX idx_library_events_date ON library_events(event_date);
 ```
 
 #### Seeding Data Example
+
 ```sql
 -- Example: supabase/seeds/13_library_events.sql
 
@@ -643,6 +697,7 @@ INSERT INTO library_events (id, library_id, event_type, title, description, even
 ### Development Workflow Best Practices
 
 #### 1. Always Work from Monorepo Root for Database Operations
+
 ```bash
 # ❌ WRONG - Don't run from subproject directory
 cd apps/library-management
@@ -654,6 +709,7 @@ supabase start  # Uses existing shared configuration
 ```
 
 #### 2. Type Generation After Schema Changes
+
 ```bash
 # After any migration or schema change:
 cd /Users/tronghieuluu/Projects/ezlib
@@ -665,6 +721,7 @@ supabase gen types typescript --local > services/crawler/lib/database.types.ts
 ```
 
 #### 3. RLS Policy Testing
+
 ```sql
 -- Always test RLS policies in Supabase Studio
 -- Go to SQL Editor and run queries as different users
@@ -679,6 +736,7 @@ SELECT * FROM book_copies WHERE library_id = 'your-library-id';
 ### Common Issues & Solutions
 
 #### Issue 1: "relation does not exist" errors
+
 ```bash
 # Solution: Reset database to apply all migrations
 cd {project root}
@@ -686,28 +744,30 @@ supabase db reset
 ```
 
 #### Issue 2: Real-time subscriptions not working
+
 ```typescript
 // Ensure you're using the correct channel name and filters
 const subscription = supabase
-  .channel('unique_channel_name') // Must be unique
+  .channel("unique_channel_name") // Must be unique
   .on(
-    'postgres_changes',
+    "postgres_changes",
     {
-      event: '*',
-      schema: 'public',
-      table: 'book_copies',
-      filter: `library_id=eq.${libraryId}` // Correct filter format
+      event: "*",
+      schema: "public",
+      table: "book_copies",
+      filter: `library_id=eq.${libraryId}`, // Correct filter format
     },
     (payload) => {
-      console.log('Change received!', payload)
+      console.log("Change received!", payload);
     }
   )
   .subscribe((status) => {
-    console.log('Subscription status:', status)
-  })
+    console.log("Subscription status:", status);
+  });
 ```
 
 #### Issue 3: RLS policies blocking queries
+
 ```sql
 -- Check RLS policies for your table
 SELECT * FROM pg_policies WHERE tablename = 'book_copies';
@@ -718,6 +778,7 @@ ALTER TABLE book_copies DISABLE ROW LEVEL SECURITY;
 ```
 
 #### Issue 4: Migration conflicts
+
 ```bash
 # If migrations fail, check the migration order
 supabase migration list
@@ -732,46 +793,58 @@ supabase migration new "fix_constraint_conflict"
 ### Performance Optimization
 
 #### Database Query Optimization
+
 ```typescript
 // ❌ Bad: Multiple queries
-const books = await supabase.from('book_copies').select('*')
-const editions = await supabase.from('book_editions').select('*')
+const books = await supabase.from("book_copies").select("*");
+const editions = await supabase.from("book_editions").select("*");
 
 // ✅ Good: Single query with joins
 const booksWithEditions = await supabase
-  .from('book_copies')
-  .select(`
+  .from("book_copies")
+  .select(
+    `
     *,
     book_editions (
       title,
       authors,
       isbn_13
     )
-  `)
-  .eq('library_id', libraryId)
+  `
+  )
+  .eq("library_id", libraryId);
 ```
 
 #### Real-time Subscription Management
+
 ```typescript
 // ❌ Bad: Multiple subscriptions
 useEffect(() => {
   // Multiple subscriptions can cause memory leaks
-  const sub1 = supabase.channel('books').subscribe()
-  const sub2 = supabase.channel('members').subscribe()
-}, [])
+  const sub1 = supabase.channel("books").subscribe();
+  const sub2 = supabase.channel("members").subscribe();
+}, []);
 
 // ✅ Good: Single subscription with proper cleanup
 useEffect(() => {
   const subscription = supabase
-    .channel('library_data')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'book_copies' }, handleBookChange)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'library_members' }, handleMemberChange)
-    .subscribe()
+    .channel("library_data")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "book_copies" },
+      handleBookChange
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "library_members" },
+      handleMemberChange
+    )
+    .subscribe();
 
   return () => {
-    supabase.removeChannel(subscription)
-  }
-}, [libraryId])
+    supabase.removeChannel(subscription);
+  };
+}, [libraryId]);
 ```
 
 ### Security Checklist
@@ -786,6 +859,7 @@ useEffect(() => {
 ### Monitoring & Debugging
 
 #### Local Development
+
 ```bash
 # View all running services
 supabase status
@@ -800,6 +874,7 @@ docker logs supabase_realtime_ezlib
 ```
 
 #### Database Debugging
+
 ```sql
 -- Check current user context
 SELECT auth.uid(), auth.jwt();
@@ -828,6 +903,7 @@ WHERE schemaname = 'public';
 ## Next Steps
 
 When starting development:
+
 1. **Project Setup**: Initialize Next.js 14 structure with required dependencies
 2. **Supabase Integration**: Configure database connection and generate types
 3. **Authentication Flow**: Implement cross-domain passwordless OTP system
@@ -836,6 +912,6 @@ When starting development:
 
 ---
 
-*Library Management App CLAUDE.md - Focused on ultra-simple library operations within EzLib ecosystem*
+_Library Management App CLAUDE.md - Focused on ultra-simple library operations within EzLib ecosystem_
 
 - Only read files in this folder, do not read documents in the root project folder unless requested

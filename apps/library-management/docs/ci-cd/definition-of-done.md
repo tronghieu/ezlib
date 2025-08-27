@@ -1,4 +1,5 @@
 # Definition of Done
+
 - [ ] GitHub Actions workflow successfully deploys to all environments
 - [ ] All quality gates pass consistently in CI pipeline
 - [ ] Health check endpoint validates deployment success
