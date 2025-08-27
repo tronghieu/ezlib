@@ -837,3 +837,5 @@ When starting development:
 ---
 
 *Library Management App CLAUDE.md - Focused on ultra-simple library operations within EzLib ecosystem*
+
+- Only read files in this folder, do not read documents in the root project folder unless requested
