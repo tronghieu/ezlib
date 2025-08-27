@@ -27,10 +27,8 @@ logger = structlog.get_logger(__name__)
 
 # Forward references for type hints
 if False:
-    from src.services.validation_service import ValidationService
     from src.services.external_api_service import ExternalAPIService
-
-
+    from src.services.validation_service import ValidationService
 
 
 class EnrichmentResult:
@@ -112,8 +110,8 @@ class BookEnrichmentService:
 
     def __init__(
         self,
-        validation_service: "ValidationService" | None = None,
-        external_api_service: "ExternalAPIService" | None = None,
+        validation_service: ValidationService | None = None,
+        external_api_service: ExternalAPIService | None = None,
         openlibrary_client: OpenLibraryClient | None = None,
     ) -> None:
         """Initialize enrichment service with dependency injection.
@@ -150,11 +148,13 @@ class BookEnrichmentService:
         # Initialize validation service
         if self._validation_service is None:
             from src.services.validation_service import ValidationService
+
             self._validation_service = ValidationService()
 
         # Initialize external API service
         if self._external_api_service is None:
             from src.services.external_api_service import ExternalAPIService
+
             self._external_api_service = ExternalAPIService(
                 openlibrary_client=self._openlibrary_client
             )
@@ -207,7 +207,7 @@ class BookEnrichmentService:
             "Created enrichment job",
             job_id=job_id,
             correlation_id=correlation_id,
-            isbn=isbn
+            isbn=isbn,
         )
 
         return job
@@ -233,7 +233,7 @@ class BookEnrichmentService:
             "Job completed and archived",
             job_id=job.job_id,
             status=job.status,
-            duration=job.get_duration()
+            duration=job.get_duration(),
         )
 
     async def enrich_book(
@@ -296,8 +296,8 @@ class BookEnrichmentService:
                     ErrorDetails(
                         category=ErrorCategory.VALIDATION_ERROR,
                         message=str(e),
-                        field_name="isbn"
-                    )
+                        field_name="isbn",
+                    ),
                 )
 
                 result = self._create_error_result(job, str(e))
@@ -335,15 +335,16 @@ class BookEnrichmentService:
 
                 except asyncio.TimeoutError:
                     processing_time = asyncio.get_event_loop().time() - start_time
-                    error_msg = f"Enrichment timeout after {settings.ENRICHMENT_TIMEOUT}s"
+                    error_msg = (
+                        f"Enrichment timeout after {settings.ENRICHMENT_TIMEOUT}s"
+                    )
 
                     job.set_error(
                         error_msg,
                         ErrorCategory.TIMEOUT_ERROR,
                         ErrorDetails(
-                            category=ErrorCategory.TIMEOUT_ERROR,
-                            message=error_msg
-                        )
+                            category=ErrorCategory.TIMEOUT_ERROR, message=error_msg
+                        ),
                     )
 
                     logger.error(
@@ -373,10 +374,7 @@ class BookEnrichmentService:
             job.set_error(
                 error_msg,
                 ErrorCategory.UNKNOWN_ERROR,
-                ErrorDetails(
-                    category=ErrorCategory.UNKNOWN_ERROR,
-                    message=str(e)
-                )
+                ErrorDetails(category=ErrorCategory.UNKNOWN_ERROR, message=str(e)),
             )
 
             logger.error(
@@ -402,9 +400,7 @@ class BookEnrichmentService:
             return result
 
     async def _enrich_single_book_enhanced(
-        self,
-        job: EnrichmentJob,
-        metrics: ProcessingMetrics
+        self, job: EnrichmentJob, metrics: ProcessingMetrics
     ) -> EnrichmentResult:
         """Enhanced single book enrichment with full quality control.
 
@@ -428,14 +424,18 @@ class BookEnrichmentService:
                 isbn=job.isbn,
             )
 
-            book_details, sources_used = await self._external_api_service.fetch_book_by_isbn(
-                job.isbn,
-                force_refresh=job.force_refresh
+            (
+                book_details,
+                sources_used,
+            ) = await self._external_api_service.fetch_book_by_isbn(
+                job.isbn, force_refresh=job.force_refresh
             )
 
             metrics.sources_used = sources_used
-            metrics.api_calls_made = len([s for s in sources_used if not s.endswith(':cached')])
-            metrics.cache_hits = len([s for s in sources_used if s.endswith(':cached')])
+            metrics.api_calls_made = len(
+                [s for s in sources_used if not s.endswith(":cached")]
+            )
+            metrics.cache_hits = len([s for s in sources_used if s.endswith(":cached")])
 
             if not book_details:
                 error_msg = "Book not found in any external source"
@@ -445,8 +445,8 @@ class BookEnrichmentService:
                     ErrorDetails(
                         category=ErrorCategory.API_ERROR,
                         message=error_msg,
-                        api_source=", ".join(sources_used)
-                    )
+                        api_source=", ".join(sources_used),
+                    ),
                 )
 
                 logger.info(
@@ -475,7 +475,7 @@ class BookEnrichmentService:
             # Update job with quality scores
             job.set_quality_scores(
                 quality_score=quality_report["completeness_score"],
-                completeness_score=quality_report["completeness_score"]
+                completeness_score=quality_report["completeness_score"],
             )
 
             # Step 6: Process quality warnings
@@ -505,8 +505,8 @@ class BookEnrichmentService:
                     ErrorDetails(
                         category=ErrorCategory.QUALITY_ERROR,
                         message=error_msg,
-                        field_name="quality_score"
-                    )
+                        field_name="quality_score",
+                    ),
                 )
 
                 logger.warning(
@@ -547,10 +547,7 @@ class BookEnrichmentService:
             job.set_error(
                 error_msg,
                 ErrorCategory.UNKNOWN_ERROR,
-                ErrorDetails(
-                    category=ErrorCategory.UNKNOWN_ERROR,
-                    message=str(e)
-                )
+                ErrorDetails(category=ErrorCategory.UNKNOWN_ERROR, message=str(e)),
             )
 
             logger.error(
@@ -565,11 +562,13 @@ class BookEnrichmentService:
                 isbn=job.isbn,
                 status=EnrichmentStatus.FAILED,
                 error=error_msg,
-                sources_used=getattr(metrics, 'sources_used', []),
+                sources_used=getattr(metrics, "sources_used", []),
                 correlation_id=job.correlation_id,
             )
 
-    def _create_error_result(self, job: EnrichmentJob, error_message: str) -> EnrichmentResult:
+    def _create_error_result(
+        self, job: EnrichmentJob, error_message: str
+    ) -> EnrichmentResult:
         """Create an error result from a failed job.
 
         Args:
@@ -622,8 +621,7 @@ class BookEnrichmentService:
 
         # Create enrichment tasks
         tasks = [
-            self.enrich_book(isbn, force_refresh, min_quality_score)
-            for isbn in isbns
+            self.enrich_book(isbn, force_refresh, min_quality_score) for isbn in isbns
         ]
 
         # Wait for all tasks to complete
@@ -634,9 +632,7 @@ class BookEnrichmentService:
         for isbn, result in zip(isbns, results, strict=True):
             if isinstance(result, Exception):
                 error_result = EnrichmentResult(
-                    isbn=isbn,
-                    status=EnrichmentStatus.FAILED,
-                    error=str(result)
+                    isbn=isbn, status=EnrichmentStatus.FAILED, error=str(result)
                 )
                 enrichment_results.append(error_result)
                 batch_job.update_progress(completed=1, failed=1)
@@ -705,7 +701,7 @@ class BookEnrichmentService:
             "job_stats": {
                 "active_jobs": len(self._active_jobs),
                 "jobs_in_history": len(self._job_history),
-            }
+            },
         }
 
         # Check external API service

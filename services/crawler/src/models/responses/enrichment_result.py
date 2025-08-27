@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -143,7 +143,7 @@ class HealthResponse(BaseModel):
 
 class JobStatusResponse(BaseModel):
     """Response model for enrichment job status."""
-    
+
     job_id: str = Field(..., description="Unique job identifier")
     correlation_id: str = Field(..., description="Correlation ID for tracking")
     isbn: str = Field(..., description="Book ISBN being enriched")
@@ -154,14 +154,15 @@ class JobStatusResponse(BaseModel):
     has_warnings: bool = Field(False, description="Whether quality warnings exist")
     requires_review: bool = Field(False, description="Whether manual review required")
     error_message: Optional[str] = Field(None, description="Error message if failed")
-    processing_time: Optional[float] = Field(None, description="Processing duration in seconds")
+    processing_time: Optional[float] = Field(
+        None, description="Processing duration in seconds"
+    )
 
 
 class ActiveJobsResponse(BaseModel):
     """Response model for active jobs list."""
-    
+
     active_jobs: List[JobStatusResponse] = Field(
-        default_factory=list, 
-        description="List of currently active enrichment jobs"
+        default_factory=list, description="List of currently active enrichment jobs"
     )
     total_active: int = Field(..., description="Total number of active jobs")

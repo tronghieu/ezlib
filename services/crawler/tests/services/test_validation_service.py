@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
 from datetime import date, datetime
 
-from src.services.validation_service import ValidationService
-from src.core.exceptions import ValidationError, DataQualityError
+import pytest
+
+from src.core.exceptions import ValidationError
 from src.models.database.book_metadata import BookMetadata
+from src.services.validation_service import ValidationService
 
 
 class TestValidationService:
@@ -49,7 +50,7 @@ class TestValidationService:
         """Test ISBN validation with invalid format."""
         with pytest.raises(ValidationError) as exc_info:
             validation_service.validate_isbn("123456789")
-        
+
         assert exc_info.value.field == "isbn"
         assert "Invalid ISBN format" in str(exc_info.value)
 
@@ -57,14 +58,14 @@ class TestValidationService:
         """Test ISBN validation with empty string."""
         with pytest.raises(ValidationError) as exc_info:
             validation_service.validate_isbn("")
-        
+
         assert "must be a non-empty string" in str(exc_info.value)
 
     def test_validate_isbn_none(self, validation_service):
         """Test ISBN validation with None."""
         with pytest.raises(ValidationError) as exc_info:
             validation_service.validate_isbn(None)
-        
+
         assert "must be a non-empty string" in str(exc_info.value)
 
     # Text Sanitization Tests
@@ -128,7 +129,7 @@ class TestValidationService:
         """Test publication date validation with date too early."""
         with pytest.raises(ValidationError) as exc_info:
             validation_service.validate_publication_date(date(1400, 1, 1))
-        
+
         assert "too early" in str(exc_info.value)
         assert exc_info.value.field == "publication_date"
 
@@ -137,7 +138,7 @@ class TestValidationService:
         future_year = datetime.now().year + 10
         with pytest.raises(ValidationError) as exc_info:
             validation_service.validate_publication_date(date(future_year, 1, 1))
-        
+
         assert "too far in future" in str(exc_info.value)
 
     def test_validate_publication_date_none(self, validation_service):
@@ -159,7 +160,7 @@ class TestValidationService:
     def test_validate_publisher_name_invalid_patterns(self, validation_service):
         """Test publisher name validation with invalid patterns."""
         invalid_names = ["unknown", "n/a", "not available", "self.published", "123456"]
-        
+
         for name in invalid_names:
             result = validation_service.validate_publisher_name(name)
             assert result is None
@@ -202,17 +203,16 @@ class TestValidationService:
         assert result == ["John Smith", "Jane Doe"]
 
     # Completeness Score Tests
-    def test_calculate_completeness_score_full_metadata(self, validation_service, sample_metadata):
+    def test_calculate_completeness_score_full_metadata(
+        self, validation_service, sample_metadata
+    ):
         """Test completeness score calculation with full metadata."""
         score = validation_service.calculate_completeness_score(sample_metadata)
         assert score == 100.0
 
     def test_calculate_completeness_score_minimal_metadata(self, validation_service):
         """Test completeness score with minimal metadata."""
-        metadata = BookMetadata(
-            isbn_13="9780321125217",
-            title="Test Book"
-        )
+        metadata = BookMetadata(isbn_13="9780321125217", title="Test Book")
         score = validation_service.calculate_completeness_score(metadata)
         # Should have title (25) + isbn (implicit, but no separate weight)
         assert score == 25.0
@@ -225,16 +225,14 @@ class TestValidationService:
 
     def test_calculate_completeness_score_partial_authors(self, validation_service):
         """Test completeness score with empty authors list."""
-        metadata = BookMetadata(
-            isbn_13="9780321125217",
-            title="Test Book",
-            authors=[]
-        )
+        metadata = BookMetadata(isbn_13="9780321125217", title="Test Book", authors=[])
         score = validation_service.calculate_completeness_score(metadata)
         assert score == 25.0  # Only title weight
 
     # Suspicious Data Detection Tests
-    def test_detect_suspicious_data_clean_metadata(self, validation_service, sample_metadata):
+    def test_detect_suspicious_data_clean_metadata(
+        self, validation_service, sample_metadata
+    ):
         """Test suspicious data detection with clean metadata."""
         warnings = validation_service.detect_suspicious_data(sample_metadata)
         assert warnings == []
@@ -260,9 +258,9 @@ class TestValidationService:
     def test_detect_suspicious_data_many_authors(self, validation_service):
         """Test detection of unusually many authors."""
         metadata = BookMetadata(
-            isbn_13="9780321125217", 
+            isbn_13="9780321125217",
             title="Test Book",
-            authors=[f"Author {i}" for i in range(15)]
+            authors=[f"Author {i}" for i in range(15)],
         )
         warnings = validation_service.detect_suspicious_data(metadata)
         assert any("high number of authors" in w for w in warnings)
@@ -273,7 +271,7 @@ class TestValidationService:
         metadata = BookMetadata(
             isbn_13="9780321125217",
             title="Test Book",
-            publication_date=date(future_year, 1, 1)
+            publication_date=date(future_year, 1, 1),
         )
         warnings = validation_service.detect_suspicious_data(metadata)
         assert any("in the future" in w for w in warnings)
@@ -281,18 +279,18 @@ class TestValidationService:
     def test_detect_suspicious_data_high_page_count(self, validation_service):
         """Test detection of unusually high page count."""
         metadata = BookMetadata(
-            isbn_13="9780321125217",
-            title="Test Book",
-            page_count=15000
+            isbn_13="9780321125217", title="Test Book", page_count=15000
         )
         warnings = validation_service.detect_suspicious_data(metadata)
         assert any("unusually high" in w for w in warnings)
 
     # Comprehensive Quality Validation Tests
-    def test_validate_metadata_quality_high_quality(self, validation_service, sample_metadata):
+    def test_validate_metadata_quality_high_quality(
+        self, validation_service, sample_metadata
+    ):
         """Test comprehensive quality validation with high-quality metadata."""
         report = validation_service.validate_metadata_quality(sample_metadata)
-        
+
         assert report["completeness_score"] == 100.0
         assert report["quality_status"] == "acceptable"
         assert report["meets_threshold"] is True
@@ -302,8 +300,10 @@ class TestValidationService:
     def test_validate_metadata_quality_below_threshold(self, validation_service):
         """Test quality validation with data below threshold."""
         metadata = BookMetadata(isbn_13="9780321125217", title="Test")
-        report = validation_service.validate_metadata_quality(metadata, min_completeness=50.0)
-        
+        report = validation_service.validate_metadata_quality(
+            metadata, min_completeness=50.0
+        )
+
         assert report["completeness_score"] == 25.0
         assert report["quality_status"] == "below_threshold"
         assert report["meets_threshold"] is False
@@ -314,29 +314,31 @@ class TestValidationService:
             isbn_13="9780321125217",
             title="X",  # Too short
             authors=["Unknown"],  # Placeholder
-            page_count=-5  # Invalid
+            page_count=-5,  # Invalid
         )
         report = validation_service.validate_metadata_quality(metadata)
-        
+
         assert report["quality_status"] == "suspicious"
         assert len(report["warnings"]) > 0
         assert report["suspicion_level"] > 0
 
     @pytest.mark.asyncio
-    async def test_validation_service_performance(self, validation_service, sample_metadata):
+    async def test_validation_service_performance(
+        self, validation_service, sample_metadata
+    ):
         """Test validation service performance with multiple operations."""
         import time
-        
+
         start_time = time.time()
-        
+
         # Run multiple validation operations
         for _ in range(100):
             validation_service.validate_isbn("978-0-321-12521-7")
             validation_service.sanitize_text("Sample text with <b>HTML</b>")
             validation_service.calculate_completeness_score(sample_metadata)
             validation_service.detect_suspicious_data(sample_metadata)
-        
+
         end_time = time.time()
-        
+
         # Should complete quickly (under 1 second for 100 iterations)
         assert end_time - start_time < 1.0

@@ -22,12 +22,12 @@ class ValidationService:
     def __init__(self) -> None:
         """Initialize validation service."""
         # Precompile regex patterns for better performance
-        self._html_tag_pattern = re.compile(r'<[^>]+>')
-        self._whitespace_pattern = re.compile(r'\s+')
+        self._html_tag_pattern = re.compile(r"<[^>]+>")
+        self._whitespace_pattern = re.compile(r"\s+")
         self._suspicious_text_pattern = re.compile(
-            r'[^\w\s\-\.\'\"\,\!\?\:\;\(\)\/\&]', re.UNICODE
+            r"[^\w\s\-\.\'\"\,\!\?\:\;\(\)\/\&]", re.UNICODE
         )
-        self._year_pattern = re.compile(r'\b(1[5-9]\d{2}|20[0-2]\d)\b')
+        self._year_pattern = re.compile(r"\b(1[5-9]\d{2}|20[0-2]\d)\b")
 
     def validate_isbn(self, isbn: str) -> str:
         """Validate and normalize ISBN.
@@ -43,26 +43,20 @@ class ValidationService:
         """
         if not isbn or not isinstance(isbn, str):
             raise ValidationError(
-                "ISBN must be a non-empty string",
-                field="isbn",
-                value=isbn
+                "ISBN must be a non-empty string", field="isbn", value=isbn
             )
 
         isbn_clean = isbn.strip().replace("-", "").replace(" ", "")
 
         if not is_valid_isbn(isbn_clean):
             raise ValidationError(
-                f"Invalid ISBN format: {isbn}",
-                field="isbn",
-                value=isbn
+                f"Invalid ISBN format: {isbn}", field="isbn", value=isbn
             )
 
         normalized = normalize_isbn(isbn_clean)
 
         logger.debug(
-            "ISBN validation successful",
-            original_isbn=isbn,
-            normalized_isbn=normalized
+            "ISBN validation successful", original_isbn=isbn, normalized_isbn=normalized
         )
 
         return normalized
@@ -81,26 +75,26 @@ class ValidationService:
             return None
 
         # Remove HTML tags
-        sanitized = self._html_tag_pattern.sub('', text)
+        sanitized = self._html_tag_pattern.sub("", text)
 
         # Decode HTML entities
         sanitized = html.unescape(sanitized)
 
         # Normalize Unicode
-        sanitized = unicodedata.normalize('NFKC', sanitized)
+        sanitized = unicodedata.normalize("NFKC", sanitized)
 
         # Normalize whitespace
-        sanitized = self._whitespace_pattern.sub(' ', sanitized).strip()
+        sanitized = self._whitespace_pattern.sub(" ", sanitized).strip()
 
         # Truncate if too long
         if len(sanitized) > max_length:
-            sanitized = sanitized[:max_length].rsplit(' ', 1)[0] + '...'
+            sanitized = sanitized[:max_length].rsplit(" ", 1)[0] + "..."
 
         # Check for suspicious characters
         if self._suspicious_text_pattern.search(sanitized):
             logger.warning(
                 "Suspicious characters detected in text",
-                text=sanitized[:100] + "..." if len(sanitized) > 100 else sanitized
+                text=sanitized[:100] + "..." if len(sanitized) > 100 else sanitized,
             )
 
         return sanitized if sanitized else None
@@ -144,7 +138,7 @@ class ValidationService:
             raise ValidationError(
                 f"Publication year {target_date.year} is too early (minimum: 1500)",
                 field="publication_date",
-                value=date_input
+                value=date_input,
             )
 
         if target_date.year > current_year + 2:
@@ -152,7 +146,7 @@ class ValidationService:
                 f"Publication year {target_date.year} is too far in future "
                 f"(maximum: {current_year + 2})",
                 field="publication_date",
-                value=date_input
+                value=date_input,
             )
 
         return target_date
@@ -177,11 +171,11 @@ class ValidationService:
 
         # Check for common invalid patterns
         invalid_patterns = [
-            r'^unknown$',
-            r'^n/a$',
-            r'^not available$',
-            r'^self.published$',
-            r'^[0-9]+$'  # Just numbers
+            r"^unknown$",
+            r"^n/a$",
+            r"^not available$",
+            r"^self.published$",
+            r"^[0-9]+$",  # Just numbers
         ]
 
         for pattern in invalid_patterns:
@@ -214,8 +208,8 @@ class ValidationService:
                 continue
 
             # Normalize name format (Handle "Last, First" format)
-            if ',' in clean_author and len(clean_author.split(',')) == 2:
-                parts = [part.strip() for part in clean_author.split(',')]
+            if "," in clean_author and len(clean_author.split(",")) == 2:
+                parts = [part.strip() for part in clean_author.split(",")]
                 if all(parts):  # Both parts non-empty
                     normalized_name = f"{parts[1]} {parts[0]}"
                 else:
@@ -242,14 +236,14 @@ class ValidationService:
         """
         # Define field weights based on importance
         field_weights = {
-            'title': 25.0,
-            'authors': 20.0,
-            'publication_date': 15.0,
-            'publisher': 10.0,
-            'description': 10.0,
-            'page_count': 8.0,
-            'language': 7.0,
-            'cover_image_url': 5.0
+            "title": 25.0,
+            "authors": 20.0,
+            "publication_date": 15.0,
+            "publisher": 10.0,
+            "description": 10.0,
+            "page_count": 8.0,
+            "language": 7.0,
+            "cover_image_url": 5.0,
         }
 
         total_weight = 0.0
@@ -260,11 +254,11 @@ class ValidationService:
 
             value = getattr(metadata, field, None)
             if value:
-                if field == 'authors':
+                if field == "authors":
                     # Authors list should have at least one entry
                     if isinstance(value, list) and len(value) > 0 and value[0]:
                         achieved_weight += weight
-                elif field == 'page_count':
+                elif field == "page_count":
                     # Page count should be positive
                     if isinstance(value, int) and value > 0:
                         achieved_weight += weight
@@ -295,7 +289,7 @@ class ValidationService:
                 warnings.append("Title is too short")
             elif len(metadata.title) > 500:
                 warnings.append("Title is unusually long")
-            elif metadata.title.lower() in ['unknown', 'n/a', 'untitled']:
+            elif metadata.title.lower() in ["unknown", "n/a", "untitled"]:
                 warnings.append("Title appears to be placeholder text")
 
         # Check for suspicious author data
@@ -306,7 +300,7 @@ class ValidationService:
             for author in metadata.authors:
                 if len(author) < 2:
                     warnings.append(f"Author name too short: {author}")
-                elif author.lower() in ['unknown', 'anonymous', 'n/a']:
+                elif author.lower() in ["unknown", "anonymous", "n/a"]:
                     warnings.append(f"Author appears to be placeholder: {author}")
 
         # Check for suspicious publication date
@@ -328,15 +322,13 @@ class ValidationService:
 
         # Check for suspicious publisher
         if metadata.publisher:
-            if metadata.publisher.lower() in ['unknown', 'self-published', 'n/a']:
+            if metadata.publisher.lower() in ["unknown", "self-published", "n/a"]:
                 warnings.append("Publisher appears to be placeholder text")
 
         return warnings
 
     def validate_metadata_quality(
-        self,
-        metadata: BookMetadata,
-        min_completeness: float = None
+        self, metadata: BookMetadata, min_completeness: float = None
     ) -> dict[str, Any]:
         """Comprehensive metadata quality validation.
 
@@ -375,7 +367,7 @@ class ValidationService:
             "warnings": warnings,
             "missing_fields": missing_fields,
             "meets_threshold": completeness_score >= min_completeness,
-            "suspicion_level": len(warnings)
+            "suspicion_level": len(warnings),
         }
 
         logger.info(
@@ -384,8 +376,7 @@ class ValidationService:
             completeness_score=completeness_score,
             quality_status=quality_status,
             warnings_count=len(warnings),
-            missing_fields_count=len(missing_fields)
+            missing_fields_count=len(missing_fields),
         )
 
         return quality_report
-

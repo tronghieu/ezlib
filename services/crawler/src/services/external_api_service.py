@@ -19,6 +19,7 @@ logger = structlog.get_logger(__name__)
 @dataclass
 class APICallMetrics:
     """Metrics for individual API calls."""
+
     api_name: str
     start_time: float
     end_time: float
@@ -34,6 +35,7 @@ class APICallMetrics:
 @dataclass
 class CacheEntry:
     """Cache entry for API responses."""
+
     data: Any
     timestamp: datetime
     ttl_seconds: int
@@ -48,9 +50,7 @@ class ExternalAPIService:
     """Service for coordinating calls to multiple external APIs."""
 
     def __init__(
-        self,
-        openlibrary_client: OpenLibraryClient | None = None,
-        cache_ttl: int = None
+        self, openlibrary_client: OpenLibraryClient | None = None, cache_ttl: int = None
     ) -> None:
         """Initialize external API service.
 
@@ -145,18 +145,12 @@ class ExternalAPIService:
             data: Response data to cache
         """
         self._response_cache[cache_key] = CacheEntry(
-            data=data,
-            timestamp=datetime.now(),
-            ttl_seconds=self._cache_ttl
+            data=data, timestamp=datetime.now(), ttl_seconds=self._cache_ttl
         )
         logger.debug("Response cached", cache_key=cache_key)
 
     async def _record_api_call(
-        self,
-        api_name: str,
-        start_time: float,
-        success: bool,
-        error: str | None = None
+        self, api_name: str, start_time: float, success: bool, error: str | None = None
     ) -> None:
         """Record metrics for API call.
 
@@ -172,7 +166,7 @@ class ExternalAPIService:
             start_time=start_time,
             end_time=end_time,
             success=success,
-            error=error
+            error=error,
         )
 
         self._call_metrics.append(metrics)
@@ -186,13 +180,11 @@ class ExternalAPIService:
             api_name=api_name,
             duration=metrics.duration,
             success=success,
-            error=error
+            error=error,
         )
 
     async def fetch_book_by_isbn(
-        self,
-        isbn: str,
-        force_refresh: bool = False
+        self, isbn: str, force_refresh: bool = False
     ) -> tuple[OpenLibraryBookDetails | None, list[str]]:
         """Fetch book data from available APIs.
 
@@ -233,7 +225,7 @@ class ExternalAPIService:
         logger.info(
             "No book data found from any API",
             isbn=isbn,
-            sources_tried=sources_used or ["openlibrary"]
+            sources_tried=sources_used or ["openlibrary"],
         )
 
         return None, sources_used or ["openlibrary"]
@@ -259,13 +251,13 @@ class ExternalAPIService:
                 logger.debug(
                     "Fetching from OpenLibrary",
                     isbn=isbn,
-                    semaphore_value=self._api_semaphores[api_name]._value
+                    semaphore_value=self._api_semaphores[api_name]._value,
                 )
 
                 # Set timeout for individual API call
                 data = await asyncio.wait_for(
                     self._openlibrary_client.fetch_book_by_isbn(isbn),
-                    timeout=30.0  # 30 second timeout per API
+                    timeout=30.0,  # 30 second timeout per API
                 )
 
                 if data:
@@ -276,7 +268,7 @@ class ExternalAPIService:
                         "Successfully fetched from OpenLibrary",
                         isbn=isbn,
                         title=book_details.title,
-                        authors_count=len(book_details.authors or [])
+                        authors_count=len(book_details.authors or []),
                     )
 
                     return book_details
@@ -298,14 +290,12 @@ class ExternalAPIService:
                 "Error fetching from OpenLibrary",
                 isbn=isbn,
                 error=str(e),
-                error_type=type(e).__name__
+                error_type=type(e).__name__,
             )
             raise ExternalAPIError(api_name, 500, error_msg) from e
 
     async def fetch_books_parallel(
-        self,
-        isbns: list[str],
-        max_concurrent: int = None
+        self, isbns: list[str], max_concurrent: int = None
     ) -> list[tuple[str, OpenLibraryBookDetails | None, list[str]]]:
         """Fetch multiple books in parallel with concurrency control.
 
@@ -324,13 +314,15 @@ class ExternalAPIService:
         logger.info(
             "Starting parallel book fetch",
             book_count=len(isbns),
-            max_concurrent=max_concurrent
+            max_concurrent=max_concurrent,
         )
 
         # Create semaphore for overall concurrency control
         semaphore = asyncio.Semaphore(max_concurrent)
 
-        async def fetch_single(isbn: str) -> tuple[str, OpenLibraryBookDetails | None, list[str]]:
+        async def fetch_single(
+            isbn: str,
+        ) -> tuple[str, OpenLibraryBookDetails | None, list[str]]:
             async with semaphore:
                 try:
                     book_details, sources = await self.fetch_book_by_isbn(isbn)
@@ -340,7 +332,7 @@ class ExternalAPIService:
                         "Error in parallel fetch",
                         isbn=isbn,
                         error=str(e),
-                        error_type=type(e).__name__
+                        error_type=type(e).__name__,
                     )
                     return isbn, None, []
 
@@ -353,21 +345,21 @@ class ExternalAPIService:
         for isbn, result in zip(isbns, results, strict=True):
             if isinstance(result, Exception):
                 logger.error(
-                    "Exception in parallel fetch",
-                    isbn=isbn,
-                    error=str(result)
+                    "Exception in parallel fetch", isbn=isbn, error=str(result)
                 )
                 processed_results.append((isbn, None, []))
             else:
                 processed_results.append(result)
 
         # Log summary
-        successful = sum(1 for _, details, _ in processed_results if details is not None)
+        successful = sum(
+            1 for _, details, _ in processed_results if details is not None
+        )
         logger.info(
             "Parallel book fetch completed",
             total_books=len(isbns),
             successful=successful,
-            failed=len(isbns) - successful
+            failed=len(isbns) - successful,
         )
 
         return processed_results
@@ -382,10 +374,7 @@ class ExternalAPIService:
             Dictionary containing API metrics
         """
         cutoff_time = time.time() - (minutes * 60)
-        recent_metrics = [
-            m for m in self._call_metrics
-            if m.start_time >= cutoff_time
-        ]
+        recent_metrics = [m for m in self._call_metrics if m.start_time >= cutoff_time]
 
         if not recent_metrics:
             return {"period_minutes": minutes, "no_data": True}
@@ -408,7 +397,7 @@ class ExternalAPIService:
                     "successful_calls": 0,
                     "failed_calls": 0,
                     "avg_duration": 0.0,
-                    "errors": []
+                    "errors": [],
                 }
 
             api_breakdown[api_name]["total_calls"] += 1
@@ -423,17 +412,21 @@ class ExternalAPIService:
         for api_name in api_breakdown:
             api_metrics = [m for m in recent_metrics if m.api_name == api_name]
             api_durations = [m.duration for m in api_metrics]
-            api_breakdown[api_name]["avg_duration"] = sum(api_durations) / len(api_durations)
+            api_breakdown[api_name]["avg_duration"] = sum(api_durations) / len(
+                api_durations
+            )
 
         return {
             "period_minutes": minutes,
             "total_calls": total_calls,
             "successful_calls": successful_calls,
             "failed_calls": failed_calls,
-            "success_rate": (successful_calls / total_calls * 100) if total_calls > 0 else 0,
+            "success_rate": (successful_calls / total_calls * 100)
+            if total_calls > 0
+            else 0,
             "average_duration": avg_duration,
             "api_breakdown": api_breakdown,
-            "cache_size": len(self._response_cache)
+            "cache_size": len(self._response_cache),
         }
 
     async def health_check(self) -> dict[str, Any]:
@@ -445,7 +438,7 @@ class ExternalAPIService:
         health_status = {
             "overall_status": "healthy",
             "timestamp": datetime.now().isoformat(),
-            "apis": {}
+            "apis": {},
         }
 
         # Check OpenLibrary
@@ -456,19 +449,20 @@ class ExternalAPIService:
             ol_healthy = await self._openlibrary_client.health_check()
             health_status["apis"]["openlibrary"] = {
                 "status": "healthy" if ol_healthy else "unhealthy",
-                "available": ol_healthy
+                "available": ol_healthy,
             }
 
         except Exception as e:
             health_status["apis"]["openlibrary"] = {
                 "status": "unhealthy",
                 "error": str(e),
-                "available": False
+                "available": False,
             }
 
         # Update overall status
         unhealthy_apis = [
-            name for name, status in health_status["apis"].items()
+            name
+            for name, status in health_status["apis"].items()
             if status["status"] != "healthy"
         ]
 
@@ -503,8 +497,7 @@ class ExternalAPIService:
 
         # Find expired keys
         expired_keys = [
-            key for key, entry in self._response_cache.items()
-            if entry.is_expired
+            key for key, entry in self._response_cache.items() if entry.is_expired
         ]
 
         # Remove expired entries
@@ -515,7 +508,7 @@ class ExternalAPIService:
         logger.debug(
             "Cache cleanup completed",
             removed_entries=removed_count,
-            remaining_entries=len(self._response_cache)
+            remaining_entries=len(self._response_cache),
         )
 
         return removed_count

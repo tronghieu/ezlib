@@ -1,7 +1,6 @@
 """Book enrichment API endpoints."""
 
 from __future__ import annotations
-from typing import Union
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
@@ -16,11 +15,11 @@ from src.models.requests.enrichment_request import (
     EnrichmentRequest,
 )
 from src.models.responses.enrichment_result import (
+    ActiveJobsResponse,
     BatchEnrichmentResponse,
     EnrichmentResponse,
     ErrorResponse,
     JobStatusResponse,
-    ActiveJobsResponse,
 )
 from src.services.enrichment_service import BookEnrichmentService, EnrichmentResult
 
@@ -262,14 +261,17 @@ async def get_enrichment_status(correlation_id: str) -> EnrichmentResponse:
     summary="Get enrichment job status",
     description="Get the current status of a specific enrichment job",
     responses={
-        200: {"description": "Job status retrieved successfully", "model": JobStatusResponse},
+        200: {
+            "description": "Job status retrieved successfully",
+            "model": JobStatusResponse,
+        },
         404: {"description": "Job not found", "model": ErrorResponse},
     },
 )
 async def get_job_status(
     job_id: str,
     service: BookEnrichmentService = Depends(get_enrichment_service),
-) -> Union[JobStatusResponse, JSONResponse]:
+) -> JobStatusResponse | JSONResponse:
     """Get status of a specific enrichment job.
 
     Args:
@@ -281,15 +283,15 @@ async def get_job_status(
     """
     try:
         job_status = service.get_job_status(job_id)
-        
+
         if job_status is None:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
-                content={"error": f"Job {job_id} not found", "job_id": job_id}
+                content={"error": f"Job {job_id} not found", "job_id": job_id},
             )
-        
+
         return JobStatusResponse(**job_status)
-        
+
     except Exception as e:
         return create_error_response(e)
 
@@ -300,12 +302,15 @@ async def get_job_status(
     summary="Get active enrichment jobs",
     description="Get list of currently active enrichment jobs",
     responses={
-        200: {"description": "Active jobs list retrieved successfully", "model": ActiveJobsResponse},
+        200: {
+            "description": "Active jobs list retrieved successfully",
+            "model": ActiveJobsResponse,
+        },
     },
 )
 async def get_active_jobs(
     service: BookEnrichmentService = Depends(get_enrichment_service),
-) -> Union[ActiveJobsResponse, JSONResponse]:
+) -> ActiveJobsResponse | JSONResponse:
     """Get list of currently active enrichment jobs.
 
     Args:
@@ -316,15 +321,12 @@ async def get_active_jobs(
     """
     try:
         active_jobs = service.get_active_jobs()
-        
-        job_responses = [
-            JobStatusResponse(**job_data) for job_data in active_jobs
-        ]
-        
+
+        job_responses = [JobStatusResponse(**job_data) for job_data in active_jobs]
+
         return ActiveJobsResponse(
-            active_jobs=job_responses,
-            total_active=len(job_responses)
+            active_jobs=job_responses, total_active=len(job_responses)
         )
-        
+
     except Exception as e:
         return create_error_response(e)
