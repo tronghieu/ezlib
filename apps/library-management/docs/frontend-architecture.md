@@ -4,10 +4,10 @@
 
 ## Change Log
 
-| Date       | Version | Description                                                          | Author              |
-| ---------- | ------- | -------------------------------------------------------------------- | ------------------- |
-| 2025-08-28 | 2.0     | Complete rewrite to match actual monolithic Next.js implementation  | Winston (Architect) |
-| 2025-08-25 | 1.0     | Initial fictional architecture (superseded)                         | BMad Orchestrator   |
+| Date       | Version | Description                                                        | Author              |
+| ---------- | ------- | ------------------------------------------------------------------ | ------------------- |
+| 2025-08-28 | 2.0     | Complete rewrite to match actual monolithic Next.js implementation | Winston (Architect) |
+| 2025-08-25 | 1.0     | Initial fictional architecture (superseded)                        | BMad Orchestrator   |
 
 ## Introduction
 
@@ -27,24 +27,28 @@ This document defines the **actual frontend architecture** for the **Library Man
 ### What Actually Exists ✅
 
 **Core Framework Setup:**
+
 - Next.js 15.5.2 with App Router configured
 - React 19.1.0 with concurrent features
 - TypeScript 5+ with strict mode enabled
 - Root layout with Geist fonts
 
 **UI Component System:**
+
 - shadcn/ui components properly installed
 - Radix UI primitives configured
 - Tailwind CSS v4 with utility classes
 - Component variants with class-variance-authority
 
 **Development Tooling:**
+
 - ESLint 9 with Next.js configuration
 - Prettier 3.6.2 with consistent formatting
 - Husky git hooks with lint-staged
 - PNPM package management
 
 **Form Handling:**
+
 - React Hook Form 7.62.0
 - Zod 4.1.3 validation schemas
 - @hookform/resolvers integration
@@ -52,12 +56,14 @@ This document defines the **actual frontend architecture** for the **Library Man
 ### What Needs Implementation 🚧
 
 **Authentication System:**
+
 - Supabase client configuration
 - Auth routes and protected pages
 - User session management
 - Permission-based access control
 
 **Application Pages:**
+
 - Dashboard with navigation
 - Book management CRUD
 - Member management CRUD
@@ -65,11 +71,13 @@ This document defines the **actual frontend architecture** for the **Library Man
 - Settings and configuration
 
 **State Management:**
+
 - Zustand stores for client state
 - TanStack Query for server state
 - Real-time subscriptions
 
 **Business Logic:**
+
 - API integration utilities
 - Form validation schemas
 - Custom React hooks
@@ -100,6 +108,7 @@ graph TD
 ### Component Architecture
 
 **Layered Component Structure:**
+
 1. **Page Components** (`src/app/`) - Route-level components
 2. **Layout Components** (`src/components/layout/`) - Navigation, headers, sidebars
 3. **Feature Components** (`src/components/forms/`, `src/components/tables/`) - Domain-specific
@@ -109,6 +118,7 @@ graph TD
 ### Data Flow Architecture
 
 **Planned Data Flow:**
+
 ```mermaid
 sequenceDiagram
     participant UI as UI Component
@@ -116,7 +126,7 @@ sequenceDiagram
     participant Query as TanStack Query
     participant Supabase as Supabase Client
     participant DB as Database
-    
+
     UI->>Hook: User Action
     Hook->>Query: API Call
     Query->>Supabase: Database Query
@@ -132,6 +142,7 @@ sequenceDiagram
 ### Next.js 15 App Router
 
 **Current Configuration:**
+
 ```typescript
 // next.config.ts
 const nextConfig: NextConfig = {
@@ -142,6 +153,7 @@ export default nextConfig;
 ```
 
 **Routing Structure:**
+
 - File-based routing with `src/app/`
 - Route groups with `(auth)` and `(dashboard)`
 - Dynamic routes with `[id]` parameters
@@ -150,40 +162,43 @@ export default nextConfig;
 ### Supabase Integration
 
 **Planned Client Setup:**
+
 ```typescript
 // lib/supabase/client.ts
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 ```
 
 **Server-Side Rendering:**
+
 ```typescript
 // lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export function createClient() {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         get(name: string) {
-          return cookies().get(name)?.value
+          return cookies().get(name)?.value;
         },
       },
     }
-  )
+  );
 }
 ```
 
 ### shadcn/ui Component System
 
 **Current Configuration:**
+
 ```json
 // components.json
 {
@@ -208,6 +223,7 @@ export function createClient() {
 ```
 
 **Available Components:**
+
 - Button, Input, Label, Textarea
 - Card, Dialog, Dropdown Menu
 - Table, Checkbox, Select
@@ -218,49 +234,51 @@ export function createClient() {
 **Planned Architecture:**
 
 1. **Client State (Zustand):**
+
 ```typescript
 // lib/stores/ui-store.ts
 interface UIState {
-  sidebarOpen: boolean
-  theme: 'light' | 'dark'
-  toggleSidebar: () => void
-  setTheme: (theme: 'light' | 'dark') => void
+  sidebarOpen: boolean;
+  theme: "light" | "dark";
+  toggleSidebar: () => void;
+  setTheme: (theme: "light" | "dark") => void;
 }
 
 export const useUIStore = create<UIState>()((set) => ({
   sidebarOpen: true,
-  theme: 'light',
+  theme: "light",
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setTheme: (theme) => set({ theme }),
-}))
+}));
 ```
 
 2. **Server State (TanStack Query):**
+
 ```typescript
 // lib/hooks/use-books.ts
 export function useBooks() {
   return useQuery({
-    queryKey: ['books'],
-    queryFn: () => supabase.from('books').select('*'),
-  })
+    queryKey: ["books"],
+    queryFn: () => supabase.from("books").select("*"),
+  });
 }
 
 export function useCreateBook() {
-  const queryClient = useQueryClient()
-  
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (book: CreateBookData) => 
-      supabase.from('books').insert(book),
+    mutationFn: (book: CreateBookData) => supabase.from("books").insert(book),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['books'] })
+      queryClient.invalidateQueries({ queryKey: ["books"] });
     },
-  })
+  });
 }
 ```
 
 ### Form Handling Pattern
 
 **Current Implementation:**
+
 ```typescript
 // components/forms/book-form.tsx
 import { useForm } from 'react-hook-form'
@@ -302,7 +320,7 @@ sequenceDiagram
     participant App as Next.js App
     participant Supabase as Supabase Auth
     participant DB as Database
-    
+
     User->>App: Access Protected Route
     App->>Supabase: Check Session
     Supabase-->>App: No Session
@@ -318,28 +336,31 @@ sequenceDiagram
 ### Route Protection
 
 **Planned Middleware:**
+
 ```typescript
 // middleware.ts
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
-  
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session && req.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', req.url))
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session && req.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
-  
-  return res
+
+  return res;
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*']
-}
+  matcher: ["/dashboard/:path*"],
+};
 ```
 
 ## UI/UX Patterns
@@ -347,6 +368,7 @@ export const config = {
 ### Layout System
 
 **Planned Dashboard Layout:**
+
 ```typescript
 // app/(dashboard)/layout.tsx
 export default function DashboardLayout({
@@ -371,12 +393,14 @@ export default function DashboardLayout({
 ### Design System
 
 **Tailwind Configuration:**
+
 - Consistent spacing scale
 - Custom color palette for library theme
 - Responsive breakpoints
 - Dark mode support via CSS variables
 
 **Component Variants:**
+
 ```typescript
 // components/ui/button.tsx
 const buttonVariants = cva(
@@ -385,8 +409,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input hover:bg-accent hover:text-accent-foreground",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input hover:bg-accent hover:text-accent-foreground",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -395,7 +421,7 @@ const buttonVariants = cva(
       },
     },
   }
-)
+);
 ```
 
 ## Performance Considerations
@@ -403,12 +429,14 @@ const buttonVariants = cva(
 ### Next.js Optimizations
 
 **Built-in Features:**
+
 - Automatic code splitting by route
 - Image optimization with next/image
 - Font optimization with next/font
 - Bundle analysis and tree shaking
 
 **Planned Optimizations:**
+
 - Dynamic imports for heavy components
 - React.lazy for code splitting
 - Memoization for expensive calculations
@@ -417,6 +445,7 @@ const buttonVariants = cva(
 ### Database Optimization
 
 **Direct Client Benefits:**
+
 - No API layer overhead
 - Automatic connection pooling
 - Real-time subscriptions
@@ -466,18 +495,30 @@ export class ErrorBoundary extends Component<Props, State> {
 ### Form Validation
 
 **Zod Schema Pattern:**
+
 ```typescript
 // lib/validation/books.ts
-import { z } from 'zod'
+import { z } from "zod";
 
 export const createBookSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(255, 'Title too long'),
-  author: z.string().min(1, 'Author is required').max(255, 'Author name too long'),
-  isbn: z.string().regex(/^[\d-]{10,17}$/, 'Invalid ISBN format').optional(),
-  publishedYear: z.number().int().min(1000).max(new Date().getFullYear()).optional(),
-})
+  title: z.string().min(1, "Title is required").max(255, "Title too long"),
+  author: z
+    .string()
+    .min(1, "Author is required")
+    .max(255, "Author name too long"),
+  isbn: z
+    .string()
+    .regex(/^[\d-]{10,17}$/, "Invalid ISBN format")
+    .optional(),
+  publishedYear: z
+    .number()
+    .int()
+    .min(1000)
+    .max(new Date().getFullYear())
+    .optional(),
+});
 
-export type CreateBookData = z.infer<typeof createBookSchema>
+export type CreateBookData = z.infer<typeof createBookSchema>;
 ```
 
 ## Development Workflow
@@ -507,6 +548,7 @@ pnpm format                 # Prettier formatting
 ### Git Workflow
 
 **Pre-commit Hooks:**
+
 - ESLint with automatic fixes
 - Prettier formatting
 - TypeScript type checking
@@ -517,11 +559,13 @@ pnpm format                 # Prettier formatting
 ### Client-Side Security
 
 **Environment Variables:**
+
 - Public variables prefixed with `NEXT_PUBLIC_`
 - Sensitive keys server-side only
 - No secrets in client bundle
 
 **Input Validation:**
+
 - All user inputs validated with Zod
 - Sanitization at form level
 - Database queries parameterized
@@ -529,6 +573,7 @@ pnpm format                 # Prettier formatting
 ### Supabase Security
 
 **Row Level Security:**
+
 - Database-level access control
 - User context in policies
 - Automatic filtering of queries
@@ -538,7 +583,7 @@ pnpm format                 # Prettier formatting
 ### Planned Features
 
 1. **Real-time Updates**: Supabase subscriptions for live data
-2. **Offline Support**: Service worker and cache strategies  
+2. **Offline Support**: Service worker and cache strategies
 3. **Progressive Web App**: PWA manifest and installability
 4. **Advanced Search**: Full-text search capabilities
 5. **Bulk Operations**: Multi-select and batch actions
@@ -561,6 +606,7 @@ This frontend architecture provides a **solid foundation** for the Library Manag
 The current minimal implementation provides the essential building blocks, with clear patterns established for authentication, state management, and UI components. Future development can follow these established patterns to build out the complete library management functionality.
 
 **Key Architectural Strengths:**
+
 - **Simplicity**: Single application, unified codebase
 - **Modern Stack**: Latest React and Next.js features
 - **Type Safety**: End-to-end TypeScript implementation

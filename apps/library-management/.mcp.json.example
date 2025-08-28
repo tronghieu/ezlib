@@ -11,7 +11,7 @@
         "--context",
         "ide-assistant",
         "--project",
-        "/Users/tronghieuluu/Projects/ezlib/apps/library-management"
+        "/path/to/your/project/ezlib/apps/library-management"
       ],
       "env": {}
     },

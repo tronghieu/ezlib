@@ -169,7 +169,7 @@ ls -la supabase/seeds/
 
 # Supabase Configuration (Local Development)
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-local-anon-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-local-publishable-key
 SUPABASE_SERVICE_ROLE_KEY=your-local-service-role-key
 
 # Copy keys from: supabase status (run from database directory)
@@ -875,3 +875,5 @@ When starting development:
 ---
 
 _Library Management System CLAUDE.md - Standalone library management application_
+
+- Use playwright mcp for end-to-end testing web app

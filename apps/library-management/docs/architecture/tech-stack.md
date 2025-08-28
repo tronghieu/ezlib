@@ -9,6 +9,7 @@ This document defines the complete technology stack for the **Library Management
 ## Architecture Pattern
 
 **Monolithic Frontend Application**
+
 - Single Next.js application with App Router
 - Direct Supabase client integration
 - Component-based UI architecture
@@ -18,74 +19,75 @@ This document defines the complete technology stack for the **Library Management
 
 ### Core Framework
 
-| Technology     | Version | Purpose                         | Rationale                                                                                  |
-| -------------- | ------- | ------------------------------- | ------------------------------------------------------------------------------------------ |
-| **Next.js**    | 15.5.2  | React framework with App Router | Server-side rendering, optimal performance, built-in optimization, modern React features   |
-| **React**      | 19.1.0  | UI library                      | Component-based architecture, concurrent features, excellent ecosystem                     |
-| **TypeScript** | 5+      | Type safety                     | Strict mode enabled, error prevention, developer productivity, maintainable codebase      |
+| Technology     | Version | Purpose                         | Rationale                                                                                |
+| -------------- | ------- | ------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Next.js**    | 15.5.2  | React framework with App Router | Server-side rendering, optimal performance, built-in optimization, modern React features |
+| **React**      | 19.1.0  | UI library                      | Component-based architecture, concurrent features, excellent ecosystem                   |
+| **TypeScript** | 5+      | Type safety                     | Strict mode enabled, error prevention, developer productivity, maintainable codebase     |
 
 ### UI & Styling
 
-| Technology        | Version | Purpose             | Rationale                                                                   |
-| ----------------- | ------- | ------------------- | --------------------------------------------------------------------------- |
-| **shadcn/ui**     | Latest  | Component system    | Professional interface, accessibility by default, highly customizable      |
-| **Radix UI**      | Latest  | Unstyled primitives | Accessibility foundation, keyboard navigation, ARIA support                 |
-| **Tailwind CSS**  | 4       | Utility-first CSS   | Rapid development, consistent design system, responsive by default          |
-| **Lucide React**  | 0.542.0 | Icon system         | Consistent iconography, tree-shakable, extensive library                    |
-| **Framer Motion** | 12.23.12| Animation library   | Smooth transitions, loading states, micro-interactions                      |
-| **next-themes**   | 0.4.6   | Theme management    | Dark/light mode support with system preference detection                    |
+| Technology        | Version  | Purpose             | Rationale                                                             |
+| ----------------- | -------- | ------------------- | --------------------------------------------------------------------- |
+| **shadcn/ui**     | Latest   | Component system    | Professional interface, accessibility by default, highly customizable |
+| **Radix UI**      | Latest   | Unstyled primitives | Accessibility foundation, keyboard navigation, ARIA support           |
+| **Tailwind CSS**  | 4        | Utility-first CSS   | Rapid development, consistent design system, responsive by default    |
+| **Lucide React**  | 0.542.0  | Icon system         | Consistent iconography, tree-shakable, extensive library              |
+| **Framer Motion** | 12.23.12 | Animation library   | Smooth transitions, loading states, micro-interactions                |
+| **next-themes**   | 0.4.6    | Theme management    | Dark/light mode support with system preference detection              |
 
 ### State Management & Data Fetching
 
-| Technology           | Version | Purpose           | Rationale                                                                   |
-| -------------------- | ------- | ----------------- | --------------------------------------------------------------------------- |
-| **Zustand**          | 5.0.8   | Client state      | Lightweight, simple API, perfect for UI state management                    |
-| **TanStack Query**   | 5.85.5  | Server state      | Optimized caching, background updates, excellent DevX                       |
-| **React Hook Form**  | 7.62.0  | Form state        | Performance optimization, minimal re-renders, excellent DX                  |
+| Technology          | Version | Purpose      | Rationale                                                  |
+| ------------------- | ------- | ------------ | ---------------------------------------------------------- |
+| **Zustand**         | 5.0.8   | Client state | Lightweight, simple API, perfect for UI state management   |
+| **TanStack Query**  | 5.85.5  | Server state | Optimized caching, background updates, excellent DevX      |
+| **React Hook Form** | 7.62.0  | Form state   | Performance optimization, minimal re-renders, excellent DX |
 
 ### Form Handling & Validation
 
-| Technology          | Version | Purpose           | Rationale                                                            |
-| ------------------- | ------- | ----------------- | -------------------------------------------------------------------- |
-| **Zod**             | 4.1.3   | Schema validation | Type-safe validation, runtime type checking, form integration        |
-| **@hookform/resolvers** | 5.2.1 | Form validation   | Seamless Zod integration with React Hook Form                      |
+| Technology              | Version | Purpose           | Rationale                                                     |
+| ----------------------- | ------- | ----------------- | ------------------------------------------------------------- |
+| **Zod**                 | 4.1.3   | Schema validation | Type-safe validation, runtime type checking, form integration |
+| **@hookform/resolvers** | 5.2.1   | Form validation   | Seamless Zod integration with React Hook Form                 |
 
 ### Database & Authentication
 
-| Technology           | Version | Purpose                    | Rationale                                                                    |
-| -------------------- | ------- | -------------------------- | ---------------------------------------------------------------------------- |
-| **Supabase Client**  | 2.56.0  | Database & Auth client     | Real-time subscriptions, Row Level Security, built-in authentication        |
-| **@supabase/ssr**    | 0.7.0   | Server-side rendering      | Proper SSR support for Supabase with Next.js App Router                     |
+| Technology          | Version | Purpose                | Rationale                                                            |
+| ------------------- | ------- | ---------------------- | -------------------------------------------------------------------- |
+| **Supabase Client** | 2.56.0  | Database & Auth client | Real-time subscriptions, Row Level Security, built-in authentication |
+| **@supabase/ssr**   | 0.7.0   | Server-side rendering  | Proper SSR support for Supabase with Next.js App Router              |
 
 ### Notifications & UI Feedback
 
-| Technology | Version | Purpose              | Rationale                                                        |
-| ---------- | ------- | -------------------- | ---------------------------------------------------------------- |
-| **Sonner** | 2.0.7   | Toast notifications  | Beautiful toast notifications with excellent UX                  |
+| Technology | Version | Purpose             | Rationale                                       |
+| ---------- | ------- | ------------------- | ----------------------------------------------- |
+| **Sonner** | 2.0.7   | Toast notifications | Beautiful toast notifications with excellent UX |
 
 ### Development Tools
 
-| Technology      | Version | Purpose                | Rationale                                             |
-| --------------- | ------- | ---------------------- | ----------------------------------------------------- |
-| **ESLint**      | 9       | Code linting           | Code quality, consistency, Next.js best practices    |
-| **Prettier**    | 3.6.2   | Code formatting        | Consistent formatting, automated style enforcement    |
-| **Husky**       | 9.1.7   | Git hooks              | Pre-commit quality checks, automated linting         |
-| **lint-staged** | 16.1.5  | Staged file processing | Only lint/format changed files                        |
+| Technology      | Version | Purpose                | Rationale                                              |
+| --------------- | ------- | ---------------------- | ------------------------------------------------------ |
+| **ESLint**      | 9       | Code linting           | Code quality, consistency, Next.js best practices      |
+| **Prettier**    | 3.6.2   | Code formatting        | Consistent formatting, automated style enforcement     |
+| **Husky**       | 9.1.7   | Git hooks              | Pre-commit quality checks, automated linting           |
+| **lint-staged** | 16.1.5  | Staged file processing | Only lint/format changed files                         |
 | **PNPM**        | 8+      | Package manager        | Fast installs, efficient disk usage, workspace support |
 
 ### Utility Libraries
 
-| Technology                | Version | Purpose                | Rationale                                           |
-| ------------------------- | ------- | ---------------------- | --------------------------------------------------- |
-| **clsx**                  | 2.1.1   | Conditional classes    | Simple conditional CSS class handling               |
-| **tailwind-merge**        | 3.3.1   | Tailwind class merge   | Intelligent Tailwind class merging                  |
-| **class-variance-authority** | 0.7.1 | Component variants   | Type-safe component variant system                  |
+| Technology                   | Version | Purpose              | Rationale                             |
+| ---------------------------- | ------- | -------------------- | ------------------------------------- |
+| **clsx**                     | 2.1.1   | Conditional classes  | Simple conditional CSS class handling |
+| **tailwind-merge**           | 3.3.1   | Tailwind class merge | Intelligent Tailwind class merging    |
+| **class-variance-authority** | 0.7.1   | Component variants   | Type-safe component variant system    |
 
 ## Architecture Decisions
 
 ### Why Monolithic Next.js?
 
 **Benefits:**
+
 - **Simplicity**: Single codebase, single deployment
 - **Developer Experience**: Unified tooling, single build process
 - **Performance**: No network overhead between frontend/backend
@@ -93,6 +95,7 @@ This document defines the complete technology stack for the **Library Management
 - **Rapid Development**: Quick iteration, shared components
 
 **Trade-offs:**
+
 - **Scalability**: All functionality in single application
 - **Team Organization**: All developers work in same codebase
 - **Deployment**: Single deployment unit
@@ -100,6 +103,7 @@ This document defines the complete technology stack for the **Library Management
 ### Why Supabase Direct Client?
 
 **Benefits:**
+
 - **Real-time**: Built-in WebSocket subscriptions
 - **Authentication**: Integrated auth with JWT tokens
 - **Row Level Security**: Database-level multi-tenancy
@@ -107,6 +111,7 @@ This document defines the complete technology stack for the **Library Management
 - **Type Safety**: Generated TypeScript types
 
 **Trade-offs:**
+
 - **Vendor Lock-in**: Tied to Supabase ecosystem
 - **Client Exposure**: Database schema visible to client
 - **Limited Backend Logic**: Complex operations need database functions
@@ -114,12 +119,14 @@ This document defines the complete technology stack for the **Library Management
 ### Why shadcn/ui over Material-UI?
 
 **Benefits:**
+
 - **Customization**: Complete control over styling
 - **Bundle Size**: Tree-shakable, minimal overhead
 - **Modern**: Latest React patterns, TypeScript first
 - **Accessibility**: Built on Radix UI primitives
 
 **Trade-offs:**
+
 - **Component Count**: Fewer pre-built components
 - **Learning Curve**: Custom implementation patterns
 
@@ -187,10 +194,10 @@ This document defines the complete technology stack for the **Library Management
 ```bash
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
-# Application Configuration  
+# Application Configuration
 NEXT_PUBLIC_SITE_URL=http://localhost:3001
 ```
 

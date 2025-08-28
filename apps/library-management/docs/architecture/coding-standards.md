@@ -9,12 +9,14 @@ This document defines the **mandatory coding standards** for the **Library Manag
 ## Core Technologies & Versions
 
 ### Language & Runtime
+
 - **TypeScript**: 5+ with strict mode enabled
 - **Node.js**: 18+ (LTS version)
 - **React**: 19.1.0 with concurrent features
 - **Next.js**: 15.5.2 with App Router
 
 ### Package Management
+
 - **Package Manager**: PNPM (required)
 - **Lock File**: pnpm-lock.yaml (commit to repository)
 - **Node Version**: Use .nvmrc for version consistency
@@ -36,6 +38,7 @@ This document defines the **mandatory coding standards** for the **Library Manag
 ```
 
 **Formatting Rules:**
+
 - **Semicolons**: Required
 - **Quotes**: Double quotes for strings
 - **Trailing Commas**: ES5 style (objects, arrays)
@@ -45,6 +48,7 @@ This document defines the **mandatory coding standards** for the **Library Manag
 ### ESLint Configuration
 
 **Current Setup:**
+
 ```javascript
 // eslint.config.mjs
 import { dirname } from "path";
@@ -64,7 +68,7 @@ const eslintConfig = [
     ignores: [
       "node_modules/**",
       ".next/**",
-      "out/**", 
+      "out/**",
       "build/**",
       "next-env.d.ts",
     ],
@@ -86,7 +90,7 @@ export default eslintConfig;
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,                    // MANDATORY
+    "strict": true, // MANDATORY
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -96,7 +100,7 @@ export default eslintConfig;
     "jsx": "preserve",
     "incremental": true,
     "paths": {
-      "@/*": ["./src/*"]               // MANDATORY alias
+      "@/*": ["./src/*"] // MANDATORY alias
     }
   }
 }
@@ -105,6 +109,7 @@ export default eslintConfig;
 ### Type Safety Rules
 
 **MANDATORY Requirements:**
+
 - **Strict Mode**: Always enabled
 - **No Any Types**: Avoid `any`, use proper types
 - **Explicit Return Types**: For public functions
@@ -119,16 +124,20 @@ interface BookFormProps {
   isLoading: boolean;
 }
 
-export function BookForm({ onSubmit, initialData, isLoading }: BookFormProps): JSX.Element {
+export function BookForm({
+  onSubmit,
+  initialData,
+  isLoading,
+}: BookFormProps): JSX.Element {
   // Implementation
 }
 
 // ✅ Good: Type-only imports
-import type { Database } from '@/lib/database.types';
-import type { User } from '@supabase/supabase-js';
+import type { Database } from "@/lib/database.types";
+import type { User } from "@supabase/supabase-js";
 
 // ❌ Bad: Any types
-function handleSubmit(data: any) { }
+function handleSubmit(data: any) {}
 
 // ❌ Bad: Missing prop types
 export function BookForm({ onSubmit, initialData }) {
@@ -143,7 +152,7 @@ export function BookForm({ onSubmit, initialData }) {
 ```plaintext
 # Next.js App Router (MANDATORY)
 page.tsx                # Page components
-layout.tsx              # Layout components  
+layout.tsx              # Layout components
 loading.tsx             # Loading states
 error.tsx               # Error boundaries
 not-found.tsx           # 404 pages
@@ -195,36 +204,36 @@ src/
 
 ```typescript
 // 1. External libraries (React, Next.js, etc.)
-import React from 'react';
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import React from "react";
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 // 2. Internal components and utilities (absolute imports)
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/hooks/use-auth';
-import { createServerClient } from '@/lib/supabase/server';
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { createServerClient } from "@/lib/supabase/server";
 
 // 3. Type-only imports (separate group)
-import type { Database } from '@/lib/database.types';
-import type { User } from '@supabase/supabase-js';
+import type { Database } from "@/lib/database.types";
+import type { User } from "@supabase/supabase-js";
 ```
 
 ### Export Standards
 
 ```typescript
 // ✅ Good: Named exports for components
-export function BookForm() { }
-export function BookTable() { }
+export function BookForm() {}
+export function BookTable() {}
 
 // ✅ Good: Default export for pages
-export default function BooksPage() { }
+export default function BooksPage() {}
 
 // ✅ Good: Consistent utility exports
-export const formatDate = (date: Date) => { }
-export const validateISBN = (isbn: string) => { }
+export const formatDate = (date: Date) => {};
+export const validateISBN = (isbn: string) => {};
 
 // ❌ Bad: Mixed export styles in same file
-export function Component1() { }
+export function Component1() {}
 export default Component2;
 ```
 
@@ -232,13 +241,13 @@ export default Component2;
 
 ```typescript
 // ✅ MANDATORY: Use @ alias for internal imports
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/hooks/use-auth';
-import { supabase } from '@/lib/supabase/client';
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { supabase } from "@/lib/supabase/client";
 
 // ❌ FORBIDDEN: Relative imports
-import { Button } from '../../../components/ui/button';
-import { useAuth } from '../../hooks/use-auth';
+import { Button } from "../../../components/ui/button";
+import { useAuth } from "../../hooks/use-auth";
 ```
 
 ## Component Standards
@@ -254,14 +263,14 @@ interface ButtonProps {
   onClick?: () => void;
 }
 
-export function Button({ 
-  children, 
-  variant = 'primary', 
+export function Button({
+  children,
+  variant = 'primary',
   disabled = false,
-  onClick 
+  onClick
 }: ButtonProps): JSX.Element {
   return (
-    <button 
+    <button
       className={`btn btn-${variant}`}
       disabled={disabled}
       onClick={onClick}
@@ -276,11 +285,11 @@ export function Button({
 
 ```typescript
 // component-name.tsx
-'use client'; // Only if client component
+"use client"; // Only if client component
 
-import React from 'react';
-import { cn } from '@/lib/utils';
-import type { ComponentProps } from './types';
+import React from "react";
+import { cn } from "@/lib/utils";
+import type { ComponentProps } from "./types";
 
 // Component interface
 interface ComponentNameProps {
@@ -294,7 +303,7 @@ export function ComponentName(props: ComponentNameProps) {
 
 // Helper functions (if needed)
 function helperFunction() {
-  // Implementation  
+  // Implementation
 }
 ```
 
@@ -304,13 +313,13 @@ function helperFunction() {
 
 ```typescript
 // lib/stores/store-name.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface StoreState {
   // State properties
   data: DataType[];
   isLoading: boolean;
-  
+
   // Actions
   fetchData: () => Promise<void>;
   updateData: (item: DataType) => void;
@@ -320,7 +329,7 @@ interface StoreState {
 export const useStoreNameStore = create<StoreState>()((set, get) => ({
   data: [],
   isLoading: false,
-  
+
   fetchData: async () => {
     set({ isLoading: true });
     try {
@@ -332,11 +341,12 @@ export const useStoreNameStore = create<StoreState>()((set, get) => ({
       throw error;
     }
   },
-  
-  updateData: (item) => set((state) => ({
-    data: state.data.map(d => d.id === item.id ? item : d)
-  })),
-  
+
+  updateData: (item) =>
+    set((state) => ({
+      data: state.data.map((d) => (d.id === item.id ? item : d)),
+    })),
+
   clearData: () => set({ data: [] }),
 }));
 ```
@@ -345,25 +355,24 @@ export const useStoreNameStore = create<StoreState>()((set, get) => ({
 
 ```typescript
 // lib/hooks/use-feature-name.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase/client';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase/client";
 
 export function useFeatureName() {
   const queryClient = useQueryClient();
-  
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['feature-name'],
-    queryFn: () => supabase.from('table').select('*'),
+    queryKey: ["feature-name"],
+    queryFn: () => supabase.from("table").select("*"),
   });
-  
+
   const mutation = useMutation({
-    mutationFn: (data: InputType) => 
-      supabase.from('table').insert(data),
+    mutationFn: (data: InputType) => supabase.from("table").insert(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['feature-name'] });
+      queryClient.invalidateQueries({ queryKey: ["feature-name"] });
     },
   });
-  
+
   return {
     data,
     isLoading,
@@ -408,14 +417,14 @@ export function FeatureForm({ onSubmit, initialData }: FeatureFormProps) {
     <form onSubmit={handleSubmit(onSubmit)}>
       <div>
         <label htmlFor="title">Title</label>
-        <input 
+        <input
           {...register('title')}
           id="title"
           type="text"
         />
         {errors.title && <span>{errors.title.message}</span>}
       </div>
-      
+
       <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Saving...' : 'Save'}
       </button>
@@ -430,11 +439,11 @@ export function FeatureForm({ onSubmit, initialData }: FeatureFormProps) {
 
 ```typescript
 // lib/supabase/client.ts
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './database.types';
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 ```
@@ -444,9 +453,9 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 ```typescript
 // ✅ Good: Type-safe queries
 const { data: books, error } = await supabase
-  .from('books')
-  .select('id, title, author, isbn')
-  .eq('library_id', libraryId);
+  .from("books")
+  .select("id, title, author, isbn")
+  .eq("library_id", libraryId);
 
 if (error) {
   throw new Error(`Failed to fetch books: ${error.message}`);
@@ -454,14 +463,12 @@ if (error) {
 
 // ✅ Good: Proper error handling
 try {
-  const { data, error } = await supabase
-    .from('books')
-    .insert(bookData);
-    
+  const { data, error } = await supabase.from("books").insert(bookData);
+
   if (error) throw error;
   return data;
 } catch (error) {
-  console.error('Database error:', error);
+  console.error("Database error:", error);
   throw error;
 }
 ```
@@ -567,6 +574,7 @@ export function Dashboard() {
 ### Commit Standards
 
 **Automated Quality Checks:**
+
 - **Pre-commit**: ESLint + Prettier (via lint-staged)
 - **Type Check**: TypeScript compilation check
 - **Build Check**: Next.js build verification
@@ -578,7 +586,7 @@ export function Dashboard() {
 feature/add-book-management
 feature/implement-auth
 
-# Bug fixes  
+# Bug fixes
 fix/form-validation-error
 fix/table-pagination
 
@@ -604,19 +612,19 @@ docs/add-api-docs
 
 ```typescript
 // ❌ FORBIDDEN: Any types
-function handleData(data: any) { }
+function handleData(data: any) {}
 
-// ❌ FORBIDDEN: Relative imports  
-import { Button } from '../../../components/ui/button';
+// ❌ FORBIDDEN: Relative imports
+import { Button } from "../../../components/ui/button";
 
 // ❌ FORBIDDEN: Missing error handling
-const data = await supabase.from('books').select('*');
+const data = await supabase.from("books").select("*");
 
 // ❌ FORBIDDEN: Untyped component props
-export function Component({ data, onSubmit }) { }
+export function Component({ data, onSubmit }) {}
 
 // ❌ FORBIDDEN: console.log in production code
-console.log('Debug info:', data);
+console.log("Debug info:", data);
 ```
 
 ## Development Commands
@@ -626,7 +634,7 @@ console.log('Debug info:', data);
 ```bash
 # MANDATORY before every commit
 pnpm lint:fix              # Fix ESLint issues
-pnpm format               # Format with Prettier  
+pnpm format               # Format with Prettier
 pnpm type-check           # TypeScript checking
 pnpm build                # Verify production build
 

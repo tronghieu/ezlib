@@ -27,7 +27,7 @@ apps/library-management/
 ├── public/                             # 🌐 Static assets
 ├── .bmad-core/                        # 🔧 BMad framework files
 ├── .claude/                           # Claude AI configuration
-├── .cursor/                           # Cursor IDE configuration  
+├── .cursor/                           # Cursor IDE configuration
 ├── .serena/                           # Serena memory system
 ├── package.json                        # 📦 Dependencies & scripts
 ├── next.config.ts                      # ⚙️ Next.js configuration
@@ -59,7 +59,7 @@ src/
 │   └── ui/                            # shadcn/ui components
 │       ├── button.tsx                  # Button component
 │       ├── card.tsx                    # Card component
-│       ├── checkbox.tsx                # Checkbox component  
+│       ├── checkbox.tsx                # Checkbox component
 │       ├── dialog.tsx                  # Modal dialog component
 │       ├── dropdown-menu.tsx           # Dropdown menu component
 │       ├── input.tsx                   # Form input component
@@ -220,13 +220,13 @@ next.config.ts                         # Next.js configuration
 tsconfig.json                          # TypeScript configuration
 components.json                        # shadcn/ui configuration
 
-# Styling Configuration  
+# Styling Configuration
 tailwind.config.js                     # Tailwind CSS configuration (implicit)
 postcss.config.mjs                     # PostCSS configuration
 .editorconfig                          # Editor configuration
 
 # Code Quality
-eslint.config.mjs                      # ESLint configuration  
+eslint.config.mjs                      # ESLint configuration
 .prettierrc                            # Prettier configuration
 
 # Package Management
@@ -244,17 +244,20 @@ pnpm-lock.yaml                         # Lock file
 ## File Naming Conventions
 
 ### Component Files
+
 - **Pages**: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`
 - **Components**: `kebab-case.tsx` (e.g., `book-form.tsx`, `member-table.tsx`)
 - **API Routes**: `route.ts`
 
 ### Utility Files
+
 - **Hooks**: `use-kebab-case.ts` (e.g., `use-auth.ts`, `use-books.ts`)
 - **Services**: `kebab-case.ts` (e.g., `supabase-client.ts`)
 - **Types**: `kebab-case.ts` (e.g., `database-types.ts`)
 - **Utils**: `kebab-case.ts` or `index.ts`
 
 ### Directory Names
+
 - **All directories**: `kebab-case` (e.g., `data-tables`, `auth-forms`)
 - **Route groups**: `(group-name)` (e.g., `(auth)`, `(dashboard)`)
 
@@ -281,6 +284,7 @@ import { createClient } from "../../lib/supabase/client";
 ## Current vs Future State
 
 ### What Exists Now (✅)
+
 - Basic Next.js 15 App Router setup
 - Root layout with fonts and metadata
 - Simple homepage component
@@ -290,6 +294,7 @@ import { createClient } from "../../lib/supabase/client";
 - Tailwind CSS v4 setup
 
 ### What Needs Implementation (🚧)
+
 - Authentication routes and Supabase integration
 - Dashboard layout and navigation
 - Book and member management pages
