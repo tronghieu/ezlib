@@ -78,7 +78,7 @@ ezlib/
 
 ### Technology Foundation
 
-- **Framework**: Next.js 14+ with App Router (SSR optimized for admin workflows)
+- **Framework**: Next.js 15+ with App Router (SSR optimized for admin workflows)
 - **Language**: TypeScript (strict mode with comprehensive type safety)
 - **Database**: Direct Supabase client integration with Row Level Security
 - **UI System**: shadcn/ui + Tailwind CSS (professional admin interface)

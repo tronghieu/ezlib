@@ -4,11 +4,11 @@ This file provides guidance to Claude Code when working with the **Library Manag
 
 ## Project Overview
 
-The **Library Management System** is a standalone Next.js 14+ web application that enables small/medium libraries to replace manual/spreadsheet systems with ultra-simple digital operations. This admin interface serves library staff for book inventory management, member registration, and circulation operations.
+The **Library Management System** is a standalone Next.js 15+ web application that enables small/medium libraries to replace manual/spreadsheet systems with ultra-simple digital operations. This admin interface serves library staff for book inventory management, member registration, and circulation operations.
 
 ### Current Development State
 
-- ❌ **Project Setup**: Next.js 14+ App Router structure [NOT YET IMPLEMENTED]
+- ❌ **Project Setup**: Next.js 15+ App Router structure [NOT YET IMPLEMENTED]
 - ❌ **Authentication**: Passwordless OTP integration [NOT YET IMPLEMENTED]
 - ❌ **Core Features**: Ultra-simple book lists, member management, circulation [NOT YET IMPLEMENTED]
 - ✅ **Documentation**: Complete PRD, technical specs, and UX requirements [IMPLEMENTED]
@@ -24,7 +24,7 @@ The **Library Management System** is a standalone Next.js 14+ web application th
 
 ### Core Technologies
 
-- **Framework**: Next.js 14+ with App Router (TypeScript, strict mode)
+- **Framework**: Next.js 15+ with App Router (TypeScript, strict mode)
 - **UI Components**: shadcn/ui with Radix UI primitives
 - **Styling**: Tailwind CSS with responsive design
 - **Database**: Direct Supabase PostgreSQL integration
@@ -54,7 +54,7 @@ cp .env.example .env.local
 pnpm dev
 
 # Open app in browser
-open http://localhost:3000
+open http://localhost:3001
 ```
 
 ## Supabase Backend-as-a-Service
@@ -242,14 +242,17 @@ All tables include `library_id` for **Row Level Security (RLS)** isolation:
 # Format and lint code
 pnpm lint:fix
 pnpm format
+pnpm format:check            # Check formatting without changes
 
 # Run type checking
 pnpm type-check
 
 # Run tests
 pnpm test                    # Unit tests
-pnpm test:e2e               # End-to-end tests
-pnpm test:coverage          # Test coverage report
+pnpm test:watch              # Unit tests in watch mode
+pnpm test:coverage           # Test coverage report
+pnpm test:e2e                # End-to-end tests
+pnpm test:e2e:ui             # End-to-end tests with UI
 ```
 
 ### Build & Deployment
@@ -274,6 +277,15 @@ pnpm format
 pnpm type-check
 pnpm test
 pnpm build
+```
+
+### Additional Development Commands
+
+```bash
+# Code quality checks
+pnpm format:check            # Check code formatting
+pnpm test:watch              # Run tests in watch mode
+pnpm test:e2e:ui             # Run E2E tests with interactive UI
 ```
 
 ### Authentication Integration Pattern
@@ -341,7 +353,7 @@ library-management/
 
 ### Epic 1: Foundation & Authentication
 
-- **Story 1.1**: Next.js 14 project setup
+- **Story 1.1**: Next.js 15 project setup
 - **Story 1.2**: Supabase integration and TypeScript type generation
 - **Story 1.3**: Passwordless authentication system
 - **Story 1.4**: Library context management and switching
@@ -866,7 +878,7 @@ WHERE schemaname = 'public';
 
 When starting development:
 
-1. **Project Setup**: Initialize Next.js 14 structure with required dependencies
+1. **Project Setup**: Initialize Next.js 15 structure with required dependencies
 2. **Supabase Integration**: Configure database connection and generate types
 3. **Authentication Flow**: Implement passwordless OTP system
 4. **Basic Dashboard**: Create main navigation and library context switching

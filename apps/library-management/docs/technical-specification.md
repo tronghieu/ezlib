@@ -41,7 +41,7 @@ The Library Management App follows a **bounded context** approach within the EzL
 ```
 apps/library-management/
 ├── src/
-│   ├── app/                           # Next.js 14 App Router
+│   ├── app/                           # Next.js 15 App Router
 │   │   ├── (auth)/                   # Authentication group
 │   │   ├── dashboard/                # Main dashboard
 │   │   ├── inventory/                # Book management
