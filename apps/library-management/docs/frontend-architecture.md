@@ -1,902 +1,568 @@
-# EzLib Library Management - Frontend Architecture Document
+# Library Management System - Frontend Architecture
 
 <!-- Powered by BMAD™ Core -->
 
 ## Change Log
 
-| Date       | Version | Description                                                                                                         | Author              |
-| ---------- | ------- | ------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| 2025-08-25 | 2.0     | Complete architectural overhaul: Ultra-simple MVP, passwordless authentication, cross-domain access, real-time sync | Winston (Architect) |
-| 2025-08-24 | 1.0     | Initial frontend architecture for Library Management App                                                            | BMad Orchestrator   |
+| Date       | Version | Description                                                          | Author              |
+| ---------- | ------- | -------------------------------------------------------------------- | ------------------- |
+| 2025-08-28 | 2.0     | Complete rewrite to match actual monolithic Next.js implementation  | Winston (Architect) |
+| 2025-08-25 | 1.0     | Initial fictional architecture (superseded)                         | BMad Orchestrator   |
 
 ## Introduction
 
-This document defines the **ultra-simple first** frontend architecture for the **EzLib Library Management System** within the monorepo. This administrative web application serves small/medium libraries (1-3 staff, up to 5K books, 1K members) with a **dashboard-centric, search-first** interface that prioritizes operational efficiency over feature complexity.
+This document defines the **actual frontend architecture** for the **Library Management System**, a **monolithic Next.js 15 application** with Supabase authentication and shadcn/ui components. This is a single standalone application serving library staff operations.
 
-### Bounded Context & MVP Philosophy
+### Architecture Reality
 
-- **Domain**: Ultra-simple library operations replacing manual/spreadsheet systems
-- **Users**: Library staff (owners, managers, librarians) with varying technical comfort levels
-- **Access**: `manage.ezlib.com` with passwordless email OTP authentication
-- **Integration**: Direct Supabase connection with real-time sync to reader app
-- **MVP Approach**: Basic book lists → simple checkout/return → enhanced features later
+- **Pattern**: Monolithic Frontend Application
+- **Framework**: Next.js 15.5.2 with App Router
+- **Authentication**: Direct Supabase client integration
+- **UI System**: shadcn/ui with Radix UI primitives
+- **Styling**: Tailwind CSS v4
+- **State**: Zustand + TanStack Query pattern (planned)
 
-## Frontend Tech Stack
+## Current Implementation State
 
-### Core Technology Decisions
+### What Actually Exists ✅
 
-| Category             | Technology             | Version | Purpose                | Rationale                                                           |
-| -------------------- | ---------------------- | ------- | ---------------------- | ------------------------------------------------------------------- |
-| **Framework**        | Next.js                | 14+     | React with App Router  | Server-side rendering, optimal admin performance, Vercel deployment |
-| **Language**         | TypeScript             | 5.0+    | Type safety            | Strict mode, error prevention, developer productivity               |
-| **UI Foundation**    | shadcn/ui              | Latest  | Component system       | Professional admin interface, accessibility, customization          |
-| **Styling**          | Tailwind CSS           | 3.4+    | Utility-first CSS      | Rapid development, consistent design, responsive by default         |
-| **Database**         | Supabase Client        | Latest  | PostgreSQL integration | Real-time subscriptions, Row Level Security, direct connection      |
-| **State Management** | Zustand + React Query  | Latest  | Client + Server state  | Lightweight UI state, optimized caching for admin operations        |
-| **Forms**            | React Hook Form + Zod  | Latest  | Type-safe forms        | Performance optimization, schema validation                         |
-| **Authentication**   | Supabase Auth          | Latest  | Passwordless OTP       | Cross-domain sessions, role-based access control                    |
-| **Real-time**        | Supabase Subscriptions | Latest  | Live updates           | Inventory sync with reader app, transaction updates                 |
+**Core Framework Setup:**
+- Next.js 15.5.2 with App Router configured
+- React 19.1.0 with concurrent features
+- TypeScript 5+ with strict mode enabled
+- Root layout with Geist fonts
 
-### Architecture Principles
+**UI Component System:**
+- shadcn/ui components properly installed
+- Radix UI primitives configured
+- Tailwind CSS v4 with utility classes
+- Component variants with class-variance-authority
 
-1. **Ultra-Simple First**: Start with basic functionality, add complexity incrementally
-2. **Search-First Interface**: Prominent search across all data types with autocomplete
-3. **Dashboard-Centric Navigation**: Operational overview with quick access to common tasks
-4. **Real-time Synchronization**: Live inventory updates between admin and reader apps
-5. **Mobile-Responsive Admin**: Tablet-optimized for circulation desk operations
-6. **Cross-Domain Authentication**: Independent login sessions with future session sharing
+**Development Tooling:**
+- ESLint 9 with Next.js configuration
+- Prettier 3.6.2 with consistent formatting
+- Husky git hooks with lint-staged
+- PNPM package management
 
-## Project Structure
+**Form Handling:**
+- React Hook Form 7.62.0
+- Zod 4.1.3 validation schemas
+- @hookform/resolvers integration
 
-```plaintext
-apps/library-management/
-├── docs/                               # Architecture documentation
-├── src/
-│   ├── app/                           # Next.js 14 App Router
-│   │   ├── (auth)/                    # Authentication group
-│   │   │   ├── login/                 # Cross-domain passwordless login
-│   │   │   └── layout.tsx             # Auth layout with registration messaging
-│   │   ├── (admin)/                   # Admin-protected routes
-│   │   │   ├── dashboard/             # Main operational dashboard
-│   │   │   ├── inventory/             # Ultra-simple book management
-│   │   │   │   ├── page.tsx           # Basic book list (title, author, status)
-│   │   │   │   ├── add/page.tsx       # Simple add book form
-│   │   │   │   └── [id]/page.tsx      # Book details (post-MVP)
-│   │   │   ├── members/               # Basic member management
-│   │   │   │   ├── page.tsx           # Simple member list
-│   │   │   │   ├── register/page.tsx  # Member registration form
-│   │   │   │   └── [id]/page.tsx      # Member profile
-│   │   │   ├── transactions/          # Ultra-simple checkout/return
-│   │   │   │   ├── checkout/page.tsx  # One-click checkout interface
-│   │   │   │   ├── return/page.tsx    # One-click return interface
-│   │   │   │   └── history/page.tsx   # Basic transaction log
-│   │   │   └── settings/              # Library configuration (post-MVP)
-│   │   ├── globals.css                # Global styles with admin theme
-│   │   ├── layout.tsx                 # Root layout with providers
-│   │   ├── loading.tsx                # Global loading states
-│   │   └── not-found.tsx              # 404 handling
-│   ├── components/                    # Shared React components
-│   │   ├── ui/                        # shadcn/ui base components
-│   │   │   ├── button.tsx             # Customized button component
-│   │   │   ├── input.tsx              # Form input component
-│   │   │   ├── table.tsx              # Data table component
-│   │   │   ├── search.tsx             # Global search component
-│   │   │   └── status-badge.tsx       # Available/checked-out indicators
-│   │   ├── layout/                    # Layout components
-│   │   │   ├── admin-header.tsx       # Header with library context + search
-│   │   │   ├── admin-sidebar.tsx      # Navigation sidebar
-│   │   │   ├── library-selector.tsx   # Multi-tenant library switching
-│   │   │   └── breadcrumb.tsx         # Contextual navigation
-│   │   ├── dashboard/                 # Dashboard-specific components
-│   │   │   ├── quick-stats.tsx        # Basic library statistics
-│   │   │   ├── recent-activity.tsx    # Latest transactions
-│   │   │   └── quick-actions.tsx      # Common task shortcuts
-│   │   ├── inventory/                 # Ultra-simple book components
-│   │   │   ├── book-list.tsx          # Basic book table (title, author, status)
-│   │   │   ├── add-book-form.tsx      # Simple add book form
-│   │   │   ├── book-search.tsx        # Book search with real-time results
-│   │   │   └── isbn-lookup.tsx        # Optional crawler integration
-│   │   ├── members/                   # Basic member components
-│   │   │   ├── member-list.tsx        # Simple member table
-│   │   │   ├── member-form.tsx        # Registration/edit form
-│   │   │   └── member-search.tsx      # Member search functionality
-│   │   ├── transactions/              # Ultra-simple checkout components
-│   │   │   ├── checkout-form.tsx      # One-click checkout interface
-│   │   │   ├── return-form.tsx        # One-click return interface
-│   │   │   ├── transaction-log.tsx    # Basic history display
-│   │   │   └── availability-sync.tsx  # Real-time status updates
-│   │   └── providers/                 # Context providers
-│   │       ├── admin-auth-provider.tsx # Authentication context
-│   │       ├── query-provider.tsx     # React Query configuration
-│   │       └── real-time-provider.tsx # Supabase subscriptions
-│   ├── lib/                           # Core utilities and services
-│   │   ├── auth/                      # Authentication logic
-│   │   │   ├── admin-auth.ts          # Cross-domain auth validation
-│   │   │   ├── permissions.ts         # Role-based access control
-│   │   │   └── session-management.ts  # Independent session handling
-│   │   ├── supabase/                  # Database integration
-│   │   │   ├── client.ts              # Supabase client configuration
-│   │   │   ├── admin-queries.ts       # Admin-specific database queries
-│   │   │   ├── real-time.ts           # Subscription management
-│   │   │   └── types.ts               # Generated database types
-│   │   ├── services/                  # Business logic services
-│   │   │   ├── inventory-service.ts   # Ultra-simple inventory operations
-│   │   │   ├── member-service.ts      # Basic member management
-│   │   │   ├── transaction-service.ts # Checkout/return operations
-│   │   │   └── sync-service.ts        # Reader app synchronization
-│   │   ├── validation/                # Form schemas
-│   │   │   ├── book-schemas.ts        # Book validation (title, author, ISBN)
-│   │   │   ├── member-schemas.ts      # Member validation (name, email)
-│   │   │   └── transaction-schemas.ts # Transaction validation
-│   │   ├── utils.ts                   # Common utilities
-│   │   └── constants.ts               # Application constants
-│   ├── hooks/                         # Custom React hooks
-│   │   ├── use-admin-permissions.ts   # Permission checking
-│   │   ├── use-library-context.ts     # Multi-tenant library state
-│   │   ├── use-real-time-inventory.ts # Live inventory updates
-│   │   ├── use-global-search.ts       # Search across all data types
-│   │   └── use-optimistic-updates.ts  # Instant UI feedback
-│   ├── store/                         # Zustand state management
-│   │   ├── admin-store.ts             # Global admin UI state
-│   │   ├── library-store.ts           # Selected library context
-│   │   ├── search-store.ts            # Global search state
-│   │   └── notification-store.ts      # System notifications
-│   └── types/                         # TypeScript definitions
-│       ├── database.ts                # Generated Supabase types
-│       ├── admin.ts                   # Admin-specific types
-│       ├── forms.ts                   # Form validation types
-│       └── api.ts                     # API contract types
-├── public/                            # Static assets
-├── package.json                       # Dependencies and scripts
-├── tailwind.config.js                 # Tailwind with admin theme
-├── next.config.js                     # Next.js configuration
-└── tsconfig.json                      # TypeScript configuration
+### What Needs Implementation 🚧
+
+**Authentication System:**
+- Supabase client configuration
+- Auth routes and protected pages
+- User session management
+- Permission-based access control
+
+**Application Pages:**
+- Dashboard with navigation
+- Book management CRUD
+- Member management CRUD
+- Circulation workflows
+- Settings and configuration
+
+**State Management:**
+- Zustand stores for client state
+- TanStack Query for server state
+- Real-time subscriptions
+
+**Business Logic:**
+- API integration utilities
+- Form validation schemas
+- Custom React hooks
+- Error handling patterns
+
+## Architecture Patterns
+
+### Monolithic Application Structure
+
+```mermaid
+graph TD
+    A[Next.js App Router] --> B[Pages & Layouts]
+    A --> C[API Routes]
+    B --> D[Dashboard]
+    B --> E[Books]
+    B --> F[Members]
+    B --> G[Circulation]
+    H[Components] --> I[UI Components]
+    H --> J[Forms]
+    H --> K[Tables]
+    L[Libraries] --> M[Supabase Client]
+    L --> N[Auth Utils]
+    L --> O[Validation]
+    P[State] --> Q[Zustand Stores]
+    P --> R[TanStack Query]
+```
+
+### Component Architecture
+
+**Layered Component Structure:**
+1. **Page Components** (`src/app/`) - Route-level components
+2. **Layout Components** (`src/components/layout/`) - Navigation, headers, sidebars
+3. **Feature Components** (`src/components/forms/`, `src/components/tables/`) - Domain-specific
+4. **UI Components** (`src/components/ui/`) - Reusable shadcn/ui primitives
+5. **Provider Components** (`src/components/providers/`) - Context providers
+
+### Data Flow Architecture
+
+**Planned Data Flow:**
+```mermaid
+sequenceDiagram
+    participant UI as UI Component
+    participant Hook as Custom Hook
+    participant Query as TanStack Query
+    participant Supabase as Supabase Client
+    participant DB as Database
+    
+    UI->>Hook: User Action
+    Hook->>Query: API Call
+    Query->>Supabase: Database Query
+    Supabase->>DB: SQL Query
+    DB->>Supabase: Result
+    Supabase->>Query: Parsed Data
+    Query->>Hook: Cached Data
+    Hook->>UI: Updated State
+```
+
+## Technology Integration
+
+### Next.js 15 App Router
+
+**Current Configuration:**
+```typescript
+// next.config.ts
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+```
+
+**Routing Structure:**
+- File-based routing with `src/app/`
+- Route groups with `(auth)` and `(dashboard)`
+- Dynamic routes with `[id]` parameters
+- Layouts with nested routing
+
+### Supabase Integration
+
+**Planned Client Setup:**
+```typescript
+// lib/supabase/client.ts
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+```
+
+**Server-Side Rendering:**
+```typescript
+// lib/supabase/server.ts
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export function createClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookies().get(name)?.value
+        },
+      },
+    }
+  )
+}
+```
+
+### shadcn/ui Component System
+
+**Current Configuration:**
+```json
+// components.json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/app/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui"
+  },
+  "iconLibrary": "lucide"
+}
+```
+
+**Available Components:**
+- Button, Input, Label, Textarea
+- Card, Dialog, Dropdown Menu
+- Table, Checkbox, Select
+- Toast notifications via Sonner
+
+### State Management Strategy
+
+**Planned Architecture:**
+
+1. **Client State (Zustand):**
+```typescript
+// lib/stores/ui-store.ts
+interface UIState {
+  sidebarOpen: boolean
+  theme: 'light' | 'dark'
+  toggleSidebar: () => void
+  setTheme: (theme: 'light' | 'dark') => void
+}
+
+export const useUIStore = create<UIState>()((set) => ({
+  sidebarOpen: true,
+  theme: 'light',
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  setTheme: (theme) => set({ theme }),
+}))
+```
+
+2. **Server State (TanStack Query):**
+```typescript
+// lib/hooks/use-books.ts
+export function useBooks() {
+  return useQuery({
+    queryKey: ['books'],
+    queryFn: () => supabase.from('books').select('*'),
+  })
+}
+
+export function useCreateBook() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (book: CreateBookData) => 
+      supabase.from('books').insert(book),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['books'] })
+    },
+  })
+}
+```
+
+### Form Handling Pattern
+
+**Current Implementation:**
+```typescript
+// components/forms/book-form.tsx
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const bookSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  author: z.string().min(1, 'Author is required'),
+  isbn: z.string().optional(),
+})
+
+type BookFormData = z.infer<typeof bookSchema>
+
+export function BookForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm<BookFormData>({
+    resolver: zodResolver(bookSchema),
+  })
+
+  const onSubmit = (data: BookFormData) => {
+    // Handle form submission
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Form fields */}
+    </form>
+  )
+}
 ```
 
 ## Authentication Architecture
 
-### Cross-Domain Passwordless Strategy
+### Planned Authentication Flow
 
+```mermaid
+sequenceDiagram
+    participant User
+    participant App as Next.js App
+    participant Supabase as Supabase Auth
+    participant DB as Database
+    
+    User->>App: Access Protected Route
+    App->>Supabase: Check Session
+    Supabase-->>App: No Session
+    App->>User: Redirect to Login
+    User->>App: Submit Credentials
+    App->>Supabase: Sign In Request
+    Supabase->>DB: Validate User
+    DB-->>Supabase: User Data
+    Supabase-->>App: JWT Token + Session
+    App->>User: Redirect to Dashboard
+```
+
+### Route Protection
+
+**Planned Middleware:**
 ```typescript
-// lib/auth/admin-auth.ts
-export class AdminAuthService {
-  private supabase = createClient();
+// middleware.ts
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-  // Validate user exists from reader platform registration
-  async validateUserFromReaderPlatform(email: string): Promise<boolean> {
-    const { data } = await this.supabase
-      .from("users")
-      .select("id, email")
-      .eq("email", email)
-      .single();
-
-    return !!data;
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
+  const supabase = createMiddlewareClient({ req, res })
+  
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  if (!session && req.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/login', req.url))
   }
+  
+  return res
+}
 
-  // Cross-domain login with existing account verification
-  async signInWithExistingAccount(email: string): Promise<AuthResult> {
-    // Verify user exists from reader platform
-    const userExists = await this.validateUserFromReaderPlatform(email);
+export const config = {
+  matcher: ['/dashboard/:path*']
+}
+```
 
-    if (!userExists) {
-      throw new AuthError(
-        "Please register first at ezlib.com before accessing library management"
-      );
-    }
+## UI/UX Patterns
 
-    // Send passwordless OTP
-    const { error } = await this.supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+### Layout System
+
+**Planned Dashboard Layout:**
+```typescript
+// app/(dashboard)/layout.tsx
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header />
+        <main className="flex-1 p-6 overflow-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  )
+}
+```
+
+### Design System
+
+**Tailwind Configuration:**
+- Consistent spacing scale
+- Custom color palette for library theme
+- Responsive breakpoints
+- Dark mode support via CSS variables
+
+**Component Variants:**
+```typescript
+// components/ui/button.tsx
+const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-md text-sm font-medium",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input hover:bg-accent hover:text-accent-foreground",
       },
-    });
-
-    if (error) throw new AuthError(error.message);
-
-    return { success: true, message: "Check your email for login code" };
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+      },
+    },
   }
-
-  // Verify admin access for specific library
-  async requireAdminAccess(libraryId: string): Promise<AdminRole> {
-    const {
-      data: { user },
-    } = await this.supabase.auth.getUser();
-
-    if (!user) {
-      throw new AuthError("Authentication required");
-    }
-
-    const { data: adminRole } = await this.supabase
-      .from("lib_admins")
-      .select("role, permissions")
-      .eq("user_id", user.id)
-      .eq("library_id", libraryId)
-      .eq("status", "active")
-      .single();
-
-    if (!adminRole) {
-      throw new AuthError("Library admin access required");
-    }
-
-    return adminRole;
-  }
-}
+)
 ```
 
-### Role-Based Access Control
+## Performance Considerations
+
+### Next.js Optimizations
+
+**Built-in Features:**
+- Automatic code splitting by route
+- Image optimization with next/image
+- Font optimization with next/font
+- Bundle analysis and tree shaking
+
+**Planned Optimizations:**
+- Dynamic imports for heavy components
+- React.lazy for code splitting
+- Memoization for expensive calculations
+- Virtual scrolling for large lists
+
+### Database Optimization
+
+**Direct Client Benefits:**
+- No API layer overhead
+- Automatic connection pooling
+- Real-time subscriptions
+- Row-level security enforcement
+
+## Error Handling Strategy
+
+### Planned Error Boundaries
 
 ```typescript
-// lib/auth/permissions.ts
-export type AdminRole = "owner" | "manager" | "librarian";
-export type AdminPermission =
-  | "manage_books"
-  | "manage_members"
-  | "process_transactions"
-  | "view_reports"
-  | "manage_settings";
+// components/error-boundary.tsx
+'use client'
 
-const ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
-  owner: [
-    "manage_books",
-    "manage_members",
-    "process_transactions",
-    "view_reports",
-    "manage_settings",
-  ],
-  manager: [
-    "manage_books",
-    "manage_members",
-    "process_transactions",
-    "view_reports",
-  ],
-  librarian: ["manage_books", "manage_members", "process_transactions"],
-};
+import { Component, ErrorInfo, ReactNode } from 'react'
 
-export function hasPermission(
-  role: AdminRole,
-  permission: AdminPermission
-): boolean {
-  return ROLE_PERMISSIONS[role].includes(permission);
+interface Props {
+  children: ReactNode
 }
 
-// Hook for component-level permission checking
-export function useAdminPermissions(libraryId: string) {
-  const [permissions, setPermissions] = useState<AdminPermission[]>([]);
-
-  useEffect(() => {
-    const checkPermissions = async () => {
-      try {
-        const adminRole = await adminAuthService.requireAdminAccess(libraryId);
-        setPermissions(ROLE_PERMISSIONS[adminRole.role]);
-      } catch (error) {
-        setPermissions([]);
-      }
-    };
-
-    checkPermissions();
-  }, [libraryId]);
-
-  return {
-    permissions,
-    hasPermission: (permission: AdminPermission) =>
-      permissions.includes(permission),
-    canManageBooks: permissions.includes("manage_books"),
-    canProcessTransactions: permissions.includes("process_transactions"),
-  };
-}
-```
-
-## Ultra-Simple State Management
-
-### Library Context Store
-
-```typescript
-// store/library-store.ts
-interface LibraryState {
-  selectedLibrary: Library | null;
-  availableLibraries: Library[];
-  isLoading: boolean;
-
-  // Actions
-  setSelectedLibrary: (library: Library) => void;
-  loadUserLibraries: (userId: string) => Promise<void>;
-  switchLibrary: (libraryId: string) => void;
+interface State {
+  hasError: boolean
 }
 
-export const useLibraryStore = create<LibraryState>()((set, get) => ({
-  selectedLibrary: null,
-  availableLibraries: [],
-  isLoading: false,
-
-  setSelectedLibrary: (library) => {
-    set({ selectedLibrary: library });
-    // Persist to localStorage for session continuity
-    localStorage.setItem("selectedLibraryId", library.id);
-  },
-
-  loadUserLibraries: async (userId) => {
-    set({ isLoading: true });
-    try {
-      const libraries = await adminService.getUserLibraries(userId);
-      set({ availableLibraries: libraries, isLoading: false });
-
-      // Auto-select first library if none selected
-      if (!get().selectedLibrary && libraries.length > 0) {
-        get().setSelectedLibrary(libraries[0]);
-      }
-    } catch (error) {
-      set({ isLoading: false });
-      throw error;
-    }
-  },
-
-  switchLibrary: (libraryId) => {
-    const library = get().availableLibraries.find(
-      (lib) => lib.id === libraryId
-    );
-    if (library) {
-      get().setSelectedLibrary(library);
-      // Clear related queries when switching libraries
-      queryClient.removeQueries(["inventory", "members", "transactions"]);
-    }
-  },
-}));
-```
-
-### Global Search Store
-
-```typescript
-// store/search-store.ts
-interface SearchState {
-  query: string;
-  isSearching: boolean;
-  results: {
-    books: BookResult[];
-    members: MemberResult[];
-    transactions: TransactionResult[];
-  };
-
-  // Actions
-  setQuery: (query: string) => void;
-  performGlobalSearch: (libraryId: string) => Promise<void>;
-  clearSearch: () => void;
-}
-
-export const useSearchStore = create<SearchState>()((set, get) => ({
-  query: "",
-  isSearching: false,
-  results: { books: [], members: [], transactions: [] },
-
-  setQuery: (query) => set({ query }),
-
-  performGlobalSearch: async (libraryId) => {
-    const { query } = get();
-    if (!query.trim()) return;
-
-    set({ isSearching: true });
-    try {
-      const [books, members, transactions] = await Promise.all([
-        inventoryService.searchBooks(libraryId, query),
-        memberService.searchMembers(libraryId, query),
-        transactionService.searchTransactions(libraryId, query),
-      ]);
-
-      set({
-        results: { books, members, transactions },
-        isSearching: false,
-      });
-    } catch (error) {
-      set({ isSearching: false });
-      throw error;
-    }
-  },
-
-  clearSearch: () =>
-    set({
-      query: "",
-      results: { books: [], members: [], transactions: [] },
-    }),
-}));
-```
-
-## Real-Time Synchronization Architecture
-
-### Inventory Sync Service
-
-```typescript
-// lib/services/sync-service.ts
-export class InventorySyncService {
-  private supabase = createClient();
-  private subscriptions: Map<string, RealtimeChannel> = new Map();
-
-  // Subscribe to inventory changes for real-time updates
-  subscribeToInventoryUpdates(
-    libraryId: string,
-    onUpdate: InventoryUpdateCallback
-  ) {
-    const channel = this.supabase
-      .channel(`inventory-${libraryId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "book_inventory",
-          filter: `library_id=eq.${libraryId}`,
-        },
-        (payload) => {
-          // Handle inventory status changes
-          this.handleInventoryChange(payload, onUpdate);
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "borrowing_transactions",
-          filter: `library_id=eq.${libraryId}`,
-        },
-        (payload) => {
-          // Handle transaction updates that affect availability
-          this.handleTransactionChange(payload, onUpdate);
-        }
-      )
-      .subscribe();
-
-    this.subscriptions.set(libraryId, channel);
-    return () => this.unsubscribe(libraryId);
+export class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false
   }
 
-  private handleInventoryChange(
-    payload: RealtimePayload,
-    onUpdate: InventoryUpdateCallback
-  ) {
-    const { eventType, new: newRecord, old: oldRecord } = payload;
-
-    switch (eventType) {
-      case "UPDATE":
-        // Availability status changed
-        if (newRecord.availability.status !== oldRecord.availability.status) {
-          onUpdate({
-            type: "availability_changed",
-            bookId: newRecord.book_edition_id,
-            status: newRecord.availability.status,
-            borrowerId: newRecord.availability.current_borrower_id,
-          });
-        }
-        break;
-
-      case "INSERT":
-        // New book added to inventory
-        onUpdate({
-          type: "book_added",
-          bookId: newRecord.book_edition_id,
-          libraryId: newRecord.library_id,
-        });
-        break;
-    }
+  public static getDerivedStateFromError(): State {
+    return { hasError: true }
   }
 
-  // Sync inventory status with reader app
-  async syncWithReaderApp(
-    libraryId: string,
-    bookId: string,
-    status: InventoryStatus
-  ) {
-    // Update book availability in shared database
-    const { error } = await this.supabase
-      .from("book_inventory")
-      .update({
-        availability: {
-          ...status,
-          last_updated: new Date().toISOString(),
-        },
-      })
-      .eq("library_id", libraryId)
-      .eq("book_edition_id", bookId);
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Uncaught error:', error, errorInfo)
+  }
 
-    if (error) {
-      throw new SyncError(`Failed to sync inventory: ${error.message}`);
+  public render() {
+    if (this.state.hasError) {
+      return <ErrorFallback />
     }
 
-    // Trigger real-time update to reader app
-    await this.supabase.channel("reader-inventory-sync").send({
-      type: "broadcast",
-      event: "inventory_updated",
-      payload: { libraryId, bookId, status },
-    });
+    return this.props.children
   }
 }
 ```
 
-### Real-Time Hooks
+### Form Validation
 
+**Zod Schema Pattern:**
 ```typescript
-// hooks/use-real-time-inventory.ts
-export function useRealTimeInventory(libraryId: string) {
-  const queryClient = useQueryClient();
-  const [connectionStatus, setConnectionStatus] = useState<
-    "connecting" | "connected" | "disconnected"
-  >("connecting");
+// lib/validation/books.ts
+import { z } from 'zod'
 
-  useEffect(() => {
-    if (!libraryId) return;
-
-    const syncService = new InventorySyncService();
-
-    const unsubscribe = syncService.subscribeToInventoryUpdates(
-      libraryId,
-      (update) => {
-        // Optimistically update React Query cache
-        switch (update.type) {
-          case "availability_changed":
-            queryClient.setQueryData(
-              ["inventory", libraryId],
-              (oldData: BookInventory[]) => {
-                return (
-                  oldData?.map((book) =>
-                    book.book_edition_id === update.bookId
-                      ? {
-                          ...book,
-                          availability: {
-                            ...book.availability,
-                            status: update.status,
-                          },
-                        }
-                      : book
-                  ) || []
-                );
-              }
-            );
-            break;
-
-          case "book_added":
-            // Invalidate inventory query to refetch with new book
-            queryClient.invalidateQueries(["inventory", libraryId]);
-            break;
-        }
-
-        // Update connection status
-        setConnectionStatus("connected");
-      }
-    );
-
-    return unsubscribe;
-  }, [libraryId, queryClient]);
-
-  return { connectionStatus };
-}
-```
-
-## Ultra-Simple Component Architecture
-
-### Dashboard Component
-
-```typescript
-// components/dashboard/quick-stats.tsx
-interface QuickStatsProps {
-  libraryId: string
-}
-
-export function QuickStats({ libraryId }: QuickStatsProps) {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboard-stats', libraryId],
-    queryFn: () => dashboardService.getQuickStats(libraryId),
-    refetchInterval: 30000 // Refresh every 30 seconds
-  })
-
-  if (isLoading) return <QuickStatsSkeleton />
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <StatCard
-        title="Total Books"
-        value={stats?.totalBooks || 0}
-        icon="📚"
-      />
-      <StatCard
-        title="Available"
-        value={stats?.availableBooks || 0}
-        icon="✅"
-        trend={stats?.availableTrend}
-      />
-      <StatCard
-        title="Checked Out"
-        value={stats?.checkedOutBooks || 0}
-        icon="📖"
-      />
-      <StatCard
-        title="Active Members"
-        value={stats?.activeMembers || 0}
-        icon="👥"
-      />
-    </div>
-  )
-}
-```
-
-### Ultra-Simple Book List
-
-```typescript
-// components/inventory/book-list.tsx
-export function BookList({ libraryId }: { libraryId: string }) {
-  const { data: books, isLoading } = useQuery({
-    queryKey: ['inventory', libraryId],
-    queryFn: () => inventoryService.getLibraryInventory(libraryId)
-  })
-
-  // Real-time updates
-  useRealTimeInventory(libraryId)
-
-  if (isLoading) return <BookListSkeleton />
-
-  return (
-    <div className="space-y-4">
-      {/* Ultra-simple search */}
-      <BookSearch libraryId={libraryId} />
-
-      {/* Basic book table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Author</TableHead>
-              <TableHead>ISBN</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {books?.map((book) => (
-              <TableRow key={book.id}>
-                <TableCell className="font-medium">
-                  {book.book_edition.title}
-                </TableCell>
-                <TableCell>
-                  {book.book_edition.general_book.canonical_title}
-                </TableCell>
-                <TableCell className="font-mono text-sm">
-                  {book.book_edition.isbn_13}
-                </TableCell>
-                <TableCell>
-                  <StatusBadge status={book.availability.status} />
-                </TableCell>
-                <TableCell>
-                  <BookActions book={book} libraryId={libraryId} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  )
-}
-```
-
-### One-Click Checkout Form
-
-```typescript
-// components/transactions/checkout-form.tsx
-export function CheckoutForm({ libraryId }: { libraryId: string }) {
-  const [selectedBook, setSelectedBook] = useState<BookInventory | null>(null)
-  const [selectedMember, setSelectedMember] = useState<LibraryMember | null>(null)
-
-  const checkoutMutation = useMutation({
-    mutationFn: (data: CheckoutData) => transactionService.processCheckout(data),
-    onSuccess: () => {
-      // Optimistic update - book immediately shows as checked out
-      queryClient.invalidateQueries(['inventory', libraryId])
-      // Clear form
-      setSelectedBook(null)
-      setSelectedMember(null)
-      // Show success message
-      toast.success('Book checked out successfully!')
-    }
-  })
-
-  const handleQuickCheckout = () => {
-    if (!selectedBook || !selectedMember) return
-
-    checkoutMutation.mutate({
-      libraryId,
-      bookInventoryId: selectedBook.id,
-      borrowerId: selectedMember.user_id,
-      // Ultra-simple: no due date initially
-      status: 'checked_out'
-    })
-  }
-
-  return (
-    <Card className="p-6">
-      <h2 className="text-lg font-semibold mb-4">Quick Checkout</h2>
-
-      <div className="space-y-4">
-        {/* Book Selection */}
-        <div>
-          <Label>Select Book</Label>
-          <BookSelector
-            libraryId={libraryId}
-            onSelect={setSelectedBook}
-            filterAvailable={true}
-          />
-        </div>
-
-        {/* Member Selection */}
-        <div>
-          <Label>Select Member</Label>
-          <MemberSelector
-            libraryId={libraryId}
-            onSelect={setSelectedMember}
-          />
-        </div>
-
-        {/* One-Click Action */}
-        <Button
-          onClick={handleQuickCheckout}
-          disabled={!selectedBook || !selectedMember || checkoutMutation.isLoading}
-          className="w-full"
-        >
-          {checkoutMutation.isLoading ? 'Processing...' : 'Check Out Book'}
-        </Button>
-      </div>
-    </Card>
-  )
-}
-```
-
-## Testing Strategy
-
-### Component Testing Template
-
-```typescript
-// __tests__/components/inventory/book-list.test.tsx
-import { render, screen, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BookList } from '@/components/inventory/book-list'
-
-const createTestWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } }
-  })
-
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
-}
-
-// Mock Supabase
-jest.mock('@/lib/supabase/client')
-
-describe('BookList', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  it('renders book list with ultra-simple columns', async () => {
-    render(<BookList libraryId="test-library" />, {
-      wrapper: createTestWrapper()
-    })
-
-    // Verify ultra-simple table headers
-    expect(screen.getByText('Title')).toBeInTheDocument()
-    expect(screen.getByText('Author')).toBeInTheDocument()
-    expect(screen.getByText('ISBN')).toBeInTheDocument()
-    expect(screen.getByText('Status')).toBeInTheDocument()
-
-    // Should NOT have complex columns in MVP
-    expect(screen.queryByText('Due Date')).not.toBeInTheDocument()
-    expect(screen.queryByText('Fine Amount')).not.toBeInTheDocument()
-  })
-
-  it('shows real-time availability updates', async () => {
-    const mockBook = {
-      id: '1',
-      availability: { status: 'available' },
-      book_edition: { title: 'Test Book', isbn_13: '1234567890123' }
-    }
-
-    render(<BookList libraryId="test-library" />, {
-      wrapper: createTestWrapper()
-    })
-
-    // Simulate real-time update
-    // (Implementation depends on real-time testing setup)
-  })
+export const createBookSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(255, 'Title too long'),
+  author: z.string().min(1, 'Author is required').max(255, 'Author name too long'),
+  isbn: z.string().regex(/^[\d-]{10,17}$/, 'Invalid ISBN format').optional(),
+  publishedYear: z.number().int().min(1000).max(new Date().getFullYear()).optional(),
 })
-```
 
-## Environment Configuration
-
-```bash
-# Next.js Configuration
-NEXT_PUBLIC_SITE_URL=https://manage.ezlib.com
-NEXT_PUBLIC_READER_APP_URL=https://ezlib.com
-
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-
-# Cross-Domain Authentication
-NEXT_PUBLIC_ENABLE_CROSS_DOMAIN_AUTH=true
-NEXTAUTH_SECRET=your-nextauth-secret
-NEXTAUTH_URL=https://manage.ezlib.com
-
-# Book Crawler Integration
-NEXT_PUBLIC_CRAWLER_API_URL=http://localhost:8000
-CRAWLER_SERVICE_AUTH_SECRET=your-crawler-auth-secret
-
-# Feature Flags (MVP Progression)
-NEXT_PUBLIC_ENABLE_DUE_DATES=false
-NEXT_PUBLIC_ENABLE_FINES=false
-NEXT_PUBLIC_ENABLE_HOLDS=false
-NEXT_PUBLIC_ENABLE_ADVANCED_SEARCH=false
-
-# Real-time Updates
-NEXT_PUBLIC_ENABLE_REALTIME=true
-NEXT_PUBLIC_REALTIME_RETRY_ATTEMPTS=3
+export type CreateBookData = z.infer<typeof createBookSchema>
 ```
 
 ## Development Workflow
 
-### MVP Phase Commands
+### Code Organization Principles
+
+1. **Feature-First Organization**: Group related components, hooks, and utilities
+2. **Separation of Concerns**: UI, business logic, and data access separated
+3. **Reusability**: Common patterns extracted to shared utilities
+4. **Type Safety**: Strong TypeScript typing throughout
+5. **Testing**: Components tested in isolation (future)
+
+### Development Commands
 
 ```bash
-# Start development
-npm run dev            # Port 3001 (different from reader app)
+# Development
+pnpm dev                    # Start development server on port 3001
+pnpm build                  # Build production bundle
+pnpm type-check             # TypeScript type checking
 
-# Type checking with strict mode
-npm run type-check
-
-# Testing
-npm run test           # Unit tests
-npm run test:e2e       # Critical workflows only
-npm run test:coverage  # Coverage reports
-
-# Code quality
-npm run lint           # ESLint + TypeScript
-npm run format         # Prettier
-
-# Database
-supabase gen types typescript --local  # Regenerate types
+# Code Quality
+pnpm lint                   # ESLint checks
+pnpm lint:fix               # Fix linting issues
+pnpm format                 # Prettier formatting
 ```
 
-### Critical Coding Standards
+### Git Workflow
 
-1. **Ultra-Simple First**: Start with basic functionality, no complex features
-2. **Real-time by Default**: All inventory changes must sync immediately
-3. **Search-First Interface**: Every list component needs prominent search
-4. **Mobile-Responsive Admin**: All interfaces must work on tablets
-5. **Cross-Domain Auth**: Always validate user exists from reader platform
-6. **Permission Checks**: Verify admin access before sensitive operations
-7. **Optimistic Updates**: User actions should feel instant
-8. **Error Boundaries**: Wrap all async operations with proper error handling
-9. **Loading States**: Always provide visual feedback for async operations
-10. **TypeScript Strict**: No `any` types, proper interface definitions
+**Pre-commit Hooks:**
+- ESLint with automatic fixes
+- Prettier formatting
+- TypeScript type checking
+- Staged files only processing
 
-## Next Steps
+## Security Considerations
 
-### Immediate Technical Actions
+### Client-Side Security
 
-1. **Authentication Flow Implementation**: Build cross-domain passwordless login
-2. **Real-time Sync Setup**: Implement inventory synchronization with reader app
-3. **Ultra-Simple Dashboard**: Create operational overview with basic statistics
-4. **Basic Book Management**: Implement title/author/status tracking only
-5. **One-Click Operations**: Build checkout/return without due date complexity
+**Environment Variables:**
+- Public variables prefixed with `NEXT_PUBLIC_`
+- Sensitive keys server-side only
+- No secrets in client bundle
 
-### Post-MVP Enhancements
+**Input Validation:**
+- All user inputs validated with Zod
+- Sanitization at form level
+- Database queries parameterized
 
-- Due date management and overdue tracking
-- Advanced search and filtering capabilities
-- Comprehensive reporting and analytics
-- Bulk operations and data management
-- Fine calculations and payment processing
-- Multi-library network support
+### Supabase Security
 
-This architecture prioritizes **immediate operational value** through ultra-simple workflows while establishing the technical foundation for future enhancements. The focus is on replacing manual/spreadsheet systems with reliable digital tools that library staff can adopt confidently.
+**Row Level Security:**
+- Database-level access control
+- User context in policies
+- Automatic filtering of queries
+
+## Future Enhancements
+
+### Planned Features
+
+1. **Real-time Updates**: Supabase subscriptions for live data
+2. **Offline Support**: Service worker and cache strategies  
+3. **Progressive Web App**: PWA manifest and installability
+4. **Advanced Search**: Full-text search capabilities
+5. **Bulk Operations**: Multi-select and batch actions
+6. **Data Export**: CSV/PDF export functionality
+7. **Analytics**: Usage tracking and reporting
+
+### Technical Debt
+
+1. **Testing Framework**: Add Jest and Testing Library
+2. **E2E Testing**: Implement Playwright tests
+3. **Storybook**: Component documentation and testing
+4. **Performance Monitoring**: Add monitoring and analytics
+5. **Accessibility**: WCAG compliance auditing
+6. **Internationalization**: Multi-language support
+
+## Conclusion
+
+This frontend architecture provides a **solid foundation** for the Library Management System using modern React patterns and proven technologies. The monolithic approach ensures simplicity while the planned component structure enables future scalability and maintainability.
+
+The current minimal implementation provides the essential building blocks, with clear patterns established for authentication, state management, and UI components. Future development can follow these established patterns to build out the complete library management functionality.
+
+**Key Architectural Strengths:**
+- **Simplicity**: Single application, unified codebase
+- **Modern Stack**: Latest React and Next.js features
+- **Type Safety**: End-to-end TypeScript implementation
+- **Scalable Patterns**: Established conventions for growth
+- **Developer Experience**: Excellent tooling and workflows

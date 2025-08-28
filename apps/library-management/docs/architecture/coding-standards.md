@@ -1,21 +1,78 @@
-# Library Management App - Coding Standards
+# Library Management System - Coding Standards
 
 <!-- Powered by BMAD™ Core -->
 
 ## Overview
 
-This document defines the coding standards for the **EzLib Library Management System**. These standards ensure code consistency, maintainability, and alignment with the **ultra-simple MVP philosophy**.
+This document defines the **mandatory coding standards** for the **Library Management System**, a monolithic Next.js application with Supabase authentication. These standards are enforced by automated tools and must be followed by all developers and AI agents.
 
-## Core Principles
+## Core Technologies & Versions
 
-1. **Ultra-Simple First**: Start with basic functionality, add complexity incrementally
-2. **Real-time by Default**: All inventory changes must sync immediately with reader app
-3. **Search-First Interface**: Every list component needs prominent search functionality
-4. **Mobile-Responsive Admin**: All interfaces must work perfectly on tablets (circulation desk)
-5. **Cross-Domain Security**: Always validate user exists from reader platform first
-6. **Permission-First**: Verify admin access before rendering sensitive UI/operations
-7. **TypeScript Strict**: No `any` types, comprehensive interface definitions
-8. **Performance Conscious**: Optimistic updates, proper loading states, efficient queries
+### Language & Runtime
+- **TypeScript**: 5+ with strict mode enabled
+- **Node.js**: 18+ (LTS version)
+- **React**: 19.1.0 with concurrent features
+- **Next.js**: 15.5.2 with App Router
+
+### Package Management
+- **Package Manager**: PNPM (required)
+- **Lock File**: pnpm-lock.yaml (commit to repository)
+- **Node Version**: Use .nvmrc for version consistency
+
+## Code Style & Formatting
+
+### Prettier Configuration
+
+```json
+// .prettierrc
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": false,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
+
+**Formatting Rules:**
+- **Semicolons**: Required
+- **Quotes**: Double quotes for strings
+- **Trailing Commas**: ES5 style (objects, arrays)
+- **Indentation**: 2 spaces (no tabs)
+- **Line Length**: 80 characters
+
+### ESLint Configuration
+
+**Current Setup:**
+```javascript
+// eslint.config.mjs
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "out/**", 
+      "build/**",
+      "next-env.d.ts",
+    ],
+  },
+];
+
+export default eslintConfig;
+```
 
 ## TypeScript Standards
 
@@ -25,768 +82,570 @@ This document defines the coding standards for the **EzLib Library Management Sy
 // tsconfig.json
 {
   "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
-  }
-}
-```
-
-### Type Definitions
-
-```typescript
-// ✅ Good: Comprehensive interface definitions
-interface BookInventory {
-  id: string;
-  book_edition_id: string;
-  library_id: string;
-  availability: {
-    status: "available" | "checked_out" | "reserved" | "maintenance";
-    total_copies: number;
-    available_copies: number;
-    current_borrower_id: string | null;
-    due_date: string | null;
-  };
-  physical_details: {
-    shelf_location?: string;
-    condition: "new" | "good" | "fair" | "poor";
-    acquisition_date: string;
-    acquisition_cost?: number;
-    barcode?: string;
-  };
-  created_at: string;
-  updated_at: string;
-}
-
-// ❌ Bad: Using any or incomplete types
-interface BadBookInventory {
-  id: string;
-  data: any; // Never use any!
-  status?: string; // Be specific with union types
-}
-```
-
-### Component Props
-
-```typescript
-// ✅ Good: Explicit prop interfaces with documentation
-interface BookListProps {
-  /** Library ID for filtering books */
-  libraryId: string;
-  /** Optional search query for filtering */
-  searchQuery?: string;
-  /** Callback when book is selected */
-  onBookSelect?: (book: BookInventory) => void;
-  /** Show only available books */
-  filterAvailable?: boolean;
-  className?: string;
-}
-
-// ❌ Bad: Unclear or missing prop types
-interface BadBookListProps {
-  libraryId: string;
-  data?: any;
-  onClick?: Function;
-}
-```
-
-## React Component Standards
-
-### Component Structure
-
-```typescript
-// ✅ Good: Proper component structure with forwardRef
-'use client'
-
-import { forwardRef } from 'react'
-import { cn } from '@/lib/utils'
-import { useAdminPermissions } from '@/hooks/use-admin-permissions'
-
-interface BookListProps {
-  libraryId: string
-  className?: string
-}
-
-const BookList = forwardRef<HTMLDivElement, BookListProps>(
-  ({ libraryId, className, ...props }, ref) => {
-    // Permission check first
-    const { canManageBooks } = useAdminPermissions(libraryId)
-
-    // Early return for permissions
-    if (!canManageBooks) {
-      return <div>Access denied</div>
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,                    // MANDATORY
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "paths": {
+      "@/*": ["./src/*"]               // MANDATORY alias
     }
-
-    return (
-      <div
-        ref={ref}
-        className={cn("space-y-4", className)}
-        {...props}
-      >
-        {/* Component content */}
-      </div>
-    )
   }
-)
-
-BookList.displayName = "BookList"
-
-export { BookList }
-export type { BookListProps }
+}
 ```
 
-### Hooks Usage
+### Type Safety Rules
+
+**MANDATORY Requirements:**
+- **Strict Mode**: Always enabled
+- **No Any Types**: Avoid `any`, use proper types
+- **Explicit Return Types**: For public functions
+- **Interface Definitions**: For all component props
+- **Type Imports**: Use `import type` for type-only imports
 
 ```typescript
-// ✅ Good: Proper hook usage with error handling
-export function useLibraryInventory(libraryId: string) {
-  const {
-    data: books,
+// ✅ Good: Proper typing
+interface BookFormProps {
+  onSubmit: (data: BookData) => Promise<void>;
+  initialData?: BookData;
+  isLoading: boolean;
+}
+
+export function BookForm({ onSubmit, initialData, isLoading }: BookFormProps): JSX.Element {
+  // Implementation
+}
+
+// ✅ Good: Type-only imports
+import type { Database } from '@/lib/database.types';
+import type { User } from '@supabase/supabase-js';
+
+// ❌ Bad: Any types
+function handleSubmit(data: any) { }
+
+// ❌ Bad: Missing prop types
+export function BookForm({ onSubmit, initialData }) {
+  // Implementation
+}
+```
+
+## File Naming Conventions
+
+### Components & Pages
+
+```plaintext
+# Next.js App Router (MANDATORY)
+page.tsx                # Page components
+layout.tsx              # Layout components  
+loading.tsx             # Loading states
+error.tsx               # Error boundaries
+not-found.tsx           # 404 pages
+
+# Regular Components (kebab-case)
+book-form.tsx           # Form components
+member-table.tsx        # Table components
+search-input.tsx        # Input components
+```
+
+### Utility Files
+
+```plaintext
+# Hooks (use- prefix)
+use-auth.ts             # Authentication hooks
+use-books.ts            # Book management hooks
+use-local-storage.ts    # Utility hooks
+
+# Services & Utils (kebab-case)
+supabase-client.ts      # Service clients
+form-validation.ts      # Validation utilities
+date-utils.ts           # Date utilities
+
+# Types (descriptive)
+database-types.ts       # Generated types
+form-types.ts          # Form-related types
+```
+
+### Directory Structure
+
+```plaintext
+# All directories: kebab-case
+src/
+├── app/                        # Next.js App Router
+├── components/
+│   ├── ui/                    # UI primitives
+│   ├── forms/                 # Form components
+│   ├── tables/                # Table components
+│   └── layout/                # Layout components
+├── lib/
+│   ├── supabase/             # Database integration
+│   ├── validation/           # Form schemas
+│   └── hooks/                # Custom hooks
+```
+
+## Import/Export Standards
+
+### Import Organization
+
+```typescript
+// 1. External libraries (React, Next.js, etc.)
+import React from 'react';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// 2. Internal components and utilities (absolute imports)
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/hooks/use-auth';
+import { createServerClient } from '@/lib/supabase/server';
+
+// 3. Type-only imports (separate group)
+import type { Database } from '@/lib/database.types';
+import type { User } from '@supabase/supabase-js';
+```
+
+### Export Standards
+
+```typescript
+// ✅ Good: Named exports for components
+export function BookForm() { }
+export function BookTable() { }
+
+// ✅ Good: Default export for pages
+export default function BooksPage() { }
+
+// ✅ Good: Consistent utility exports
+export const formatDate = (date: Date) => { }
+export const validateISBN = (isbn: string) => { }
+
+// ❌ Bad: Mixed export styles in same file
+export function Component1() { }
+export default Component2;
+```
+
+### Absolute Imports (MANDATORY)
+
+```typescript
+// ✅ MANDATORY: Use @ alias for internal imports
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/hooks/use-auth';
+import { supabase } from '@/lib/supabase/client';
+
+// ❌ FORBIDDEN: Relative imports
+import { Button } from '../../../components/ui/button';
+import { useAuth } from '../../hooks/use-auth';
+```
+
+## Component Standards
+
+### React Component Patterns
+
+```typescript
+// ✅ Good: Functional component with proper typing
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary';
+  disabled?: boolean;
+  onClick?: () => void;
+}
+
+export function Button({ 
+  children, 
+  variant = 'primary', 
+  disabled = false,
+  onClick 
+}: ButtonProps): JSX.Element {
+  return (
+    <button 
+      className={`btn btn-${variant}`}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+```
+
+### Component File Structure
+
+```typescript
+// component-name.tsx
+'use client'; // Only if client component
+
+import React from 'react';
+import { cn } from '@/lib/utils';
+import type { ComponentProps } from './types';
+
+// Component interface
+interface ComponentNameProps {
+  // Props definition
+}
+
+// Main component
+export function ComponentName(props: ComponentNameProps) {
+  // Implementation
+}
+
+// Helper functions (if needed)
+function helperFunction() {
+  // Implementation  
+}
+```
+
+## State Management Standards
+
+### Zustand Store Pattern
+
+```typescript
+// lib/stores/store-name.ts
+import { create } from 'zustand';
+
+interface StoreState {
+  // State properties
+  data: DataType[];
+  isLoading: boolean;
+  
+  // Actions
+  fetchData: () => Promise<void>;
+  updateData: (item: DataType) => void;
+  clearData: () => void;
+}
+
+export const useStoreNameStore = create<StoreState>()((set, get) => ({
+  data: [],
+  isLoading: false,
+  
+  fetchData: async () => {
+    set({ isLoading: true });
+    try {
+      // API call
+      const data = await fetchFromAPI();
+      set({ data, isLoading: false });
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+  
+  updateData: (item) => set((state) => ({
+    data: state.data.map(d => d.id === item.id ? item : d)
+  })),
+  
+  clearData: () => set({ data: [] }),
+}));
+```
+
+### Custom Hooks Pattern
+
+```typescript
+// lib/hooks/use-feature-name.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase/client';
+
+export function useFeatureName() {
+  const queryClient = useQueryClient();
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['feature-name'],
+    queryFn: () => supabase.from('table').select('*'),
+  });
+  
+  const mutation = useMutation({
+    mutationFn: (data: InputType) => 
+      supabase.from('table').insert(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feature-name'] });
+    },
+  });
+  
+  return {
+    data,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["inventory", libraryId],
-    queryFn: () => inventoryService.getLibraryInventory(libraryId),
-    enabled: !!libraryId,
-    staleTime: 30000, // 30 seconds
-    refetchOnWindowFocus: false,
+    create: mutation.mutate,
+    isCreating: mutation.isLoading,
+  };
+}
+```
+
+## Form Standards
+
+### React Hook Form + Zod Pattern
+
+```typescript
+// components/forms/feature-form.tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+// Validation schema
+const formSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  author: z.string().min(1, 'Author is required'),
+  isbn: z.string().regex(/^[\d-]{10,17}$/, 'Invalid ISBN').optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+interface FeatureFormProps {
+  onSubmit: (data: FormData) => Promise<void>;
+  initialData?: Partial<FormData>;
+}
+
+export function FeatureForm({ onSubmit, initialData }: FeatureFormProps) {
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: initialData,
   });
 
-  // Real-time updates
-  useRealTimeInventory(libraryId);
-
-  return {
-    books: books || [],
-    isLoading,
-    error,
-    isEmpty: !isLoading && (!books || books.length === 0),
-  };
-}
-
-// ❌ Bad: No error handling, unclear return type
-export function useBadInventory(libraryId: string) {
-  const { data } = useQuery(["inventory", libraryId], () =>
-    inventoryService.getLibraryInventory(libraryId)
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div>
+        <label htmlFor="title">Title</label>
+        <input 
+          {...register('title')}
+          id="title"
+          type="text"
+        />
+        {errors.title && <span>{errors.title.message}</span>}
+      </div>
+      
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Saving...' : 'Save'}
+      </button>
+    </form>
   );
-  return data;
-}
-```
-
-## Service Layer Standards
-
-### Service Classes
-
-```typescript
-// ✅ Good: Comprehensive service with error handling
-export class InventoryService {
-  private supabase = createAdminClient();
-
-  async addBookToInventory(data: AddBookInventoryData): Promise<BookInventory> {
-    try {
-      // Validate input
-      const validatedData = addBookInventorySchema.parse(data);
-
-      // Database operation
-      const { data: inventory, error } = await this.supabase
-        .from("book_inventory")
-        .insert({
-          book_edition_id: validatedData.book_edition_id,
-          library_id: validatedData.library_id,
-          availability: {
-            status: "available",
-            total_copies: validatedData.total_copies,
-            available_copies: validatedData.total_copies,
-            current_borrower_id: null,
-            due_date: null,
-          },
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw new InventoryError(`Failed to add book: ${error.message}`);
-      }
-
-      // Real-time sync with reader app
-      await this.syncWithReaderApp(
-        validatedData.library_id,
-        inventory.book_edition_id,
-        inventory.availability
-      );
-
-      return inventory;
-    } catch (error) {
-      if (error instanceof InventoryError) throw error;
-      throw new InventoryError("Unexpected error adding book to inventory");
-    }
-  }
-
-  private async syncWithReaderApp(
-    libraryId: string,
-    bookId: string,
-    availability: InventoryStatus
-  ): Promise<void> {
-    // Implementation for real-time sync
-  }
-}
-```
-
-### Error Handling
-
-```typescript
-// ✅ Good: Custom error classes with context
-export class InventoryError extends Error {
-  constructor(
-    message: string,
-    public code?: string,
-    public context?: Record<string, unknown>
-  ) {
-    super(message);
-    this.name = "InventoryError";
-  }
-}
-
-export class AuthenticationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "AuthenticationError";
-  }
-}
-
-// Usage in components
-try {
-  await inventoryService.addBook(bookData);
-} catch (error) {
-  if (error instanceof InventoryError) {
-    toast.error(`Inventory Error: ${error.message}`);
-  } else if (error instanceof AuthenticationError) {
-    router.push("/login");
-  } else {
-    toast.error("An unexpected error occurred");
-  }
 }
 ```
 
 ## Database Integration Standards
 
+### Supabase Client Usage
+
+```typescript
+// lib/supabase/client.ts
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from './database.types';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+```
+
 ### Query Patterns
 
 ```typescript
-// ✅ Good: Efficient queries with proper filtering
-export async function getLibraryInventory(
-  libraryId: string
-): Promise<BookInventoryWithDetails[]> {
+// ✅ Good: Type-safe queries
+const { data: books, error } = await supabase
+  .from('books')
+  .select('id, title, author, isbn')
+  .eq('library_id', libraryId);
+
+if (error) {
+  throw new Error(`Failed to fetch books: ${error.message}`);
+}
+
+// ✅ Good: Proper error handling
+try {
   const { data, error } = await supabase
-    .from("book_inventory")
-    .select(
-      `
-      id,
-      availability,
-      physical_details,
-      created_at,
-      updated_at,
-      book_edition:book_editions!inner(
-        id,
-        title,
-        subtitle,
-        isbn_13,
-        language,
-        general_book:general_books!inner(
-          id,
-          canonical_title,
-          first_publication_year
-        )
-      )
-    `
-    )
-    .eq("library_id", libraryId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw new DatabaseError(error.message);
-  return data || [];
-}
-
-// ❌ Bad: Over-fetching, no error handling
-export async function getBadInventory(libraryId: string) {
-  const { data } = await supabase
-    .from("book_inventory")
-    .select("*") // Over-fetching
-    .eq("library_id", libraryId);
-
-  return data; // No error handling
+    .from('books')
+    .insert(bookData);
+    
+  if (error) throw error;
+  return data;
+} catch (error) {
+  console.error('Database error:', error);
+  throw error;
 }
 ```
 
-### Real-time Subscriptions
+## Error Handling Standards
+
+### Error Boundary Pattern
 
 ```typescript
-// ✅ Good: Managed subscriptions with cleanup
-export function useRealTimeInventory(libraryId: string) {
-  const queryClient = useQueryClient();
+// components/error-boundary.tsx
+'use client';
 
-  useEffect(() => {
-    if (!libraryId) return;
+import React from 'react';
 
-    const channel = supabase
-      .channel(`inventory-${libraryId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "book_inventory",
-          filter: `library_id=eq.${libraryId}`,
-        },
-        (payload) => {
-          // Update React Query cache optimistically
-          queryClient.setQueryData(
-            ["inventory", libraryId],
-            (oldData: BookInventory[] | undefined) => {
-              if (!oldData) return oldData;
-
-              switch (payload.eventType) {
-                case "UPDATE":
-                  return oldData.map((book) =>
-                    book.id === payload.new.id
-                      ? (payload.new as BookInventory)
-                      : book
-                  );
-                case "INSERT":
-                  return [...oldData, payload.new as BookInventory];
-                case "DELETE":
-                  return oldData.filter((book) => book.id !== payload.old.id);
-                default:
-                  return oldData;
-              }
-            }
-          );
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [libraryId, queryClient]);
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<{ error: Error }>;
 }
-```
 
-## Form Validation Standards
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
 
-### Zod Schemas
-
-```typescript
-// ✅ Good: Comprehensive validation schemas
-import { z } from "zod";
-
-export const addBookInventorySchema = z.object({
-  book_edition_id: z.string().uuid("Invalid book edition ID"),
-  library_id: z.string().uuid("Invalid library ID"),
-  total_copies: z.number().min(1, "Must have at least 1 copy"),
-  shelf_location: z.string().optional(),
-  condition: z.enum(["new", "good", "fair", "poor"]).default("good"),
-  acquisition_date: z.string().datetime(),
-  acquisition_cost: z.number().positive().optional(),
-  barcode: z.string().optional(),
-});
-
-export type AddBookInventoryData = z.infer<typeof addBookInventorySchema>;
-
-// Form usage
-const form = useForm<AddBookInventoryData>({
-  resolver: zodResolver(addBookInventorySchema),
-  defaultValues: {
-    condition: "good",
-    total_copies: 1,
-  },
-});
-```
-
-## UI/UX Standards
-
-### Ultra-Simple MVP Interface
-
-```typescript
-// ✅ Good: Ultra-simple table for MVP
-<Table>
-  <TableHeader>
-    <TableRow>
-      <TableHead>Title</TableHead>
-      <TableHead>Author</TableHead>
-      <TableHead>ISBN</TableHead>
-      <TableHead>Status</TableHead>
-      <TableHead>Actions</TableHead>
-    </TableRow>
-  </TableHeader>
-  <TableBody>
-    {books.map((book) => (
-      <TableRow key={book.id}>
-        <TableCell>{book.book_edition.title}</TableCell>
-        <TableCell>{book.book_edition.general_book.canonical_title}</TableCell>
-        <TableCell className="font-mono">{book.book_edition.isbn_13}</TableCell>
-        <TableCell>
-          <StatusBadge status={book.availability.status} />
-        </TableCell>
-        <TableCell>
-          <BookQuickActions book={book} />
-        </TableCell>
-      </TableRow>
-    ))}
-  </TableBody>
-</Table>
-
-// ❌ Bad: Complex table for MVP (save for post-MVP)
-<Table>
-  <TableHeader>
-    <TableRow>
-      <TableHead>Title</TableHead>
-      <TableHead>Author</TableHead>
-      <TableHead>Due Date</TableHead> {/* Too complex for MVP */}
-      <TableHead>Fine Amount</TableHead> {/* Too complex for MVP */}
-      <TableHead>Hold Queue</TableHead> {/* Too complex for MVP */}
-      <TableHead>Borrower Details</TableHead> {/* Too complex for MVP */}
-    </TableRow>
-  </TableHeader>
-</Table>
-```
-
-### Loading States & Error Boundaries
-
-```typescript
-// ✅ Good: Comprehensive loading and error states
-export function BookList({ libraryId }: BookListProps) {
-  const { books, isLoading, error, isEmpty } = useLibraryInventory(libraryId)
-
-  if (isLoading) {
-    return <BookListSkeleton />
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
   }
 
-  if (error) {
-    return (
-      <ErrorState
-        title="Failed to load books"
-        description={error.message}
-        action={
-          <Button onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        }
-      />
-    )
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
   }
 
-  if (isEmpty) {
-    return (
-      <EmptyState
-        title="No books found"
-        description="Start by adding your first book to the inventory"
-        action={
-          <AddBookButton libraryId={libraryId} />
-        }
-      />
-    )
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error boundary caught an error:', error, errorInfo);
   }
 
-  return (
-    <div className="space-y-4">
-      <BookSearch libraryId={libraryId} />
-      <BookTable books={books} />
-    </div>
-  )
+  render() {
+    if (this.state.hasError) {
+      const FallbackComponent = this.props.fallback || DefaultErrorFallback;
+      return <FallbackComponent error={this.state.error!} />;
+    }
+
+    return this.props.children;
+  }
 }
-```
-
-## Testing Standards
-
-### Component Testing
-
-```typescript
-// ✅ Good: Comprehensive component test
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BookList } from '@/components/inventory/book-list'
-import { createMockBooks } from '@/test-utils/mock-data'
-
-const createTestWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } }
-  })
-
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
-}
-
-jest.mock('@/lib/services/inventory-service')
-
-describe('BookList', () => {
-  const mockLibraryId = 'lib-123'
-
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  it('renders book list with ultra-simple columns only', async () => {
-    render(<BookList libraryId={mockLibraryId} />, {
-      wrapper: createTestWrapper()
-    })
-
-    // Verify MVP columns
-    expect(screen.getByText('Title')).toBeInTheDocument()
-    expect(screen.getByText('Author')).toBeInTheDocument()
-    expect(screen.getByText('Status')).toBeInTheDocument()
-
-    // Ensure complex columns are NOT present in MVP
-    expect(screen.queryByText('Due Date')).not.toBeInTheDocument()
-    expect(screen.queryByText('Fine Amount')).not.toBeInTheDocument()
-  })
-
-  it('handles book search correctly', async () => {
-    render(<BookList libraryId={mockLibraryId} />, {
-      wrapper: createTestWrapper()
-    })
-
-    const searchInput = screen.getByPlaceholderText('Search books...')
-    fireEvent.change(searchInput, { target: { value: 'Harry Potter' } })
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('Harry Potter')).toBeInTheDocument()
-    })
-  })
-})
 ```
 
 ## Performance Standards
 
-### Query Optimization
+### Component Optimization
 
 ```typescript
-// ✅ Good: Optimized React Query usage
-const { data: books } = useQuery({
-  queryKey: ["inventory", libraryId, searchQuery],
-  queryFn: () => inventoryService.searchBooks(libraryId, searchQuery),
-  enabled: !!libraryId,
-  staleTime: 30000, // 30 seconds
-  cacheTime: 300000, // 5 minutes
-  refetchOnWindowFocus: false,
-  keepPreviousData: true, // For smooth pagination
+// ✅ Good: Memoized expensive components
+import React from 'react';
+
+interface ExpensiveComponentProps {
+  data: DataType[];
+  onSelect: (item: DataType) => void;
+}
+
+export const ExpensiveComponent = React.memo<ExpensiveComponentProps>(
+  ({ data, onSelect }) => {
+    // Expensive rendering logic
+    return (
+      <div>
+        {data.map(item => (
+          <ExpensiveItem key={item.id} item={item} onSelect={onSelect} />
+        ))}
+      </div>
+    );
+  }
+);
+
+ExpensiveComponent.displayName = 'ExpensiveComponent';
+```
+
+### Dynamic Imports
+
+```typescript
+// ✅ Good: Lazy load heavy components
+import dynamic from 'next/dynamic';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+
+const HeavyChart = dynamic(() => import('@/components/heavy-chart'), {
+  loading: () => <LoadingSpinner />,
+  ssr: false,
 });
 
-// ❌ Bad: No optimization, frequent refetching
-const { data: books } = useQuery(
-  ["inventory"],
-  () => inventoryService.getBooks()
-  // No optimization options
-);
-```
-
-### Bundle Optimization
-
-```typescript
-// ✅ Good: Lazy loading for non-critical components
-const ReportsPage = lazy(() => import('@/pages/reports'))
-const SettingsPage = lazy(() => import('@/pages/settings'))
-
-// Usage with Suspense
-<Suspense fallback={<PageSkeleton />}>
-  <ReportsPage />
-</Suspense>
-
-// ✅ Good: Code splitting for large libraries
-const ChartLibrary = dynamic(() => import('recharts'), {
-  loading: () => <ChartSkeleton />,
-  ssr: false
-})
-```
-
-## Security Standards
-
-### Permission Validation
-
-```typescript
-// ✅ Good: Server-side permission validation
-export async function requireAdminAccess(
-  libraryId: string,
-  requiredPermission?: AdminPermission
-): Promise<AdminRole> {
-  const session = await getServerSession()
-
-  if (!session?.user) {
-    redirect('/auth/signin')
-  }
-
-  const adminRole = await getAdminRole(session.user.id, libraryId)
-
-  if (!adminRole) {
-    throw new Error('Library admin access required')
-  }
-
-  if (requiredPermission && !hasPermission(adminRole.role, requiredPermission)) {
-    throw new Error(`Missing ${requiredPermission} permission`)
-  }
-
-  return adminRole
-}
-
-// Page usage
-export default async function InventoryPage({ params }: { params: { libraryId: string } }) {
-  await requireAdminAccess(params.libraryId, 'manage_books')
-  return <InventoryPageClient libraryId={params.libraryId} />
+export function Dashboard() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <HeavyChart />
+    </div>
+  );
 }
 ```
 
-### Data Sanitization
+## Git & Development Workflow
 
-```typescript
-// ✅ Good: Input sanitization and validation
-export function sanitizeBookTitle(title: string): string {
-  return title
-    .trim()
-    .replace(/<[^>]*>/g, "") // Remove HTML tags
-    .slice(0, 255); // Limit length
-}
+### Commit Standards
 
-// Form submission
-const handleSubmit = (data: AddBookData) => {
-  const sanitizedData = {
-    ...data,
-    title: sanitizeBookTitle(data.title),
-    isbn: data.isbn?.replace(/[^0-9X]/g, ""), // Only numbers and X
-  };
-
-  submitBook(sanitizedData);
-};
-```
-
-## Code Organization Standards
-
-### File Structure
-
-```
-src/
-├── app/                    # Next.js App Router pages
-├── components/             # Reusable components
-│   ├── ui/                # Base UI components (shadcn/ui)
-│   ├── forms/             # Form-specific components
-│   ├── data-tables/       # Table components
-│   └── layout/            # Layout components
-├── lib/                   # Core utilities
-│   ├── auth/              # Authentication logic
-│   ├── services/          # Business logic services
-│   ├── validation/        # Zod schemas
-│   └── utils.ts           # Common utilities
-├── hooks/                 # Custom React hooks
-├── store/                 # Zustand stores
-└── types/                 # TypeScript definitions
-```
-
-### Import Organization
-
-```typescript
-// ✅ Good: Organized imports
-// React imports first
-import { useState, useEffect } from "react";
-
-// External library imports
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-
-// Internal imports (absolute paths)
-import { Button } from "@/components/ui/button";
-import { useAdminPermissions } from "@/hooks/use-admin-permissions";
-import { inventoryService } from "@/lib/services/inventory-service";
-import type { BookInventory } from "@/types/admin";
-
-// ❌ Bad: Mixed import order, relative paths
-import type { BookInventory } from "../../../types/admin";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-```
-
-## Documentation Standards
-
-### Component Documentation
-
-````typescript
-/**
- * BookList displays the library's book inventory with search and filtering capabilities.
- *
- * @remarks
- * This component follows the ultra-simple MVP philosophy:
- * - Shows only essential columns (Title, Author, ISBN, Status)
- * - Real-time updates via Supabase subscriptions
- * - Search-first interface with prominent search bar
- * - Mobile-responsive for tablet use at circulation desk
- *
- * @param libraryId - The ID of the library to display books for
- * @param searchQuery - Optional search query to filter books
- * @param onBookSelect - Callback when a book is selected
- *
- * @example
- * ```tsx
- * <BookList
- *   libraryId="lib-123"
- *   searchQuery="harry potter"
- *   onBookSelect={(book) => console.log('Selected:', book.title)}
- * />
- * ```
- */
-export function BookList({
-  libraryId,
-  searchQuery,
-  onBookSelect,
-}: BookListProps) {
-  // Implementation
-}
-````
-
-## Version Control Standards
-
-### Commit Messages
-
-```bash
-# ✅ Good: Clear, descriptive commit messages
-feat(inventory): add real-time book availability sync with reader app
-fix(auth): resolve cross-domain login session persistence issue
-refactor(search): optimize global search performance for large inventories
-docs(api): update inventory service documentation
-
-# ❌ Bad: Vague commit messages
-fix stuff
-update code
-changes
-wip
-```
+**Automated Quality Checks:**
+- **Pre-commit**: ESLint + Prettier (via lint-staged)
+- **Type Check**: TypeScript compilation check
+- **Build Check**: Next.js build verification
 
 ### Branch Naming
 
-```bash
-# ✅ Good: Descriptive branch names
-feature/ultra-simple-checkout-flow
-fix/real-time-inventory-sync
-refactor/search-performance-optimization
-hotfix/auth-session-timeout
+```plaintext
+# Feature branches
+feature/add-book-management
+feature/implement-auth
 
-# ❌ Bad: Unclear branch names
-feature/new-stuff
-fix/bug
-update
+# Bug fixes  
+fix/form-validation-error
+fix/table-pagination
+
+# Documentation
+docs/update-readme
+docs/add-api-docs
 ```
 
-## Performance Monitoring
+## Critical Rules for AI Development
 
-### Key Metrics to Track
+### MANDATORY Requirements
 
-- **Page Load Time**: < 3 seconds for dashboard
-- **API Response Time**: < 500ms for inventory queries
-- **Real-time Update Latency**: < 100ms for status changes
-- **Search Response Time**: < 200ms for basic queries
-- **Bundle Size**: < 1MB for initial load
+1. **Always use TypeScript strict mode**
+2. **Never use `any` types - find proper types**
+3. **Use absolute imports with @ alias**
+4. **Follow Next.js App Router patterns**
+5. **Implement proper error handling**
+6. **Use Zod for all form validation**
+7. **Follow component naming conventions**
+8. **Include proper TypeScript interfaces**
 
-These standards ensure we build a **reliable, maintainable, and performant** library management system that can grow from ultra-simple MVP to comprehensive post-MVP functionality.
+### FORBIDDEN Patterns
+
+```typescript
+// ❌ FORBIDDEN: Any types
+function handleData(data: any) { }
+
+// ❌ FORBIDDEN: Relative imports  
+import { Button } from '../../../components/ui/button';
+
+// ❌ FORBIDDEN: Missing error handling
+const data = await supabase.from('books').select('*');
+
+// ❌ FORBIDDEN: Untyped component props
+export function Component({ data, onSubmit }) { }
+
+// ❌ FORBIDDEN: console.log in production code
+console.log('Debug info:', data);
+```
+
+## Development Commands
+
+### Quality Assurance Workflow
+
+```bash
+# MANDATORY before every commit
+pnpm lint:fix              # Fix ESLint issues
+pnpm format               # Format with Prettier  
+pnpm type-check           # TypeScript checking
+pnpm build                # Verify production build
+
+# Development workflow
+pnpm dev                  # Start development server
+pnpm dev -- --turbo       # Start with Turbo optimization
+```
+
+### Environment Setup
+
+```bash
+# Package installation (MANDATORY: use PNPM)
+pnpm install              # Install dependencies
+pnpm add <package>        # Add production dependency
+pnpm add -D <package>     # Add development dependency
+
+# FORBIDDEN: Other package managers
+npm install               # ❌ Don't use npm
+yarn install             # ❌ Don't use yarn
+```
+
+These coding standards ensure **consistency**, **quality**, and **maintainability** across the Library Management System codebase. All automated tools enforce these standards, making compliance mandatory for successful development.
