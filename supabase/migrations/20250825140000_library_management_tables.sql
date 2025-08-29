@@ -151,7 +151,8 @@ CREATE TABLE borrowing_transactions (
         "total": 0
     }'::jsonb,
     notes TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Add constraints and validations
@@ -213,3 +214,33 @@ COMMENT ON COLUMN library_members.member_id IS 'Library-specific member identifi
 COMMENT ON COLUMN book_copies.copy_number IS 'Library-specific copy identifier for inventory tracking';
 COMMENT ON COLUMN book_copies.barcode IS 'Unique barcode for physical item scanning';
 COMMENT ON COLUMN borrowing_transactions.fees IS 'All fees associated with this transaction (late, damage, etc.)';
+
+-- =============================================================================
+-- AUTOMATIC TIMESTAMP TRIGGERS
+-- =============================================================================
+
+-- Add updated_at triggers for all library management tables
+CREATE TRIGGER update_libraries_updated_at 
+    BEFORE UPDATE ON libraries 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_library_staff_updated_at 
+    BEFORE UPDATE ON library_staff 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_library_members_updated_at 
+    BEFORE UPDATE ON library_members 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_book_copies_updated_at 
+    BEFORE UPDATE ON book_copies 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_borrowing_transactions_updated_at 
+    BEFORE UPDATE ON borrowing_transactions 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();

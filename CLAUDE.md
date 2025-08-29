@@ -110,3 +110,5 @@ supabase migration list
 - Database migrations are organized into logical files (metadata, relationships, indexes, triggers, RLS)
 - The crawler service has comprehensive test coverage and should maintain this standard
 - Future frontend applications should follow the planned monorepo structure in `apps/`
+- While creating seeding data, split into separating files in the supabase/seeds folder
+- When designing database tables that have update operations, always include `created_at` and `updated_at` columns and add trigger to automatically timestamp when data changes

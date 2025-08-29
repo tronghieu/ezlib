@@ -109,6 +109,7 @@ export type Database = {
           id: string
           role: string
           sort_order: number
+          updated_at: string
         }
         Insert: {
           author_id: string
@@ -119,6 +120,7 @@ export type Database = {
           id?: string
           role?: string
           sort_order?: number
+          updated_at?: string
         }
         Update: {
           author_id?: string
@@ -129,6 +131,7 @@ export type Database = {
           id?: string
           role?: string
           sort_order?: number
+          updated_at?: string
         }
         Relationships: [
           {
@@ -150,6 +153,60 @@ export type Database = {
             columns: ["general_book_id"]
             isOneToOne: false
             referencedRelation: "general_books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_copies: {
+        Row: {
+          availability: Json
+          barcode: string | null
+          book_edition_id: string
+          condition_info: Json
+          copy_number: string
+          created_at: string
+          id: string
+          library_id: string
+          location: Json
+          updated_at: string
+        }
+        Insert: {
+          availability?: Json
+          barcode?: string | null
+          book_edition_id: string
+          condition_info?: Json
+          copy_number: string
+          created_at?: string
+          id?: string
+          library_id: string
+          location?: Json
+          updated_at?: string
+        }
+        Update: {
+          availability?: Json
+          barcode?: string | null
+          book_edition_id?: string
+          condition_info?: Json
+          copy_number?: string
+          created_at?: string
+          id?: string
+          library_id?: string
+          location?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_copies_book_edition_id_fkey"
+            columns: ["book_edition_id"]
+            isOneToOne: false
+            referencedRelation: "book_editions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_copies_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
             referencedColumns: ["id"]
           },
         ]
@@ -207,6 +264,83 @@ export type Database = {
           },
         ]
       }
+      borrowing_transactions: {
+        Row: {
+          book_copy_id: string
+          created_at: string
+          due_date: string | null
+          fees: Json
+          id: string
+          library_id: string
+          member_id: string
+          notes: string | null
+          return_date: string | null
+          staff_id: string | null
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          book_copy_id: string
+          created_at?: string
+          due_date?: string | null
+          fees?: Json
+          id?: string
+          library_id: string
+          member_id: string
+          notes?: string | null
+          return_date?: string | null
+          staff_id?: string | null
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Update: {
+          book_copy_id?: string
+          created_at?: string
+          due_date?: string | null
+          fees?: Json
+          id?: string
+          library_id?: string
+          member_id?: string
+          notes?: string | null
+          return_date?: string | null
+          staff_id?: string | null
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "borrowing_transactions_book_copy_id_fkey"
+            columns: ["book_copy_id"]
+            isOneToOne: false
+            referencedRelation: "book_copies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "borrowing_transactions_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "borrowing_transactions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "library_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "borrowing_transactions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "library_staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       general_books: {
         Row: {
           canonical_title: string
@@ -236,6 +370,136 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      libraries: {
+        Row: {
+          address: Json
+          code: string
+          contact_info: Json
+          created_at: string
+          id: string
+          name: string
+          settings: Json
+          stats: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: Json
+          code: string
+          contact_info?: Json
+          created_at?: string
+          id?: string
+          name: string
+          settings?: Json
+          stats?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: Json
+          code?: string
+          contact_info?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          settings?: Json
+          stats?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      library_members: {
+        Row: {
+          borrowing_stats: Json
+          created_at: string
+          id: string
+          library_id: string
+          member_id: string
+          membership_info: Json
+          personal_info: Json
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          borrowing_stats?: Json
+          created_at?: string
+          id?: string
+          library_id: string
+          member_id: string
+          membership_info?: Json
+          personal_info?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          borrowing_stats?: Json
+          created_at?: string
+          id?: string
+          library_id?: string
+          member_id?: string
+          membership_info?: Json
+          personal_info?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_members_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_staff: {
+        Row: {
+          created_at: string
+          employment_info: Json
+          id: string
+          library_id: string
+          permissions: Json
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          employment_info?: Json
+          id?: string
+          library_id: string
+          permissions?: Json
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          employment_info?: Json
+          id?: string
+          library_id?: string
+          permissions?: Json
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_staff_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "libraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {

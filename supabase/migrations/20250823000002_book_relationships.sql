@@ -15,7 +15,8 @@ CREATE TABLE book_contributors (
     role TEXT NOT NULL DEFAULT 'author',
     credit_text TEXT, -- Custom credit if needed (e.g., "Translated from French")
     sort_order INTEGER NOT NULL DEFAULT 0, -- For display ordering
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Add constraint for valid contributor roles
