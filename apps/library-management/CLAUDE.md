@@ -895,3 +895,4 @@ _Library Management System CLAUDE.md - Standalone library management application
 
 - Use playwright mcp for end-to-end testing web app
 - when working with browser or testing the display of web applications, use playwright mcp
+- When building frontend interfaces, prioritize using Shadcn UI components, install if not already present. Use context7 mcp to read the latest Shadcn UI documentation

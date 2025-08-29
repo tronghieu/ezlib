@@ -15,13 +15,13 @@ export type {
   UserPermissions,
 } from "./permissions";
 
+export type { AuthState, LibraryAccess } from "./hooks";
+
 export type {
-  AuthState,
-  LibraryAccess,
   UserSessionPreferences,
   LibrarySessionContext,
   SessionData,
-} from "./hooks";
+} from "./session";
 
 export type {
   AuthContextState,

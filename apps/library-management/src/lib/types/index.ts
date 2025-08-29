@@ -1,7 +1,7 @@
 /**
  * Application-specific type definitions
  * Custom composite types and helpers for the Library Management System
- * 
+ *
  * @see Database types from database.ts for generated Supabase types
  */
 
@@ -209,10 +209,22 @@ export interface BookCopy {
   updated_at: string;
 }
 
-export type BookCondition = "new" | "excellent" | "good" | "fair" | "poor" | "damaged";
+export type BookCondition =
+  | "new"
+  | "excellent"
+  | "good"
+  | "fair"
+  | "poor"
+  | "damaged";
 
 export interface AvailabilityStatus {
-  status: "available" | "checked_out" | "on_hold" | "lost" | "damaged" | "withdrawn";
+  status:
+    | "available"
+    | "checked_out"
+    | "on_hold"
+    | "lost"
+    | "damaged"
+    | "withdrawn";
   due_date?: string;
   member_id?: string;
   hold_queue?: HoldRequest[];
@@ -243,7 +255,12 @@ export interface BorrowingTransaction {
   updated_at: string;
 }
 
-export type TransactionType = "checkout" | "return" | "renewal" | "hold_request" | "hold_fulfillment";
+export type TransactionType =
+  | "checkout"
+  | "return"
+  | "renewal"
+  | "hold_request"
+  | "hold_fulfillment";
 
 export interface TransactionFees {
   late_fee: number;
@@ -266,17 +283,24 @@ export type CreateAuthorData = Omit<Author, "id" | "created_at" | "updated_at">;
 /**
  * Update author data (for partial updates)
  */
-export type UpdateAuthorData = Partial<Omit<Author, "id" | "created_at" | "updated_at">>;
+export type UpdateAuthorData = Partial<
+  Omit<Author, "id" | "created_at" | "updated_at">
+>;
 
 /**
  * Create book edition data (for insertions)
  */
-export type CreateBookEditionData = Omit<BookEdition, "id" | "created_at" | "updated_at">;
+export type CreateBookEditionData = Omit<
+  BookEdition,
+  "id" | "created_at" | "updated_at"
+>;
 
 /**
- * Update book edition data (for partial updates)  
+ * Update book edition data (for partial updates)
  */
-export type UpdateBookEditionData = Partial<Omit<BookEdition, "id" | "created_at" | "updated_at">>;
+export type UpdateBookEditionData = Partial<
+  Omit<BookEdition, "id" | "created_at" | "updated_at">
+>;
 
 /**
  * Author with related books for joined queries
@@ -492,4 +516,70 @@ export interface AppConfig {
     holds: boolean;
     advancedSearch: boolean;
   };
+}
+
+// =============================================================================
+// LIBRARY CONTEXT TYPES
+// =============================================================================
+
+/**
+ * Library with user access information
+ * Extended library record with user's role and permissions
+ */
+export interface LibraryWithAccess {
+  id: string;
+  name: string;
+  code: string;
+  address: Database["public"]["Tables"]["libraries"]["Row"]["address"];
+  contact_info: Database["public"]["Tables"]["libraries"]["Row"]["contact_info"];
+  settings: Database["public"]["Tables"]["libraries"]["Row"]["settings"];
+  stats: Database["public"]["Tables"]["libraries"]["Row"]["stats"];
+  status: string;
+  created_at: string;
+  updated_at: string;
+  // User's access information from library_staff
+  user_role: string;
+  user_permissions: Database["public"]["Tables"]["library_staff"]["Row"]["permissions"];
+  staff_id: string;
+  staff_status: string;
+}
+
+/**
+ * Library context state
+ * Tracks current library, available libraries, and loading states
+ */
+export interface LibraryContextState {
+  currentLibrary: LibraryWithAccess | null;
+  availableLibraries: LibraryWithAccess[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+/**
+ * Library context actions
+ * Functions for managing library selection and state
+ */
+export interface LibraryContextActions {
+  selectLibrary: (library: LibraryWithAccess) => void;
+  refreshLibraries: () => Promise<void>;
+  clearLibrarySelection: () => void;
+  switchLibrary: (libraryId: string) => Promise<void>;
+}
+
+/**
+ * Complete library context value
+ * Combines state and actions for library context provider
+ */
+export type LibraryContextValue = LibraryContextState & LibraryContextActions;
+
+/**
+ * Library access validation result
+ * Used for checking user access to specific libraries
+ */
+export interface LibraryAccessValidation {
+  hasAccess: boolean;
+  role?: string;
+  permissions?: Database["public"]["Tables"]["library_staff"]["Row"]["permissions"];
+  staffId?: string;
+  error?: string;
 }
