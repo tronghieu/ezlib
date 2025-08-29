@@ -11,6 +11,7 @@ This document provides a comprehensive technical implementation plan for adding 
 ### Selected i18n Solution: next-intl v4+
 
 **Rationale:**
+
 - **Next.js 15 Compatibility**: Full App Router support with Server Components
 - **Type Safety**: Generated TypeScript types for translations
 - **Performance**: Built-in optimization with static rendering support
@@ -22,6 +23,7 @@ This document provides a comprehensive technical implementation plan for adding 
 **Selected Approach:** Cookie and user preference-based locale management (no URL prefixes)
 
 **Benefits:**
+
 - **Clean URLs**: No `/en/` or `/vi/` prefixes cluttering the URL structure
 - **User Preference Persistence**: Language choice saved in cookies and database
 - **Simplified Routing**: No need for locale segments in routes
@@ -69,35 +71,37 @@ src/
 ### 1.3 Core Configuration Files
 
 #### `src/i18n/config.ts`
+
 ```typescript
-export const locales = ['en', 'vi'] as const;
-export const defaultLocale = 'en' as const;
+export const locales = ["en", "vi"] as const;
+export const defaultLocale = "en" as const;
 
 export type Locale = (typeof locales)[number];
 
 // Cookie configuration
-export const LOCALE_COOKIE_NAME = 'library-locale';
+export const LOCALE_COOKIE_NAME = "library-locale";
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 ```
 
 #### `src/i18n/request.ts`
+
 ```typescript
-import { getRequestConfig } from 'next-intl/server';
-import { cookies } from 'next/headers';
-import { locales, defaultLocale, LOCALE_COOKIE_NAME } from './config';
-import { getUserLocalePreference } from '@/lib/supabase/user-preferences';
+import { getRequestConfig } from "next-intl/server";
+import { cookies } from "next/headers";
+import { locales, defaultLocale, LOCALE_COOKIE_NAME } from "./config";
+import { getUserLocalePreference } from "@/lib/supabase/user-preferences";
 
 export default getRequestConfig(async () => {
   // Get locale from cookie or user preference
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get(LOCALE_COOKIE_NAME)?.value;
-  
+
   // Optionally get user preference from database
   // const userLocale = await getUserLocalePreference();
-  
+
   // Determine final locale
   let locale = cookieLocale || defaultLocale;
-  
+
   // Validate locale
   if (!locales.includes(locale as any)) {
     locale = defaultLocale;
@@ -106,88 +110,92 @@ export default getRequestConfig(async () => {
   return {
     locale,
     messages: (await import(`../../messages/${locale}.json`)).default,
-    
+
     // Format configurations
     formats: {
       dateTime: {
         short: {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
+          day: "numeric",
+          month: "short",
+          year: "numeric",
         },
         long: {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        },
       },
       number: {
         currency: {
-          style: 'currency',
-          currency: locale === 'vi' ? 'VND' : 'USD'
-        }
-      }
+          style: "currency",
+          currency: locale === "vi" ? "VND" : "USD",
+        },
+      },
     },
-    
+
     // Timezone configuration
-    timeZone: locale === 'vi' ? 'Asia/Ho_Chi_Minh' : 'UTC'
+    timeZone: locale === "vi" ? "Asia/Ho_Chi_Minh" : "UTC",
   };
 });
 ```
 
 #### `src/lib/locale-cookie.ts`
+
 ```typescript
-import { cookies } from 'next/headers';
-import { LOCALE_COOKIE_NAME, LOCALE_COOKIE_MAX_AGE, Locale } from '@/i18n/config';
+import { cookies } from "next/headers";
+import {
+  LOCALE_COOKIE_NAME,
+  LOCALE_COOKIE_MAX_AGE,
+  Locale,
+} from "@/i18n/config";
 
 export async function getLocale(): Promise<Locale> {
   const cookieStore = await cookies();
   const locale = cookieStore.get(LOCALE_COOKIE_NAME)?.value as Locale;
-  return locale || 'en';
+  return locale || "en";
 }
 
 export async function setLocale(locale: Locale) {
   const cookieStore = await cookies();
   cookieStore.set(LOCALE_COOKIE_NAME, locale, {
     maxAge: LOCALE_COOKIE_MAX_AGE,
-    path: '/',
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production'
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
   });
 }
 ```
 
 #### `next.config.ts`
+
 ```typescript
-import { NextConfig } from 'next';
-import createNextIntlPlugin from 'next-intl/plugin';
+import { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   // Existing configuration preserved
 };
 
 // Wrap with next-intl plugin (no routing)
-const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 export default withNextIntl(nextConfig);
 ```
 
 #### `src/app/api/locale/route.ts`
+
 ```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { setLocale } from '@/lib/locale-cookie';
-import { locales, Locale } from '@/i18n/config';
-import { updateUserLocalePreference } from '@/lib/supabase/user-preferences';
+import { NextRequest, NextResponse } from "next/server";
+import { setLocale } from "@/lib/locale-cookie";
+import { locales, Locale } from "@/i18n/config";
+import { updateUserLocalePreference } from "@/lib/supabase/user-preferences";
 
 export async function POST(request: NextRequest) {
   const { locale, userId } = await request.json();
 
   // Validate locale
   if (!locales.includes(locale)) {
-    return NextResponse.json(
-      { error: 'Invalid locale' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid locale" }, { status: 400 });
   }
 
   // Set cookie
@@ -198,7 +206,7 @@ export async function POST(request: NextRequest) {
     try {
       await updateUserLocalePreference(userId, locale);
     } catch (error) {
-      console.error('Failed to update user locale preference:', error);
+      console.error("Failed to update user locale preference:", error);
     }
   }
 
@@ -209,6 +217,7 @@ export async function POST(request: NextRequest) {
 ### 1.4 App Router Layout Updates
 
 #### `src/app/layout.tsx`
+
 ```typescript
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -222,7 +231,7 @@ export default async function RootLayout({
 }: RootLayoutProps) {
   // Get locale from cookie/preference
   const locale = await getLocale();
-  
+
   // Get messages for the current locale
   const messages = await getMessages();
 
@@ -246,6 +255,7 @@ export default async function RootLayout({
 ### 2.1 Message Structure Design
 
 #### `src/messages/en.json`
+
 ```json
 {
   "common": {
@@ -264,7 +274,7 @@ export default async function RootLayout({
     "next": "Next",
     "previous": "Previous"
   },
-  
+
   "navigation": {
     "dashboard": "Dashboard",
     "inventory": "Inventory",
@@ -274,7 +284,7 @@ export default async function RootLayout({
     "settings": "Settings",
     "logout": "Logout"
   },
-  
+
   "dashboard": {
     "title": "Library Dashboard",
     "welcomeMessage": "Welcome to {libraryName}",
@@ -300,7 +310,7 @@ export default async function RootLayout({
       "newBook": "New book added: {bookTitle}"
     }
   },
-  
+
   "inventory": {
     "title": "Book Inventory",
     "addBook": "Add New Book",
@@ -338,7 +348,7 @@ export default async function RootLayout({
       }
     }
   },
-  
+
   "members": {
     "title": "Library Members",
     "addMember": "Add New Member",
@@ -355,7 +365,7 @@ export default async function RootLayout({
     "addMemberForm": {
       "title": "Register New Member",
       "firstName": "First Name",
-      "lastName": "Last Name", 
+      "lastName": "Last Name",
       "email": "Email Address",
       "phone": "Phone Number",
       "address": "Address",
@@ -377,11 +387,11 @@ export default async function RootLayout({
       "noBorrowingHistory": "No borrowing history"
     }
   },
-  
+
   "circulation": {
     "title": "Circulation",
     "checkOut": "Check Out",
-    "checkIn": "Check In", 
+    "checkIn": "Check In",
     "memberLookup": "Member Lookup",
     "bookLookup": "Book Lookup",
     "scanBarcode": "Scan Barcode",
@@ -411,7 +421,7 @@ export default async function RootLayout({
       "memberHasOverdue": "Member has overdue items"
     }
   },
-  
+
   "auth": {
     "signIn": "Sign In",
     "signOut": "Sign Out",
@@ -427,7 +437,7 @@ export default async function RootLayout({
     "otpSent": "Verification code sent to {email}",
     "resendCode": "Resend Code"
   },
-  
+
   "errors": {
     "general": "An error occurred. Please try again.",
     "network": "Network error. Please check your connection.",
@@ -440,6 +450,7 @@ export default async function RootLayout({
 ```
 
 #### `src/messages/vi.json`
+
 ```json
 {
   "common": {
@@ -458,7 +469,7 @@ export default async function RootLayout({
     "next": "Tiếp theo",
     "previous": "Trước đó"
   },
-  
+
   "navigation": {
     "dashboard": "Bảng điều khiển",
     "inventory": "Kho sách",
@@ -468,7 +479,7 @@ export default async function RootLayout({
     "settings": "Cài đặt",
     "logout": "Đăng xuất"
   },
-  
+
   "dashboard": {
     "title": "Bảng điều khiển thư viện",
     "welcomeMessage": "Chào mừng đến với {libraryName}",
@@ -494,7 +505,7 @@ export default async function RootLayout({
       "newBook": "Sách mới được thêm: {bookTitle}"
     }
   },
-  
+
   "inventory": {
     "title": "Kho sách",
     "addBook": "Thêm sách mới",
@@ -532,7 +543,7 @@ export default async function RootLayout({
       }
     }
   },
-  
+
   "members": {
     "title": "Thành viên thư viện",
     "addMember": "Thêm thành viên mới",
@@ -571,7 +582,7 @@ export default async function RootLayout({
       "noBorrowingHistory": "Chưa có lịch sử mượn sách"
     }
   },
-  
+
   "circulation": {
     "title": "Lưu thông sách",
     "checkOut": "Cho mượn",
@@ -605,7 +616,7 @@ export default async function RootLayout({
       "memberHasOverdue": "Thành viên có sách quá hạn"
     }
   },
-  
+
   "auth": {
     "signIn": "Đăng nhập",
     "signOut": "Đăng xuất",
@@ -621,7 +632,7 @@ export default async function RootLayout({
     "otpSent": "Đã gửi mã xác thực đến {email}",
     "resendCode": "Gửi lại mã"
   },
-  
+
   "errors": {
     "general": "Đã xảy ra lỗi. Vui lòng thử lại.",
     "network": "Lỗi mạng. Vui lòng kiểm tra kết nối internet.",
@@ -636,13 +647,14 @@ export default async function RootLayout({
 ### 2.2 TypeScript Integration
 
 #### `src/messages/index.ts`
+
 ```typescript
-import en from './en.json';
-import vi from './vi.json';
+import en from "./en.json";
+import vi from "./vi.json";
 
 export const messages = {
   en,
-  vi
+  vi,
 };
 
 export type Messages = typeof en;
@@ -655,12 +667,13 @@ declare global {
 ```
 
 #### Global type declaration `src/types/global.d.ts`
-```typescript
-import { routing } from '@/i18n/routing';
-import { formats } from '@/i18n/request';
-import en from '@/messages/en.json';
 
-declare module 'next-intl' {
+```typescript
+import { routing } from "@/i18n/routing";
+import { formats } from "@/i18n/request";
+import en from "@/messages/en.json";
+
+declare module "next-intl" {
   interface AppConfig {
     Locale: (typeof routing.locales)[number];
     Messages: typeof en;
@@ -674,6 +687,7 @@ declare module 'next-intl' {
 ### 3.1 Navigation Components
 
 #### `src/components/navigation/language-switcher.tsx`
+
 ```typescript
 'use client';
 
@@ -681,11 +695,11 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger 
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Globe, Loader2 } from 'lucide-react';
 import { locales } from '@/i18n/config';
@@ -705,10 +719,10 @@ export function LanguageSwitcher() {
         const response = await fetch('/api/locale', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             locale: newLocale,
             // Include userId if available from auth context
-            // userId: user?.id 
+            // userId: user?.id
           })
         });
 
@@ -718,7 +732,7 @@ export function LanguageSwitcher() {
 
         // Refresh the page to apply new locale
         router.refresh();
-        
+
         toast({
           title: t('languageChanged'),
           description: t('languageChangedDescription'),
@@ -768,6 +782,7 @@ export function LanguageSwitcher() {
 ```
 
 #### `src/components/navigation/main-nav.tsx`
+
 ```typescript
 'use client';
 
@@ -797,8 +812,8 @@ export function MainNav() {
           href={item.href}
           className={cn(
             'text-sm font-medium transition-colors hover:text-primary',
-            pathname === item.href 
-              ? 'text-foreground' 
+            pathname === item.href
+              ? 'text-foreground'
               : 'text-muted-foreground'
           )}
         >
@@ -813,6 +828,7 @@ export function MainNav() {
 ### 3.2 Form Components
 
 #### `src/components/forms/add-book-form.tsx`
+
 ```typescript
 'use client';
 
@@ -857,7 +873,7 @@ function createAddBookSchema(t: any) {
 
 export function AddBookForm({ onSubmit }: AddBookFormProps) {
   const t = useTranslations('inventory.addBookForm');
-  
+
   // Create localized schema
   const schema = createAddBookSchema(t);
   type AddBookFormData = z.infer<typeof schema>;
@@ -947,8 +963,8 @@ export function AddBookForm({ onSubmit }: AddBookFormProps) {
               <FormItem>
                 <FormLabel>{t('publishYear')}</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
+                  <Input
+                    type="number"
                     {...field}
                     onChange={(e) => field.onChange(
                       e.target.value ? parseInt(e.target.value) : undefined
@@ -1001,6 +1017,7 @@ export function AddBookForm({ onSubmit }: AddBookFormProps) {
 ### 3.3 Data Display Components
 
 #### `src/components/dashboard/statistics-card.tsx`
+
 ```typescript
 'use client';
 
@@ -1008,7 +1025,7 @@ import { useTranslations, useFormatter } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface StatisticsCardProps {
-  type: 'totalBooks' | 'availableBooks' | 'checkedOutBooks' | 
+  type: 'totalBooks' | 'availableBooks' | 'checkedOutBooks' |
         'totalMembers' | 'activeMembers' | 'overdueItems';
   value: number;
   icon: React.ReactNode;
@@ -1041,25 +1058,27 @@ export function StatisticsCard({ type, value, icon }: StatisticsCardProps) {
 ### 4.1 Date and Number Formatting
 
 #### `src/lib/i18n/formatters.ts`
+
 ```typescript
-import { useFormatter } from 'next-intl';
+import { useFormatter } from "next-intl";
 
 export function useLibraryFormatters() {
   const format = useFormatter();
 
   return {
     // Date formatting
-    formatDate: (date: Date) => format.dateTime(date, 'short'),
-    formatDateTime: (date: Date) => format.dateTime(date, 'long'),
-    
-    // Number formatting  
+    formatDate: (date: Date) => format.dateTime(date, "short"),
+    formatDateTime: (date: Date) => format.dateTime(date, "long"),
+
+    // Number formatting
     formatNumber: (num: number) => format.number(num),
-    formatCurrency: (amount: number) => format.number(amount, 'currency'),
-    
+    formatCurrency: (amount: number) => format.number(amount, "currency"),
+
     // Library-specific formats
     formatMemberId: (id: string) => `#${id}`,
-    formatIsbn: (isbn: string) => isbn.replace(/(\d{3})(\d{1})(\d{3})(\d{3})(\d{3})/, '$1-$2-$3-$4-$5'),
-    
+    formatIsbn: (isbn: string) =>
+      isbn.replace(/(\d{3})(\d{1})(\d{3})(\d{3})(\d{3})/, "$1-$2-$3-$4-$5"),
+
     // Relative time for activity feeds
     formatRelativeTime: (date: Date) => format.relativeTime(date),
   };
@@ -1069,6 +1088,7 @@ export function useLibraryFormatters() {
 ### 4.2 Error Handling
 
 #### `src/components/error/error-boundary.tsx`
+
 ```typescript
 'use client';
 
@@ -1111,6 +1131,7 @@ export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
 ### 4.3 Loading States
 
 #### `src/components/ui/loading-skeleton.tsx`
+
 ```typescript
 'use client';
 
@@ -1212,9 +1233,10 @@ export function LoadingSkeleton({ type, count = 1 }: LoadingSkeletonProps) {
 ### 5.1 User Locale Preferences
 
 #### Database Migration
+
 ```sql
 -- Add language preference to user profiles
-ALTER TABLE profiles 
+ALTER TABLE profiles
 ADD COLUMN preferred_language VARCHAR(5) DEFAULT 'en';
 
 -- Add indexes for performance
@@ -1224,17 +1246,18 @@ CREATE INDEX idx_profiles_preferred_language ON profiles(preferred_language);
 ```
 
 #### `src/lib/supabase/user-preferences.ts`
+
 ```typescript
-import { createClient } from '@/lib/supabase/client';
-import { routing } from '@/i18n/routing';
+import { createClient } from "@/lib/supabase/client";
+import { routing } from "@/i18n/routing";
 
 export async function getUserLocalePreference(userId: string): Promise<string> {
   const supabase = createClient();
-  
+
   const { data, error } = await supabase
-    .from('profiles')
-    .select('preferred_language')
-    .eq('id', userId)
+    .from("profiles")
+    .select("preferred_language")
+    .eq("id", userId)
     .single();
 
   if (error || !data?.preferred_language) {
@@ -1250,18 +1273,18 @@ export async function getUserLocalePreference(userId: string): Promise<string> {
 }
 
 export async function updateUserLocalePreference(
-  userId: string, 
+  userId: string,
   locale: string
 ): Promise<void> {
   const supabase = createClient();
-  
+
   const { error } = await supabase
-    .from('profiles')
+    .from("profiles")
     .update({ preferred_language: locale })
-    .eq('id', userId);
+    .eq("id", userId);
 
   if (error) {
-    throw new Error('Failed to update language preference');
+    throw new Error("Failed to update language preference");
   }
 }
 ```
@@ -1269,9 +1292,10 @@ export async function updateUserLocalePreference(
 ### 5.2 Localized Data Storage
 
 #### Library Configuration
+
 ```sql
 -- Add localized library information
-ALTER TABLE libraries 
+ALTER TABLE libraries
 ADD COLUMN localized_info JSONB DEFAULT '{}';
 
 -- Example structure:
@@ -1288,8 +1312,9 @@ ADD COLUMN localized_info JSONB DEFAULT '{}';
 ```
 
 #### `src/lib/supabase/localized-data.ts`
+
 ```typescript
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from "@/lib/supabase/client";
 
 export interface LocalizedLibraryData {
   name: Record<string, string>;
@@ -1302,11 +1327,11 @@ export async function getLocalizedLibraryInfo(
   locale: string
 ): Promise<LocalizedLibraryData | null> {
   const supabase = createClient();
-  
+
   const { data, error } = await supabase
-    .from('libraries')
-    .select('name, localized_info')
-    .eq('id', libraryId)
+    .from("libraries")
+    .select("name, localized_info")
+    .eq("id", libraryId)
     .single();
 
   if (error || !data) {
@@ -1314,14 +1339,14 @@ export async function getLocalizedLibraryInfo(
   }
 
   const localizedInfo = data.localized_info || {};
-  
+
   return {
     name: {
       [locale]: localizedInfo.name?.[locale] || data.name,
-      ...localizedInfo.name
+      ...localizedInfo.name,
     },
     description: localizedInfo.description,
-    policies: localizedInfo.policies
+    policies: localizedInfo.policies,
   };
 }
 ```
@@ -1331,6 +1356,7 @@ export async function getLocalizedLibraryInfo(
 ### 6.1 Dynamic Rendering with Cookie-Based Locale
 
 #### `src/app/page.tsx`
+
 ```typescript
 import { getTranslations, getLocale } from 'next-intl/server';
 
@@ -1364,32 +1390,33 @@ export default async function HomePage() {
 ### 6.2 Translation Bundle Splitting
 
 #### `src/lib/i18n/lazy-translations.ts`
+
 ```typescript
 import { useTranslations } from 'next-intl';
 import { lazy, Suspense } from 'react';
 
 // Create lazy-loaded translation bundles for large sections
-const LazyInventoryTranslations = lazy(() => 
+const LazyInventoryTranslations = lazy(() =>
   import('@/messages/inventory').then(module => ({
     default: module.InventoryTranslations
   }))
 );
 
-const LazyMemberTranslations = lazy(() => 
+const LazyMemberTranslations = lazy(() =>
   import('@/messages/members').then(module => ({
-    default: module.MemberTranslations  
+    default: module.MemberTranslations
   }))
 );
 
-export function LazyTranslationProvider({ 
-  section, 
-  children 
-}: { 
+export function LazyTranslationProvider({
+  section,
+  children
+}: {
   section: 'inventory' | 'members';
   children: React.ReactNode;
 }) {
-  const TranslationComponent = section === 'inventory' 
-    ? LazyInventoryTranslations 
+  const TranslationComponent = section === 'inventory'
+    ? LazyInventoryTranslations
     : LazyMemberTranslations;
 
   return (
@@ -1405,8 +1432,9 @@ export function LazyTranslationProvider({
 ### 6.3 Cache Optimization
 
 #### `src/lib/i18n/cache-config.ts`
+
 ```typescript
-import { unstable_cache } from 'next/cache';
+import { unstable_cache } from "next/cache";
 
 // Cache translated content for better performance
 export const getCachedTranslations = unstable_cache(
@@ -1414,10 +1442,10 @@ export const getCachedTranslations = unstable_cache(
     const messages = await import(`../../messages/${locale}.json`);
     return messages.default[namespace];
   },
-  ['translations'],
+  ["translations"],
   {
-    tags: ['translations'],
-    revalidate: 3600 // 1 hour cache
+    tags: ["translations"],
+    revalidate: 3600, // 1 hour cache
   }
 );
 
@@ -1425,12 +1453,12 @@ export const getCachedTranslations = unstable_cache(
 export const getCachedUserLocale = unstable_cache(
   async (userId: string) => {
     // Implementation for fetching user locale
-    return 'en'; // placeholder
+    return "en"; // placeholder
   },
-  ['user-locale'],
+  ["user-locale"],
   {
-    tags: ['user-locale'],
-    revalidate: 300 // 5 minutes cache
+    tags: ["user-locale"],
+    revalidate: 300, // 5 minutes cache
   }
 );
 ```
@@ -1440,79 +1468,80 @@ export const getCachedUserLocale = unstable_cache(
 ### 7.1 i18n Testing Strategy
 
 #### `src/__tests__/i18n/translations.test.ts`
-```typescript
-import { describe, expect, it } from 'vitest';
-import en from '@/messages/en.json';
-import vi from '@/messages/vi.json';
 
-describe('Translation consistency', () => {
-  it('should have matching keys in all locales', () => {
+```typescript
+import { describe, expect, it } from "vitest";
+import en from "@/messages/en.json";
+import vi from "@/messages/vi.json";
+
+describe("Translation consistency", () => {
+  it("should have matching keys in all locales", () => {
     const enKeys = getAllKeys(en);
     const viKeys = getAllKeys(vi);
-    
+
     expect(viKeys).toEqual(enKeys);
   });
 
-  it('should not have empty translation values', () => {
+  it("should not have empty translation values", () => {
     const enEmpty = findEmptyValues(en);
     const viEmpty = findEmptyValues(vi);
-    
+
     expect(enEmpty).toEqual([]);
     expect(viEmpty).toEqual([]);
   });
 
-  it('should have proper interpolation syntax', () => {
+  it("should have proper interpolation syntax", () => {
     const enInterpolations = findInterpolations(en);
     const viInterpolations = findInterpolations(vi);
-    
+
     enInterpolations.forEach((key) => {
       expect(viInterpolations).toContain(key);
     });
   });
 });
 
-function getAllKeys(obj: any, prefix = ''): string[] {
+function getAllKeys(obj: any, prefix = ""): string[] {
   let keys: string[] = [];
-  
+
   for (const key in obj) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
-    
-    if (typeof obj[key] === 'object' && obj[key] !== null) {
+
+    if (typeof obj[key] === "object" && obj[key] !== null) {
       keys = keys.concat(getAllKeys(obj[key], fullKey));
     } else {
       keys.push(fullKey);
     }
   }
-  
+
   return keys.sort();
 }
 
-function findEmptyValues(obj: any, prefix = ''): string[] {
+function findEmptyValues(obj: any, prefix = ""): string[] {
   const empty: string[] = [];
-  
+
   for (const key in obj) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
-    
-    if (typeof obj[key] === 'object' && obj[key] !== null) {
+
+    if (typeof obj[key] === "object" && obj[key] !== null) {
       empty.push(...findEmptyValues(obj[key], fullKey));
-    } else if (!obj[key] || obj[key].trim() === '') {
+    } else if (!obj[key] || obj[key].trim() === "") {
       empty.push(fullKey);
     }
   }
-  
+
   return empty;
 }
 
 function findInterpolations(obj: any): string[] {
   const interpolations: string[] = [];
-  
-  const traverse = (current: any, path = '') => {
+
+  const traverse = (current: any, path = "") => {
     for (const key in current) {
       const currentPath = path ? `${path}.${key}` : key;
-      
-      if (typeof current[key] === 'object') {
+
+      if (typeof current[key] === "object") {
         traverse(current[key], currentPath);
-      } else if (typeof current[key] === 'string') {
+      } else if (typeof current[key] === "string") {
         const matches = current[key].match(/\{[^}]+\}/g);
         if (matches) {
           interpolations.push(currentPath);
@@ -1520,13 +1549,14 @@ function findInterpolations(obj: any): string[] {
       }
     }
   };
-  
+
   traverse(obj);
   return interpolations;
 }
 ```
 
 #### `src/__tests__/components/language-switcher.test.tsx`
+
 ```typescript
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -1577,49 +1607,56 @@ describe('LanguageSwitcher', () => {
 ### 7.2 E2E Testing with Playwright
 
 #### `tests/e2e/i18n.spec.ts`
+
 ```typescript
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Internationalization', () => {
-  test('should display English content by default', async ({ page }) => {
-    await page.goto('/en/dashboard');
-    
-    await expect(page.locator('h1')).toContainText('Library Dashboard');
-    await expect(page.locator('[data-testid=nav-inventory]')).toContainText('Inventory');
+test.describe("Internationalization", () => {
+  test("should display English content by default", async ({ page }) => {
+    await page.goto("/en/dashboard");
+
+    await expect(page.locator("h1")).toContainText("Library Dashboard");
+    await expect(page.locator("[data-testid=nav-inventory]")).toContainText(
+      "Inventory"
+    );
   });
 
-  test('should display Vietnamese content when locale is vi', async ({ page }) => {
-    await page.goto('/vi/dashboard');
-    
-    await expect(page.locator('h1')).toContainText('Bảng điều khiển thư viện');
-    await expect(page.locator('[data-testid=nav-inventory]')).toContainText('Kho sách');
+  test("should display Vietnamese content when locale is vi", async ({
+    page,
+  }) => {
+    await page.goto("/vi/dashboard");
+
+    await expect(page.locator("h1")).toContainText("Bảng điều khiển thư viện");
+    await expect(page.locator("[data-testid=nav-inventory]")).toContainText(
+      "Kho sách"
+    );
   });
 
-  test('should switch languages using language switcher', async ({ page }) => {
-    await page.goto('/en/dashboard');
-    
+  test("should switch languages using language switcher", async ({ page }) => {
+    await page.goto("/en/dashboard");
+
     // Click language switcher
-    await page.click('[data-testid=language-switcher]');
-    await page.click('text=Tiếng Việt');
-    
+    await page.click("[data-testid=language-switcher]");
+    await page.click("text=Tiếng Việt");
+
     // Verify URL changed and content is in Vietnamese
-    await expect(page).toHaveURL('/vi/dashboard');
-    await expect(page.locator('h1')).toContainText('Bảng điều khiển thư viện');
+    await expect(page).toHaveURL("/vi/dashboard");
+    await expect(page.locator("h1")).toContainText("Bảng điều khiển thư viện");
   });
 
-  test('should maintain route when switching languages', async ({ page }) => {
-    await page.goto('/en/inventory');
-    
-    await page.click('[data-testid=language-switcher]');
-    await page.click('text=Tiếng Việt');
-    
-    await expect(page).toHaveURL('/vi/inventory');
+  test("should maintain route when switching languages", async ({ page }) => {
+    await page.goto("/en/inventory");
+
+    await page.click("[data-testid=language-switcher]");
+    await page.click("text=Tiếng Việt");
+
+    await expect(page).toHaveURL("/vi/inventory");
   });
 
-  test('should redirect invalid locale to default', async ({ page }) => {
-    await page.goto('/fr/dashboard');
-    
-    await expect(page).toHaveURL('/en/dashboard');
+  test("should redirect invalid locale to default", async ({ page }) => {
+    await page.goto("/fr/dashboard");
+
+    await expect(page).toHaveURL("/en/dashboard");
   });
 });
 ```
@@ -1627,6 +1664,7 @@ test.describe('Internationalization', () => {
 ## Implementation Timeline & Milestones
 
 ### Week 1-2: Foundation Setup
+
 - **Deliverables:**
   - next-intl package installation and configuration
   - Basic routing setup with middleware
@@ -1638,7 +1676,8 @@ test.describe('Internationalization', () => {
   - Language switcher functional
   - Basic navigation translated
 
-### Week 3-4: Component Integration  
+### Week 3-4: Component Integration
+
 - **Deliverables:**
   - All navigation components localized
   - Form validation with localized error messages
@@ -1651,6 +1690,7 @@ test.describe('Internationalization', () => {
   - Date/number formatting appropriate for each locale
 
 ### Week 5-6: Database & Performance
+
 - **Deliverables:**
   - User locale preference storage
   - Database schema for localized content
@@ -1663,6 +1703,7 @@ test.describe('Internationalization', () => {
   - SEO metadata properly localized
 
 ### Week 7-8: Testing & Quality Assurance
+
 - **Deliverables:**
   - Comprehensive test suite for i18n functionality
   - E2E tests covering language switching flows
@@ -1680,10 +1721,11 @@ test.describe('Internationalization', () => {
 ### Translation Workflow
 
 1. **Developer Workflow:**
+
    ```bash
    # Add new translation key
    # 1. Add to en.json
-   # 2. Add to vi.json  
+   # 2. Add to vi.json
    # 3. Update TypeScript types if needed
    # 4. Use in component with useTranslations()
    ```
@@ -1737,7 +1779,7 @@ test.describe('Internationalization', () => {
 
 ### Why No URL Routing for Admin Applications
 
-1. **Clean URLs**: 
+1. **Clean URLs**:
    - `/dashboard` instead of `/en/dashboard` or `/vi/dashboard`
    - Simpler URL structure for internal tools
    - No need to handle locale in every link
@@ -1767,6 +1809,7 @@ test.describe('Internationalization', () => {
 This implementation plan provides a robust foundation for English/Vietnamese internationalization using next-intl with a **cookie-based approach** that avoids URL routing complexity. The solution is ideal for the Library Management System as an authenticated admin application.
 
 Key success factors:
+
 - **Clean URLs:** No locale prefixes cluttering the URL structure
 - **Type Safety:** Full TypeScript integration prevents runtime errors
 - **User Preference:** Language choice persists via cookies and database

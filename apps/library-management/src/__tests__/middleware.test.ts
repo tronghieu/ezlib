@@ -16,22 +16,27 @@ describe("Authentication Middleware", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    mockGetUser = jest.fn();
-    mockCreateServerClient = jest.requireMock("@supabase/ssr").createServerClient;
 
-    mockCreateServerClient.mockImplementation((url: string, key: string, options: unknown) => {
-      // Simulate the cookies behavior
-      if (options && typeof options === "object" && "cookies" in options) {
-        const cookieOptions = options as { cookies: { setAll: (cookies: unknown[]) => void } };
-        cookieOptions.cookies.setAll([]);
+    mockGetUser = jest.fn();
+    mockCreateServerClient =
+      jest.requireMock("@supabase/ssr").createServerClient;
+
+    mockCreateServerClient.mockImplementation(
+      (url: string, key: string, options: unknown) => {
+        // Simulate the cookies behavior
+        if (options && typeof options === "object" && "cookies" in options) {
+          const cookieOptions = options as {
+            cookies: { setAll: (cookies: unknown[]) => void };
+          };
+          cookieOptions.cookies.setAll([]);
+        }
+        return {
+          auth: {
+            getUser: mockGetUser,
+          },
+        };
       }
-      return {
-        auth: {
-          getUser: mockGetUser,
-        },
-      };
-    });
+    );
 
     // Mock environment variables
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co";
@@ -53,13 +58,16 @@ describe("Authentication Middleware", () => {
       "/favicon.ico",
     ];
 
-    test.each(publicRoutes)("allows access to public route: %s", async (route) => {
-      const request = createRequest(route);
-      const response = await middleware(request);
-      
-      expect(response.status).toBe(200);
-      expect(mockGetUser).not.toHaveBeenCalled();
-    });
+    test.each(publicRoutes)(
+      "allows access to public route: %s",
+      async (route) => {
+        const request = createRequest(route);
+        const response = await middleware(request);
+
+        expect(response.status).toBe(200);
+        expect(mockGetUser).not.toHaveBeenCalled();
+      }
+    );
   });
 
   describe("Protected Routes", () => {
@@ -86,10 +94,10 @@ describe("Authentication Middleware", () => {
       });
 
       const request = createRequest("/dashboard");
-      
+
       // Mock cookies to simulate session refresh
       request.cookies.set("sb-access-token", "old-token");
-      
+
       const response = await middleware(request);
 
       expect(mockCreateServerClient).toHaveBeenCalledWith(
@@ -102,7 +110,7 @@ describe("Authentication Middleware", () => {
           }),
         })
       );
-      
+
       expect(response.status).toBe(200);
     });
   });

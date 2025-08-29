@@ -1,27 +1,28 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 /**
  * Server-side Authentication and Permission Utilities
  * Implements server-side permission checking for protected API routes
  * and database operations with library staff validation
  */
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { 
-  LibraryRole, 
-  Permission, 
-  UserPermissions, 
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import {
+  LibraryRole,
+  Permission,
+  UserPermissions,
   hasPermission,
   requirePermission,
-  PermissionError 
-} from './permissions';
+  PermissionError,
+} from "./permissions";
 
 /**
  * Create authenticated Supabase server client
  */
 export function createAuthenticatedClient() {
   const cookieStore = cookies();
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
@@ -36,7 +37,7 @@ export function createAuthenticatedClient() {
               cookieStore.set(name, value, options)
             );
           } catch (error) {
-            console.error('Error setting cookies:', error);
+            console.error("Error setting cookies:", error);
           }
         },
       },
@@ -53,7 +54,7 @@ export interface LibraryStaffData {
   library_id: string;
   role: LibraryRole;
   permissions: Record<string, any>; // JSONB custom permissions
-  status: 'active' | 'inactive' | 'pending';
+  status: "active" | "inactive" | "pending";
   invited_at: string;
   activated_at?: string;
 }
@@ -63,17 +64,20 @@ export interface LibraryStaffData {
  */
 export async function getAuthenticatedUser(libraryId?: string) {
   const supabase = createAuthenticatedClient();
-  
+
   // Check user authentication
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
   if (authError || !user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
-  
+
   // TODO: Implement library staff validation when database schema is updated
   // For now, we'll return a placeholder staff record for development
-  
+
   /* Future implementation once library_staff table exists:
   
   const { data: staffData, error: staffError } = await supabase
@@ -93,22 +97,22 @@ export async function getAuthenticatedUser(libraryId?: string) {
     staffData: staffData as LibraryStaffData
   };
   */
-  
+
   // Temporary placeholder for development
   const placeholderStaffData: LibraryStaffData = {
-    id: 'temp-staff-id',
+    id: "temp-staff-id",
     user_id: user.id,
-    library_id: libraryId || 'demo-library-id',
-    role: 'owner' as LibraryRole, // Temporary - grant full access for development
+    library_id: libraryId || "demo-library-id",
+    role: "owner" as LibraryRole, // Temporary - grant full access for development
     permissions: {},
-    status: 'active',
+    status: "active",
     invited_at: new Date().toISOString(),
-    activated_at: new Date().toISOString()
+    activated_at: new Date().toISOString(),
   };
-  
+
   return {
     user,
-    staffData: placeholderStaffData
+    staffData: placeholderStaffData,
   };
 }
 
@@ -120,17 +124,17 @@ export async function getUserPermissionsForLibrary(
   libraryId: string
 ): Promise<UserPermissions | null> {
   const supabase = createAuthenticatedClient();
-  
+
   try {
     // Attempt to query real database first
     const { data: staffData, error } = await supabase
-      .from('library_staff')
-      .select('role, permissions, status')
-      .eq('user_id', userId)
-      .eq('library_id', libraryId)
-      .eq('status', 'active')
+      .from("library_staff")
+      .select("role, permissions, status")
+      .eq("user_id", userId)
+      .eq("library_id", libraryId)
+      .eq("status", "active")
       .single();
-    
+
     if (!error && staffData) {
       // Real database data available
       return {
@@ -138,27 +142,37 @@ export async function getUserPermissionsForLibrary(
         libraryId,
         role: staffData.role as LibraryRole,
         customPermissions: staffData.permissions?.granted || [],
-        deniedPermissions: staffData.permissions?.denied || []
+        deniedPermissions: staffData.permissions?.denied || [],
       };
     }
-    
+
     // If error is "relation does not exist", table hasn't been created yet
-    if (error?.message?.includes('relation "public.library_staff" does not exist')) {
-      console.log('Library staff table not yet created - using development defaults');
+    if (
+      error?.message?.includes('relation "public.library_staff" does not exist')
+    ) {
+      console.log(
+        "Library staff table not yet created - using development defaults"
+      );
     } else if (error) {
-      console.log('Database query failed, using development defaults:', error.message);
+      console.log(
+        "Database query failed, using development defaults:",
+        error.message
+      );
     }
   } catch (error) {
-    console.log('Database connection failed, using development defaults:', error);
+    console.log(
+      "Database connection failed, using development defaults:",
+      error
+    );
   }
-  
+
   // Fallback to development placeholder when database is not available
   return {
     userId,
     libraryId,
-    role: 'owner', // Grant full access during development
+    role: "owner", // Grant full access during development
     customPermissions: [],
-    deniedPermissions: []
+    deniedPermissions: [],
   };
 }
 
@@ -168,24 +182,24 @@ export async function getUserPermissionsForLibrary(
 export async function requireLibraryAccess(libraryId?: string) {
   try {
     const { user, staffData } = await getAuthenticatedUser(libraryId);
-    
+
     const userPermissions = await getUserPermissionsForLibrary(
-      user.id, 
+      user.id,
       staffData.library_id
     );
-    
+
     if (!userPermissions) {
-      redirect('/unauthorized');
+      redirect("/unauthorized");
     }
-    
+
     return {
       user,
       staffData,
-      permissions: userPermissions
+      permissions: userPermissions,
     };
   } catch (error) {
-    console.error('Library access validation failed:', error);
-    redirect('/auth/login');
+    console.error("Library access validation failed:", error);
+    redirect("/auth/login");
   }
 }
 
@@ -202,8 +216,8 @@ export async function withAuth<T extends any[]>(
       return handler(...args);
     } catch (error) {
       return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
       );
     }
   };
@@ -220,32 +234,32 @@ export async function withPermission<T extends any[]>(
   return async (...args: T): Promise<Response> => {
     try {
       const { permissions } = await requireLibraryAccess(libraryId);
-      
+
       if (!hasPermission(permissions, requiredPermission)) {
         return new Response(
-          JSON.stringify({ 
-            error: 'Insufficient permissions',
-            required: requiredPermission 
+          JSON.stringify({
+            error: "Insufficient permissions",
+            required: requiredPermission,
           }),
-          { status: 403, headers: { 'Content-Type': 'application/json' } }
+          { status: 403, headers: { "Content-Type": "application/json" } }
         );
       }
-      
+
       return handler(...args);
     } catch (error) {
       if (error instanceof PermissionError) {
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: error.message,
-            permission: error.permission 
+            permission: error.permission,
           }),
-          { status: 403, headers: { 'Content-Type': 'application/json' } }
+          { status: 403, headers: { "Content-Type": "application/json" } }
         );
       }
-      
+
       return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
       );
     }
   };
@@ -255,18 +269,21 @@ export async function withPermission<T extends any[]>(
  * Database query wrapper with automatic permission checking
  */
 export async function withLibraryScope<T>(
-  query: (supabase: ReturnType<typeof createAuthenticatedClient>, libraryId: string) => Promise<T>,
+  query: (
+    supabase: ReturnType<typeof createAuthenticatedClient>,
+    libraryId: string
+  ) => Promise<T>,
   requiredPermission?: Permission,
   libraryId?: string
 ): Promise<T> {
   const supabase = createAuthenticatedClient();
   const { permissions, staffData } = await requireLibraryAccess(libraryId);
-  
+
   // Check permission if specified
   if (requiredPermission) {
     requirePermission(permissions, requiredPermission);
   }
-  
+
   // Execute query with library scope
   return query(supabase, staffData.library_id);
 }
@@ -275,18 +292,19 @@ export async function withLibraryScope<T>(
  * Utility to validate library context in server components
  */
 export async function validateLibraryContext(libraryId: string) {
-  const { user, staffData, permissions } = await requireLibraryAccess(libraryId);
-  
+  const { user, staffData, permissions } =
+    await requireLibraryAccess(libraryId);
+
   // Ensure library ID matches staff access
   if (staffData.library_id !== libraryId) {
-    redirect('/unauthorized');
+    redirect("/unauthorized");
   }
-  
+
   return {
     user,
     staffData,
     permissions,
-    libraryId: staffData.library_id
+    libraryId: staffData.library_id,
   };
 }
 
@@ -295,12 +313,13 @@ export async function validateLibraryContext(libraryId: string) {
  */
 export async function getUserLibraries(userId: string) {
   const supabase = createAuthenticatedClient();
-  
+
   try {
     // Attempt to query real database first
     const { data: libraries, error } = await supabase
-      .from('library_staff')
-      .select(`
+      .from("library_staff")
+      .select(
+        `
         library_id,
         role,
         status,
@@ -310,48 +329,64 @@ export async function getUserLibraries(userId: string) {
           code,
           settings
         )
-      `)
-      .eq('user_id', userId)
-      .eq('status', 'active');
-    
+      `
+      )
+      .eq("user_id", userId)
+      .eq("status", "active");
+
     if (!error && libraries && libraries.length > 0) {
       // Real database data available
       return libraries;
     }
-    
+
     // If error is "relation does not exist", table hasn't been created yet
-    if (error?.message?.includes('relation "public.library_staff" does not exist') ||
-        error?.message?.includes('relation "public.libraries" does not exist')) {
-      console.log('Library tables not yet created - using development defaults');
+    if (
+      error?.message?.includes(
+        'relation "public.library_staff" does not exist'
+      ) ||
+      error?.message?.includes('relation "public.libraries" does not exist')
+    ) {
+      console.log(
+        "Library tables not yet created - using development defaults"
+      );
     } else if (error) {
-      console.log('Database query failed, using development defaults:', error.message);
+      console.log(
+        "Database query failed, using development defaults:",
+        error.message
+      );
     } else if (!libraries || libraries.length === 0) {
-      console.log('No libraries found for user, using development defaults');
+      console.log("No libraries found for user, using development defaults");
     }
   } catch (error) {
-    console.log('Database connection failed, using development defaults:', error);
+    console.log(
+      "Database connection failed, using development defaults:",
+      error
+    );
   }
-  
+
   // Fallback to development placeholder when database is not available
   return [
     {
-      library_id: 'demo-library-id',
-      role: 'owner',
-      status: 'active',
+      library_id: "demo-library-id",
+      role: "owner",
+      status: "active",
       libraries: {
-        id: 'demo-library-id',
-        name: 'Demo Library',
-        code: 'DEMO-LIB',
-        settings: {}
-      }
-    }
+        id: "demo-library-id",
+        name: "Demo Library",
+        code: "DEMO-LIB",
+        settings: {},
+      },
+    },
   ];
 }
 
 /**
  * Check if current user can access a specific library
  */
-export async function canAccessLibrary(userId: string, libraryId: string): Promise<boolean> {
+export async function canAccessLibrary(
+  userId: string,
+  libraryId: string
+): Promise<boolean> {
   const userPermissions = await getUserPermissionsForLibrary(userId, libraryId);
   return userPermissions !== null;
 }

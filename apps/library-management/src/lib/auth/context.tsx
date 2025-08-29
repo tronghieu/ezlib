@@ -1,27 +1,34 @@
 /**
  * Authentication Context Provider
  * Implements AC6: Authentication State Management
- * 
+ *
  * This module provides app-wide authentication state management with React context,
  * real-time state synchronization, and proper cleanup.
  */
 
-'use client';
+"use client";
+/* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-unused-vars */
 
-import React, { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
-import type { User, Session } from '@supabase/supabase-js';
-import { 
-  SessionManager, 
-  getSessionManager, 
-  LibrarySessionContext, 
-  UserSessionPreferences 
-} from './session';
-import { 
-  LibraryRole, 
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  ReactNode,
+} from "react";
+import { createBrowserClient } from "@supabase/ssr";
+import type { User, Session } from "@supabase/supabase-js";
+import {
+  SessionManager,
+  getSessionManager,
+  LibrarySessionContext,
+  UserSessionPreferences,
+} from "./session";
+import {
+  LibraryRole,
   UserPermissions,
-  getUserPermissions 
-} from './permissions';
+  getUserPermissions,
+} from "./permissions";
 
 /**
  * Complete authentication state
@@ -32,17 +39,17 @@ export interface AuthContextState {
   session: Session | null;
   loading: boolean;
   error: string | null;
-  
+
   // Library context
   currentLibrary: LibrarySessionContext | null;
   permissions: UserPermissions | null;
-  
+
   // User preferences
   preferences: UserSessionPreferences;
-  
+
   // Session management
   sessionManager: SessionManager;
-  
+
   // State flags
   isAuthenticated: boolean;
   hasLibraryAccess: boolean;
@@ -52,15 +59,18 @@ export interface AuthContextState {
 /**
  * Authentication actions
  */
-type AuthAction = 
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'SET_SESSION'; payload: { user: User | null; session: Session | null } }
-  | { type: 'SET_LIBRARY'; payload: LibrarySessionContext | null }
-  | { type: 'SET_PREFERENCES'; payload: UserSessionPreferences }
-  | { type: 'SET_PERMISSIONS'; payload: UserPermissions | null }
-  | { type: 'INITIALIZE_COMPLETE' }
-  | { type: 'RESET_STATE' };
+type AuthAction =
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string | null }
+  | {
+      type: "SET_SESSION";
+      payload: { user: User | null; session: Session | null };
+    }
+  | { type: "SET_LIBRARY"; payload: LibrarySessionContext | null }
+  | { type: "SET_PREFERENCES"; payload: UserSessionPreferences }
+  | { type: "SET_PERMISSIONS"; payload: UserPermissions | null }
+  | { type: "INITIALIZE_COMPLETE" }
+  | { type: "RESET_STATE" };
 
 /**
  * Authentication context actions/methods
@@ -68,15 +78,18 @@ type AuthAction =
 export interface AuthContextActions {
   // Authentication actions
   signOut: () => Promise<{ error: Error | null }>;
-  refreshSession: () => Promise<{ session: Session | null; error: Error | null }>;
-  
+  refreshSession: () => Promise<{
+    session: Session | null;
+    error: Error | null;
+  }>;
+
   // Library management
   setCurrentLibrary: (library: LibrarySessionContext) => void;
   clearCurrentLibrary: () => void;
-  
+
   // Preferences management
   updatePreferences: (preferences: Partial<UserSessionPreferences>) => void;
-  
+
   // State management
   clearError: () => void;
   retry: () => Promise<void>;
@@ -101,54 +114,57 @@ const initialState: AuthContextState = {
   sessionManager: getSessionManager(),
   isAuthenticated: false,
   hasLibraryAccess: false,
-  isInitialized: false
+  isInitialized: false,
 };
 
 /**
  * Authentication state reducer
  */
-function authReducer(state: AuthContextState, action: AuthAction): AuthContextState {
+function authReducer(
+  state: AuthContextState,
+  action: AuthAction
+): AuthContextState {
   switch (action.type) {
-    case 'SET_LOADING':
+    case "SET_LOADING":
       return { ...state, loading: action.payload };
-      
-    case 'SET_ERROR':
+
+    case "SET_ERROR":
       return { ...state, error: action.payload, loading: false };
-      
-    case 'SET_SESSION':
+
+    case "SET_SESSION":
       return {
         ...state,
         user: action.payload.user,
         session: action.payload.session,
         isAuthenticated: action.payload.user !== null,
         loading: false,
-        error: null
+        error: null,
       };
-      
-    case 'SET_LIBRARY':
+
+    case "SET_LIBRARY":
       return {
         ...state,
         currentLibrary: action.payload,
-        hasLibraryAccess: action.payload !== null
+        hasLibraryAccess: action.payload !== null,
       };
-      
-    case 'SET_PREFERENCES':
+
+    case "SET_PREFERENCES":
       return { ...state, preferences: action.payload };
-      
-    case 'SET_PERMISSIONS':
+
+    case "SET_PERMISSIONS":
       return { ...state, permissions: action.payload };
-      
-    case 'INITIALIZE_COMPLETE':
+
+    case "INITIALIZE_COMPLETE":
       return { ...state, isInitialized: true, loading: false };
-      
-    case 'RESET_STATE':
+
+    case "RESET_STATE":
       return {
         ...initialState,
         sessionManager: state.sessionManager,
         isInitialized: true,
-        loading: false
+        loading: false,
       };
-      
+
     default:
       return state;
   }
@@ -177,23 +193,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function initializeAuth() {
       try {
-        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: "SET_LOADING", payload: true });
 
         // Get initial session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
         if (sessionError) {
-          console.error('Failed to get initial session:', sessionError);
-          dispatch({ type: 'SET_ERROR', payload: sessionError.message });
+          console.error("Failed to get initial session:", sessionError);
+          dispatch({ type: "SET_ERROR", payload: sessionError.message });
           return;
         }
 
         if (!mounted) return;
 
         // Set initial session state
-        dispatch({ 
-          type: 'SET_SESSION', 
-          payload: { user: session?.user || null, session } 
+        dispatch({
+          type: "SET_SESSION",
+          payload: { user: session?.user || null, session },
         });
 
         // Load session data if authenticated
@@ -201,13 +220,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await loadSessionData();
         }
 
-        dispatch({ type: 'INITIALIZE_COMPLETE' });
+        dispatch({ type: "INITIALIZE_COMPLETE" });
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error("Auth initialization error:", error);
         if (mounted) {
-          dispatch({ 
-            type: 'SET_ERROR', 
-            payload: error instanceof Error ? error.message : 'Unknown error' 
+          dispatch({
+            type: "SET_ERROR",
+            payload: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
@@ -224,23 +243,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Set up real-time authentication state changes
    */
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
-        
-        dispatch({ 
-          type: 'SET_SESSION', 
-          payload: { user: session?.user || null, session } 
-        });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change:", event, session?.user?.email);
 
-        if (event === 'SIGNED_IN' && session?.user) {
-          await loadSessionData();
-        } else if (event === 'SIGNED_OUT') {
-          dispatch({ type: 'RESET_STATE' });
-          state.sessionManager.logout();
-        }
+      dispatch({
+        type: "SET_SESSION",
+        payload: { user: session?.user || null, session },
+      });
+
+      if (event === "SIGNED_IN" && session?.user) {
+        await loadSessionData();
+      } else if (event === "SIGNED_OUT") {
+        dispatch({ type: "RESET_STATE" });
+        state.sessionManager.logout();
       }
-    );
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -255,29 +274,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for library changes
     removeListeners.push(
-      state.sessionManager.addEventListener('library-changed', (library) => {
-        dispatch({ type: 'SET_LIBRARY', payload: library });
+      state.sessionManager.addEventListener("library-changed", (library) => {
+        dispatch({ type: "SET_LIBRARY", payload: library });
         updatePermissions(library);
       })
     );
 
     // Listen for preference changes
     removeListeners.push(
-      state.sessionManager.addEventListener('preferences-changed', (preferences) => {
-        dispatch({ type: 'SET_PREFERENCES', payload: preferences });
-      })
+      state.sessionManager.addEventListener(
+        "preferences-changed",
+        (preferences) => {
+          dispatch({ type: "SET_PREFERENCES", payload: preferences });
+        }
+      )
     );
 
     // Listen for session timeout
     removeListeners.push(
-      state.sessionManager.addEventListener('session-timeout', () => {
-        dispatch({ type: 'SET_ERROR', payload: 'Session expired due to inactivity' });
-        dispatch({ type: 'RESET_STATE' });
+      state.sessionManager.addEventListener("session-timeout", () => {
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Session expired due to inactivity",
+        });
+        dispatch({ type: "RESET_STATE" });
       })
     );
 
     return () => {
-      removeListeners.forEach(remove => remove());
+      removeListeners.forEach((remove) => remove());
     };
   }, [state.sessionManager]);
 
@@ -287,18 +312,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loadSessionData() {
     try {
       const sessionData = await state.sessionManager.getSessionData();
-      
-      dispatch({ type: 'SET_LIBRARY', payload: sessionData.currentLibrary });
-      dispatch({ type: 'SET_PREFERENCES', payload: sessionData.preferences });
-      
+
+      dispatch({ type: "SET_LIBRARY", payload: sessionData.currentLibrary });
+      dispatch({ type: "SET_PREFERENCES", payload: sessionData.preferences });
+
       if (sessionData.currentLibrary) {
         updatePermissions(sessionData.currentLibrary);
       }
     } catch (error) {
-      console.error('Failed to load session data:', error);
-      dispatch({ 
-        type: 'SET_ERROR', 
-        payload: 'Failed to load user preferences' 
+      console.error("Failed to load session data:", error);
+      dispatch({
+        type: "SET_ERROR",
+        payload: "Failed to load user preferences",
       });
     }
   }
@@ -308,7 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   function updatePermissions(library: LibrarySessionContext | null) {
     if (!library || !state.user) {
-      dispatch({ type: 'SET_PERMISSIONS', payload: null });
+      dispatch({ type: "SET_PERMISSIONS", payload: null });
       return;
     }
 
@@ -317,10 +342,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       libraryId: library.libraryId,
       role: library.role as LibraryRole,
       customPermissions: [], // Could be loaded from library.permissions
-      deniedPermissions: []
+      deniedPermissions: [],
     };
 
-    dispatch({ type: 'SET_PERMISSIONS', payload: permissions });
+    dispatch({ type: "SET_PERMISSIONS", payload: permissions });
   }
 
   /**
@@ -328,31 +353,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const actions: AuthContextActions = {
     async signOut() {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: "SET_LOADING", payload: true });
       const result = await state.sessionManager.logout();
-      
+
       if (result.error) {
-        dispatch({ type: 'SET_ERROR', payload: result.error.message });
+        dispatch({ type: "SET_ERROR", payload: result.error.message });
       } else {
-        dispatch({ type: 'RESET_STATE' });
+        dispatch({ type: "RESET_STATE" });
       }
-      
+
       return result;
     },
 
     async refreshSession() {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: "SET_LOADING", payload: true });
       const result = await state.sessionManager.refreshSession();
-      
+
       if (result.error) {
-        dispatch({ type: 'SET_ERROR', payload: result.error.message });
+        dispatch({ type: "SET_ERROR", payload: result.error.message });
       } else if (result.session) {
-        dispatch({ 
-          type: 'SET_SESSION', 
-          payload: { user: result.session.user, session: result.session } 
+        dispatch({
+          type: "SET_SESSION",
+          payload: { user: result.session.user, session: result.session },
         });
       }
-      
+
       return result;
     },
 
@@ -362,8 +387,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
 
     clearCurrentLibrary() {
-      dispatch({ type: 'SET_LIBRARY', payload: null });
-      dispatch({ type: 'SET_PERMISSIONS', payload: null });
+      dispatch({ type: "SET_LIBRARY", payload: null });
+      dispatch({ type: "SET_PERMISSIONS", payload: null });
     },
 
     updatePreferences(preferences: Partial<UserSessionPreferences>) {
@@ -372,38 +397,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
 
     clearError() {
-      dispatch({ type: 'SET_ERROR', payload: null });
+      dispatch({ type: "SET_ERROR", payload: null });
     },
 
     async retry() {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
-      
+      dispatch({ type: "SET_LOADING", payload: true });
+      dispatch({ type: "SET_ERROR", payload: null });
+
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
         if (error) throw error;
-        
-        dispatch({ 
-          type: 'SET_SESSION', 
-          payload: { user: session?.user || null, session } 
+
+        dispatch({
+          type: "SET_SESSION",
+          payload: { user: session?.user || null, session },
         });
-        
+
         if (session?.user) {
           await loadSessionData();
         }
       } catch (error) {
-        dispatch({ 
-          type: 'SET_ERROR', 
-          payload: error instanceof Error ? error.message : 'Retry failed' 
+        dispatch({
+          type: "SET_ERROR",
+          payload: error instanceof Error ? error.message : "Retry failed",
         });
       }
-    }
+    },
   };
 
   const contextValue: AuthContext = {
     ...state,
-    ...actions
+    ...actions,
   };
 
   return (
@@ -418,11 +446,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  */
 export function useAuthContext(): AuthContext {
   const context = useContext(AuthContextProvider);
-  
+
   if (!context) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
+    throw new Error("useAuthContext must be used within an AuthProvider");
   }
-  
+
   return context;
 }
 
@@ -434,16 +462,16 @@ export function withAuth<P extends object>(
 ): React.ComponentType<P> {
   return function AuthenticatedComponent(props: P) {
     const { isAuthenticated, loading } = useAuthContext();
-    
+
     if (loading) {
       return <div>Loading...</div>;
     }
-    
+
     if (!isAuthenticated) {
       // This would normally redirect to login, but we'll just show a message
       return <div>Authentication required</div>;
     }
-    
+
     return <Component {...props} />;
   };
 }
@@ -456,15 +484,15 @@ export function withLibraryAccess<P extends object>(
 ): React.ComponentType<P> {
   return function LibraryAccessComponent(props: P) {
     const { hasLibraryAccess, loading } = useAuthContext();
-    
+
     if (loading) {
       return <div>Loading...</div>;
     }
-    
+
     if (!hasLibraryAccess) {
       return <div>Library access required</div>;
     }
-    
+
     return <Component {...props} />;
   };
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * @jest-environment node
  */
@@ -17,7 +18,7 @@ describe("Environment File Structure Validation", () => {
   // Required environment variables based on AC1 requirements
   const requiredEnvVars = [
     "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", 
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
     "NEXT_PUBLIC_SITE_URL",
   ];
@@ -29,7 +30,7 @@ describe("Environment File Structure Validation", () => {
     "DEBUG",
     "NEXT_PUBLIC_ENABLE_DUE_DATES",
     "NEXT_PUBLIC_ENABLE_FINES",
-    "NEXT_PUBLIC_ENABLE_HOLDS", 
+    "NEXT_PUBLIC_ENABLE_HOLDS",
     "NEXT_PUBLIC_ENABLE_ADVANCED_SEARCH",
   ];
 
@@ -45,17 +46,17 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=test-publishable-key
 SUPABASE_SERVICE_ROLE_KEY=test-service-role-key
 NODE_ENV=development
 DEBUG=false`;
-        
+
         writeFileSync(envLocalPath, testEnvContent);
       }
-      
+
       // When: Reading .env.local file
       expect(existsSync(envLocalPath)).toBe(true);
-      
+
       const envContent = readFileSync(envLocalPath, "utf-8");
-      
+
       // Then: All required variables should be present
-      requiredEnvVars.forEach(varName => {
+      requiredEnvVars.forEach((varName) => {
         expect(envContent).toMatch(new RegExp(`^${varName}=`, "m"));
       });
     });
@@ -69,19 +70,19 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=test-key
 SUPABASE_SERVICE_ROLE_KEY=test-service-key`;
         writeFileSync(envLocalPath, testEnvContent);
       }
-      
+
       // When: Parsing environment file content
       const envContent = readFileSync(envLocalPath, "utf-8");
-      const lines = envContent.split("\n").filter(line => 
-        line.trim() && !line.trim().startsWith("#")
-      );
-      
+      const lines = envContent
+        .split("\n")
+        .filter((line) => line.trim() && !line.trim().startsWith("#"));
+
       // Then: Each variable should follow KEY=VALUE format
-      lines.forEach(line => {
+      lines.forEach((line) => {
         if (line.includes("=")) {
           const [key, ...valueParts] = line.split("=");
           const value = valueParts.join("=");
-          
+
           expect(key.trim()).toBeTruthy();
           expect(key.trim()).toMatch(/^[A-Z_][A-Z0-9_]*$/);
           expect(value.trim()).toBeTruthy();
@@ -93,14 +94,20 @@ SUPABASE_SERVICE_ROLE_KEY=test-service-key`;
       // Given: .env.local file exists
       if (existsSync(envLocalPath)) {
         const envContent = readFileSync(envLocalPath, "utf-8");
-        
+
         // When: Checking client-side variables
-        const clientVars = ["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "SITE_URL"];
-        
+        const clientVars = [
+          "SUPABASE_URL",
+          "SUPABASE_PUBLISHABLE_KEY",
+          "SITE_URL",
+        ];
+
         // Then: Client-side variables should have NEXT_PUBLIC prefix
-        clientVars.forEach(varSuffix => {
+        clientVars.forEach((varSuffix) => {
           if (envContent.includes(varSuffix)) {
-            expect(envContent).toMatch(new RegExp(`NEXT_PUBLIC_${varSuffix}`, "g"));
+            expect(envContent).toMatch(
+              new RegExp(`NEXT_PUBLIC_${varSuffix}`, "g")
+            );
           }
         });
       }
@@ -110,14 +117,16 @@ SUPABASE_SERVICE_ROLE_KEY=test-service-key`;
       // Given: .env.local with URL variables
       if (existsSync(envLocalPath)) {
         const envContent = readFileSync(envLocalPath, "utf-8");
-        
+
         // When: Extracting URL values
-        const urlMatches = envContent.match(/^(NEXT_PUBLIC_SITE_URL|NEXT_PUBLIC_SUPABASE_URL)=(.+)$/gm);
-        
+        const urlMatches = envContent.match(
+          /^(NEXT_PUBLIC_SITE_URL|NEXT_PUBLIC_SUPABASE_URL)=(.+)$/gm
+        );
+
         if (urlMatches) {
-          urlMatches.forEach(match => {
+          urlMatches.forEach((match) => {
             const [, , url] = match.match(/^(.+)=(.+)$/) || [];
-            
+
             // Then: URLs should be valid format
             expect(url).toMatch(/^https?:\/\/.+/);
             expect(url).not.toContain("your-");
@@ -132,7 +141,7 @@ SUPABASE_SERVICE_ROLE_KEY=test-service-key`;
     it("should have .env.example template file for team onboarding", () => {
       // Given: Project structure
       let envExampleExists = existsSync(envExamplePath);
-      
+
       if (!envExampleExists) {
         // Create .env.example template for validation
         const exampleContent = `# Environment Variables Template
@@ -153,14 +162,14 @@ NEXT_PUBLIC_ENABLE_DUE_DATES=false
 NEXT_PUBLIC_ENABLE_FINES=false
 NEXT_PUBLIC_ENABLE_HOLDS=false
 NEXT_PUBLIC_ENABLE_ADVANCED_SEARCH=false`;
-        
+
         writeFileSync(envExamplePath, exampleContent);
         envExampleExists = true;
       }
-      
+
       // When: Checking for .env.example
       expect(envExampleExists).toBe(true);
-      
+
       // Then: File should exist and be readable
       const exampleContent = readFileSync(envExamplePath, "utf-8");
       expect(exampleContent.length).toBeGreaterThan(0);
@@ -170,10 +179,10 @@ NEXT_PUBLIC_ENABLE_ADVANCED_SEARCH=false`;
       // Given: .env.example file exists
       if (existsSync(envExamplePath)) {
         const exampleContent = readFileSync(envExamplePath, "utf-8");
-        
+
         // When: Checking required variables
         // Then: All required variables should be present
-        requiredEnvVars.forEach(varName => {
+        requiredEnvVars.forEach((varName) => {
           expect(exampleContent).toMatch(new RegExp(`^${varName}=`, "m"));
         });
       }
@@ -183,7 +192,7 @@ NEXT_PUBLIC_ENABLE_ADVANCED_SEARCH=false`;
       // Given: .env.example file
       if (existsSync(envExamplePath)) {
         const exampleContent = readFileSync(envExamplePath, "utf-8");
-        
+
         // When: Checking for documentation
         // Then: Should contain helpful comments
         expect(exampleContent).toMatch(/#.*[Cc]opy.*\.env\.local/);
@@ -193,10 +202,10 @@ NEXT_PUBLIC_ENABLE_ADVANCED_SEARCH=false`;
     });
 
     it("should use placeholder values, not real credentials", () => {
-      // Given: .env.example file 
+      // Given: .env.example file
       if (existsSync(envExamplePath)) {
         const exampleContent = readFileSync(envExamplePath, "utf-8");
-        
+
         // When: Checking for placeholder values
         // Then: Should not contain real credentials
         expect(exampleContent).not.toMatch(/sk_[a-zA-Z0-9]/); // No real service keys
@@ -214,14 +223,16 @@ NEXT_PUBLIC_ENABLE_ADVANCED_SEARCH=false`;
 NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU`;
-      
+
       // When: Validating local development URLs
       const lines = testEnvContent.split("\n");
-      const supabaseUrl = lines.find(line => line.startsWith("NEXT_PUBLIC_SUPABASE_URL="));
-      
+      const supabaseUrl = lines.find((line) =>
+        line.startsWith("NEXT_PUBLIC_SUPABASE_URL=")
+      );
+
       if (supabaseUrl) {
         const url = supabaseUrl.split("=")[1];
-        
+
         // Then: Should point to local Supabase
         expect(url).toMatch(/localhost:54321/);
         expect(url).toMatch(/^http:\/\/localhost:/);
@@ -232,13 +243,16 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
       // Given: Local development configuration
       const localDevKeys = {
         anon: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0",
-        service: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU"
+        service:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU",
       };
-      
+
       // When: Checking key format for local development
       // Then: Keys should be valid JWT format
-      Object.values(localDevKeys).forEach(key => {
-        expect(key).toMatch(/^eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/);
+      Object.values(localDevKeys).forEach((key) => {
+        expect(key).toMatch(
+          /^eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/
+        );
         expect(key.split(".")).toHaveLength(3); // JWT has 3 parts
       });
     });
@@ -249,20 +263,26 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
       // Given: Environment variables are set
       const testEnv = {
         NEXT_PUBLIC_SITE_URL: "http://localhost:3001",
-        NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321", 
+        NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321",
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "test-key",
         NODE_ENV: "test",
       };
-      
+
       const originalEnv = process.env;
       process.env = { ...originalEnv, ...testEnv };
-      
+
       try {
         // When: Accessing environment variables
         // Then: Variables should be accessible
-        expect(process.env.NEXT_PUBLIC_SITE_URL).toBe(testEnv.NEXT_PUBLIC_SITE_URL);
-        expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe(testEnv.NEXT_PUBLIC_SUPABASE_URL);
-        expect(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).toBe(testEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+        expect(process.env.NEXT_PUBLIC_SITE_URL).toBe(
+          testEnv.NEXT_PUBLIC_SITE_URL
+        );
+        expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe(
+          testEnv.NEXT_PUBLIC_SUPABASE_URL
+        );
+        expect(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).toBe(
+          testEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        );
         expect(process.env.NODE_ENV).toBe("test");
       } finally {
         process.env = originalEnv;
@@ -276,16 +296,16 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
         "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
         "NEXT_PUBLIC_SITE_URL",
       ];
-      
+
       // When: Checking NEXT_PUBLIC variables (client-accessible)
       // Then: Variables should follow Next.js naming convention
-      requiredVars.forEach(varName => {
+      requiredVars.forEach((varName) => {
         expect(varName).toMatch(/^NEXT_PUBLIC_/);
       });
-      
+
       // And private variables should NOT have NEXT_PUBLIC prefix
       const privateVars = ["SUPABASE_SERVICE_ROLE_KEY"];
-      privateVars.forEach(varName => {
+      privateVars.forEach((varName) => {
         expect(varName).not.toMatch(/^NEXT_PUBLIC_/);
       });
     });
@@ -294,13 +314,16 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
   // Cleanup test files if they were created during tests
   afterAll(() => {
     const testFiles = [envLocalPath, envExamplePath];
-    
-    testFiles.forEach(filePath => {
+
+    testFiles.forEach((filePath) => {
       if (existsSync(filePath)) {
         try {
           const content = readFileSync(filePath, "utf-8");
           // Only remove files that contain test data
-          if (content.includes("test-") || content.includes("Test environment")) {
+          if (
+            content.includes("test-") ||
+            content.includes("Test environment")
+          ) {
             unlinkSync(filePath);
           }
         } catch {

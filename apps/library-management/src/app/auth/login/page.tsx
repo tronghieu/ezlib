@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -96,55 +96,60 @@ export default function LoginPage() {
     }
   };
 
-  const handleOtpSubmit = async (otpValue?: string) => {
-    const codeToVerify = otpValue || otp;
-    setError("");
-    setIsLoading(true);
+  const handleOtpSubmit = useCallback(
+    async (otpValue?: string) => {
+      const codeToVerify = otpValue || otp;
+      setError("");
+      setIsLoading(true);
 
-    try {
-      // Validate OTP format
-      const validationResult = otpSchema.safeParse({ otp: codeToVerify });
-      if (!validationResult.success) {
-        setError(validationResult.error.issues[0].message);
-        return;
-      }
-
-      // Verify OTP code
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email,
-        token: codeToVerify,
-        type: "email",
-      });
-
-      if (verifyError) {
-        if (verifyError.message.includes("Invalid token")) {
-          setError(
-            "Invalid verification code. Please check the code and try again."
-          );
-        } else if (verifyError.message.includes("expired")) {
-          setError("Verification code has expired. Please request a new one.");
-        } else {
-          setError(`Verification failed: ${verifyError.message}`);
+      try {
+        // Validate OTP format
+        const validationResult = otpSchema.safeParse({ otp: codeToVerify });
+        if (!validationResult.success) {
+          setError(validationResult.error.issues[0].message);
+          return;
         }
-        return;
-      }
 
-      // Success - redirect to intended destination
-      router.replace(redirectTo);
-    } catch (err) {
-      console.error("OTP verification error:", err);
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        // Verify OTP code
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          email,
+          token: codeToVerify,
+          type: "email",
+        });
+
+        if (verifyError) {
+          if (verifyError.message.includes("Invalid token")) {
+            setError(
+              "Invalid verification code. Please check the code and try again."
+            );
+          } else if (verifyError.message.includes("expired")) {
+            setError(
+              "Verification code has expired. Please request a new one."
+            );
+          } else {
+            setError(`Verification failed: ${verifyError.message}`);
+          }
+          return;
+        }
+
+        // Success - redirect to intended destination
+        router.replace(redirectTo);
+      } catch (err) {
+        console.error("OTP verification error:", err);
+        setError("An unexpected error occurred. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [otp, router, redirectTo, email, supabase.auth]
+  );
 
   // Auto-submit when 6 digits are entered
   useEffect(() => {
     if (otp.length === 6 && isOtpSent && !isLoading) {
       handleOtpSubmit(otp);
     }
-  }, [otp, isOtpSent, isLoading]);
+  }, [otp, isOtpSent, isLoading, handleOtpSubmit]);
 
   if (isOtpSent) {
     return (

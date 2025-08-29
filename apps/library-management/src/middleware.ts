@@ -83,12 +83,12 @@ export async function middleware(request: NextRequest) {
     // If user is not authenticated, redirect to login with return URL
     if (!user) {
       const loginUrl = new URL("/auth/login", request.url);
-      
+
       // Add return URL parameter for redirect after login
       if (pathname !== "/auth/login") {
         loginUrl.searchParams.set("redirectTo", pathname);
       }
-      
+
       return NextResponse.redirect(loginUrl);
     }
 

@@ -22,16 +22,19 @@ Before populating the story template, the SM MUST perform this systematic analys
 ## Epic Cross-Reference Checklist
 
 ### Epic 2 Analysis (Core Operations):
+
 - [ ] Does this story create UI elements that need translation? → Flag for i18n consideration
 - [ ] Does this story handle user input that needs validation? → Check validation message localization
 - [ ] Does this story create member-facing features? → Consider role-based access patterns
 
 ### Epic 3 Analysis (Enhanced Circulation):
+
 - [ ] Does this story create data that due dates will depend on? → Consider date formatting
 - [ ] Does this story create notification triggers? → Consider message localization
 - [ ] Does this story affect reporting calculations? → Consider number formatting
 
 ### Epic 4 Analysis (Advanced Features):
+
 - [ ] Does this story create reports or analytics? → Consider regional formatting
 - [ ] Does this story create admin interfaces? → Consider staff role management
 - [ ] Does this story create user-facing text? → MANDATORY i18n consideration
@@ -45,6 +48,7 @@ Before populating the story template, the SM MUST perform this systematic analys
 ## Cross-Cutting Concerns Validation
 
 ### 🌐 Internationalization (i18n) Impact
+
 - [ ] **User-Facing Text**: Does this story create ANY user-visible text?
 - [ ] **Form Validation**: Does this story create form validation messages?
 - [ ] **Error Messages**: Does this story create error or success messages?
@@ -53,6 +57,7 @@ Before populating the story template, the SM MUST perform this systematic analys
 - [ ] **DECISION**: i18n Required: YES/NO with justification
 
 ### 🔐 Authentication & Authorization Impact
+
 - [ ] **User Context**: Does this story require knowing who the current user is?
 - [ ] **Role Permissions**: Does this story need different behavior for different roles?
 - [ ] **Library Context**: Does this story require knowing which library context?
@@ -60,18 +65,21 @@ Before populating the story template, the SM MUST perform this systematic analys
 - [ ] **DECISION**: Auth Integration Required: YES/NO with specific requirements
 
 ### 🏢 Multi-Tenant Architecture Impact
+
 - [ ] **Library Scoping**: Does this story create data that belongs to a specific library?
 - [ ] **Cross-Library Impact**: Could this story affect other libraries if not properly isolated?
 - [ ] **Staff Role Context**: Does this story need to differentiate between staff roles?
 - [ ] **DECISION**: Multi-tenant Considerations: List specific RLS/scoping requirements
 
 ### ♿ Accessibility & UX Impact
+
 - [ ] **Keyboard Navigation**: Does this story create interactive elements?
 - [ ] **Screen Reader**: Does this story create complex UI that needs ARIA labels?
 - [ ] **Color/Contrast**: Does this story use color to convey information?
 - [ ] **DECISION**: Accessibility Requirements: List specific WCAG 2.1 considerations
 
 ### 📊 Performance & Scale Impact
+
 - [ ] **Large Data Sets**: Could this story handle 5000+ books or 1000+ members?
 - [ ] **Real-time Updates**: Does this story need live data synchronization?
 - [ ] **Database Queries**: Does this story create new database query patterns?
@@ -86,14 +94,17 @@ Before populating the story template, the SM MUST perform this systematic analys
 ## Story Integration Analysis
 
 ### Upstream Dependencies (Stories this depends on):
+
 - Story X.X: [Specific dependency and integration point]
 - Story X.X: [Specific dependency and integration point]
 
 ### Downstream Impact (Stories that will depend on this):
+
 - Story X.X: [How this story will be leveraged]
 - Story X.X: [How this story will be leveraged]
 
 ### Cross-Cutting Feature Integration:
+
 - **Authentication System**: [How this story integrates with existing auth]
 - **i18n Framework**: [How this story will be localized in Epic 4]
 - **Multi-tenant Architecture**: [How this story respects library isolation]
@@ -108,16 +119,19 @@ Before populating the story template, the SM MUST perform this systematic analys
 ## Future Epic Preparation Assessment
 
 ### Technical Debt Creation Risk:
+
 - [ ] Could this story create patterns that conflict with Epic 4 i18n requirements?
 - [ ] Could this story create hardcoded values that Epic 4 needs to make configurable?
 - [ ] Could this story create UI patterns that don't support language switching?
 
 ### Epic 4 Integration Readiness:
+
 - [ ] Are text strings externalized for future translation?
 - [ ] Are date/number formats abstracted for localization?
 - [ ] Are user-facing messages structured for interpolation?
 
 ### Mitigation Strategies:
+
 - [List specific actions to prevent future rework]
 - [List architectural decisions that support future enhancement]
 ```
@@ -142,14 +156,14 @@ Add this section to the story template BEFORE "Dev Notes":
   template: |
     ## Epic Dependency Analysis
     [Results of Epic 2/3/4 impact analysis]
-    
+
     ## Architectural Cross-Cutting Concerns
     ### i18n Impact: [YES/NO with justification]
     ### Auth Integration: [Requirements and integration points]
     ### Multi-tenant Considerations: [RLS and scoping requirements]
     ### Accessibility Requirements: [WCAG 2.1 specific needs]
     ### Performance Considerations: [Scale and optimization needs]
-    
+
     ## Story Integration Points
     ### Upstream Dependencies: [List with integration details]
     ### Downstream Impact: [Stories that will depend on this]
@@ -179,6 +193,7 @@ Add this to the existing story draft checklist (`.bmad-core/checklists/story-dra
 
 ```markdown
 ## Cross-Cutting Concerns Validation
+
 - [ ] Cross-Cutting Concerns Analysis section is complete
 - [ ] i18n impact assessment is present and justified
 - [ ] Authentication integration is documented with specific patterns
@@ -195,6 +210,7 @@ Add this to the existing story draft checklist (`.bmad-core/checklists/story-dra
 ### Immediate Training Requirements
 
 The SM must be trained on:
+
 1. **Epic Interdependency Mapping**: Understanding how current MVP work affects Epic 4
 2. **i18n Preparation Patterns**: Recognizing when strings need externalization
 3. **Cross-Story Integration**: Identifying reusable patterns and components
@@ -203,13 +219,14 @@ The SM must be trained on:
 ### Process Enforcement Mechanisms
 
 1. **Mandatory PO Review**: All stories require PO validation before "Approved" status
-2. **Automated Checklist**: Story template enforces cross-cutting analysis completion  
+2. **Automated Checklist**: Story template enforces cross-cutting analysis completion
 3. **Epic Cross-Reference**: Visual matrix showing story-to-epic relationships
 4. **Retrospective Review**: Regular assessment of missed cross-cutting concerns
 
 ## Success Metrics
 
 Track these metrics to measure process improvement:
+
 - **Cross-Cutting Issue Discovery Rate**: Issues caught in story draft vs. development
 - **Rework Reduction**: Stories requiring significant changes due to missed concerns
 - **Epic 4 Preparation Readiness**: Technical debt metrics when Epic 4 begins
@@ -218,16 +235,19 @@ Track these metrics to measure process improvement:
 ## Implementation Rollout
 
 ### Phase 1: Immediate (This Sprint)
+
 - Update create-next-story.md with Step 4.5 requirements
 - Create enhanced story template with Cross-Cutting Concerns Analysis section
 - Update story draft checklist with validation requirements
 
-### Phase 2: Next Sprint  
+### Phase 2: Next Sprint
+
 - Train SM on enhanced process with real story examples
 - Implement PO validation workflow for all story drafts
 - Create Epic cross-reference matrix for visual dependency tracking
 
 ### Phase 3: Continuous Improvement
+
 - Collect metrics on cross-cutting concern discovery rates
 - Refine guidelines based on missed issues in retrospectives
 - Automate cross-cutting concern flagging where possible

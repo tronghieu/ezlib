@@ -3,20 +3,20 @@
  * Provides React hooks for managing authentication state and permission-based UI
  */
 
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
-import type { User, Session } from '@supabase/supabase-js';
-import { 
-  LibraryRole, 
-  Permission, 
+import { useEffect, useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
+import type { User, Session } from "@supabase/supabase-js";
+import {
+  LibraryRole,
+  Permission,
   UserPermissions,
   hasPermission,
   hasAnyPermission,
   hasAllPermissions,
-  getUserPermissions
-} from './permissions';
+  getUserPermissions,
+} from "./permissions";
 
 /**
  * Authentication state
@@ -47,7 +47,7 @@ export function useAuth(): AuthState {
     user: null,
     session: null,
     loading: true,
-    error: null
+    error: null,
   });
 
   useEffect(() => {
@@ -59,28 +59,28 @@ export function useAuth(): AuthState {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        setState(prev => ({ ...prev, error: error.message, loading: false }));
+        setState((prev) => ({ ...prev, error: error.message, loading: false }));
       } else {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           user: session?.user || null,
           session,
           loading: false,
-          error: null
+          error: null,
         }));
       }
     });
 
     // Listen for auth changes
     const {
-      data: { subscription }
+      data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         user: session?.user || null,
         session,
         loading: false,
-        error: null
+        error: null,
       }));
     });
 
@@ -99,26 +99,30 @@ export function useLibraryAccess(libraryId: string): LibraryAccess {
   const { user } = useAuth();
   const [access, setAccess] = useState<LibraryAccess>({
     libraryId,
-    role: 'librarian',
+    role: "librarian",
     permissions: {
-      userId: '',
+      userId: "",
       libraryId,
-      role: 'librarian',
+      role: "librarian",
       customPermissions: [],
-      deniedPermissions: []
+      deniedPermissions: [],
     },
     loading: true,
-    error: null
+    error: null,
   });
 
   useEffect(() => {
     if (!user) {
-      setAccess(prev => ({ ...prev, loading: false, error: 'Not authenticated' }));
+      setAccess((prev) => ({
+        ...prev,
+        loading: false,
+        error: "Not authenticated",
+      }));
       return;
     }
 
     // TODO: Implement actual library access fetching when API endpoints exist
-    
+
     /* Future implementation:
     
     const fetchLibraryAccess = async () => {
@@ -162,16 +166,16 @@ export function useLibraryAccess(libraryId: string): LibraryAccess {
     // Temporary placeholder for development
     const placeholderAccess: LibraryAccess = {
       libraryId,
-      role: 'owner', // Grant full access during development
+      role: "owner", // Grant full access during development
       permissions: {
         userId: user.id,
         libraryId,
-        role: 'owner',
+        role: "owner",
         customPermissions: [],
-        deniedPermissions: []
+        deniedPermissions: [],
       },
       loading: false,
-      error: null
+      error: null,
     };
 
     setAccess(placeholderAccess);
@@ -183,7 +187,10 @@ export function useLibraryAccess(libraryId: string): LibraryAccess {
 /**
  * Hook to check if user has a specific permission
  */
-export function usePermission(permission: Permission, libraryId: string): {
+export function usePermission(
+  permission: Permission,
+  libraryId: string
+): {
   hasPermission: boolean;
   loading: boolean;
   error: string | null;
@@ -193,41 +200,59 @@ export function usePermission(permission: Permission, libraryId: string): {
   return {
     hasPermission: loading ? false : hasPermission(permissions, permission),
     loading,
-    error
+    error,
   };
 }
 
 /**
  * Hook to check if user has any of the specified permissions
  */
-export function useAnyPermission(permissions: Permission[], libraryId: string): {
+export function useAnyPermission(
+  permissions: Permission[],
+  libraryId: string
+): {
   hasAnyPermission: boolean;
   loading: boolean;
   error: string | null;
 } {
-  const { permissions: userPermissions, loading, error } = useLibraryAccess(libraryId);
+  const {
+    permissions: userPermissions,
+    loading,
+    error,
+  } = useLibraryAccess(libraryId);
 
   return {
-    hasAnyPermission: loading ? false : hasAnyPermission(userPermissions, permissions),
+    hasAnyPermission: loading
+      ? false
+      : hasAnyPermission(userPermissions, permissions),
     loading,
-    error
+    error,
   };
 }
 
 /**
  * Hook to check if user has all of the specified permissions
  */
-export function useAllPermissions(permissions: Permission[], libraryId: string): {
+export function useAllPermissions(
+  permissions: Permission[],
+  libraryId: string
+): {
   hasAllPermissions: boolean;
   loading: boolean;
   error: string | null;
 } {
-  const { permissions: userPermissions, loading, error } = useLibraryAccess(libraryId);
+  const {
+    permissions: userPermissions,
+    loading,
+    error,
+  } = useLibraryAccess(libraryId);
 
   return {
-    hasAllPermissions: loading ? false : hasAllPermissions(userPermissions, permissions),
+    hasAllPermissions: loading
+      ? false
+      : hasAllPermissions(userPermissions, permissions),
     loading,
-    error
+    error,
   };
 }
 
@@ -239,12 +264,16 @@ export function useUserPermissions(libraryId: string): {
   loading: boolean;
   error: string | null;
 } {
-  const { permissions: userPermissions, loading, error } = useLibraryAccess(libraryId);
+  const {
+    permissions: userPermissions,
+    loading,
+    error,
+  } = useLibraryAccess(libraryId);
 
   return {
     permissions: loading ? [] : getUserPermissions(userPermissions),
     loading,
-    error
+    error,
   };
 }
 
@@ -262,7 +291,7 @@ export function usePermissionGate(
 
   return {
     canRender: hasPermission,
-    loading
+    loading,
   };
 }
 
@@ -279,29 +308,33 @@ export const authUtils = {
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
     );
     const { error } = await supabase.auth.signOut();
-    
+
     if (!error) {
       // Redirect to login page after successful logout
-      window.location.href = '/auth/login';
+      window.location.href = "/auth/login";
     }
-    
+
     return { error };
   },
 
   /**
    * Send magic link to email
    */
-  async sendMagicLink(email: string, redirectTo?: string): Promise<{ error: Error | null }> {
+  async sendMagicLink(
+    email: string,
+    redirectTo?: string
+  ): Promise<{ error: Error | null }> {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
     );
-    
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: redirectTo || `${window.location.origin}/auth/callback`
-      }
+        emailRedirectTo:
+          redirectTo || `${window.location.origin}/auth/callback`,
+      },
     });
 
     return { error };
@@ -318,8 +351,8 @@ export const authUtils = {
    * Get user's display name
    */
   getUserDisplayName(user: User | null): string {
-    if (!user) return '';
-    return user.user_metadata?.full_name || user.email || 'User';
+    if (!user) return "";
+    return user.user_metadata?.full_name || user.email || "User";
   },
 
   /**
@@ -328,5 +361,5 @@ export const authUtils = {
   getUserAvatarUrl(user: User | null): string | null {
     if (!user) return null;
     return user.user_metadata?.avatar_url || null;
-  }
+  },
 };

@@ -3,9 +3,9 @@
  * Tests domain-specific type helpers and future library management types
  */
 
-import type { 
-  Author, 
-  BookEdition, 
+import type {
+  Author,
+  BookEdition,
   GeneralBook,
   BookCopy,
   Library,
@@ -36,7 +36,7 @@ describe("Type Helpers Completeness Tests", () => {
           },
           verified: true,
         };
-        
+
         // When: Using Author type
         // Then: All required fields should be properly typed
         expect(mockAuthor.id).toBeDefined();
@@ -58,7 +58,7 @@ describe("Type Helpers Completeness Tests", () => {
           },
           verified: false,
         };
-        
+
         // When: Using create type
         // Then: Should have required fields without auto-generated ones
         expect(createData.name).toBeDefined();
@@ -75,7 +75,7 @@ describe("Type Helpers Completeness Tests", () => {
             biography: "Updated biography",
           },
         };
-        
+
         // When: Using update type
         // Then: All fields should be optional for partial updates
         expect(updateData.name).toBeDefined();
@@ -103,7 +103,7 @@ describe("Type Helpers Completeness Tests", () => {
             },
           ],
         };
-        
+
         // When: Using joined type
         // Then: Should include relationship data
         expect(authorWithBooks.id).toBeDefined();
@@ -134,7 +134,7 @@ describe("Type Helpers Completeness Tests", () => {
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
         };
-        
+
         // When: Using BookEdition type
         // Then: All fields should be properly typed
         expect(mockBookEdition.id).toBeDefined();
@@ -155,7 +155,7 @@ describe("Type Helpers Completeness Tests", () => {
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
         };
-        
+
         // When: Using GeneralBook type
         // Then: Should handle book series metadata
         expect(mockGeneralBook.canonical_title).toBeDefined();
@@ -167,7 +167,7 @@ describe("Type Helpers Completeness Tests", () => {
         // Given: Book edition with author relationship
         const bookWithAuthor: BookEditionWithAuthor = {
           id: "edition-1",
-          general_book_id: "book-1", 
+          general_book_id: "book-1",
           title: "Test Book",
           language: "en",
           created_at: "2025-01-01T00:00:00Z",
@@ -183,7 +183,7 @@ describe("Type Helpers Completeness Tests", () => {
             },
           ],
         };
-        
+
         // When: Using joined book-author type
         // Then: Should include author relationship
         expect(bookWithAuthor.title).toBeDefined();
@@ -198,7 +198,7 @@ describe("Type Helpers Completeness Tests", () => {
         // Given: Library type for future implementation
         const mockLibrary: Library = {
           id: "lib-1",
-          name: "Test Public Library", 
+          name: "Test Public Library",
           code: "TPL-MAIN",
           address: {
             street: "123 Main St",
@@ -216,20 +216,22 @@ describe("Type Helpers Completeness Tests", () => {
             defaultLoanPeriodDays: 14,
             maxRenewals: 2,
             finePerDayAmount: 0.25,
-            maxFineAmount: 10.00,
+            maxFineAmount: 10.0,
             allowHolds: true,
           },
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
         };
-        
+
         // When: Using Library type
         // Then: Should handle complex nested data
         expect(mockLibrary.name).toBeDefined();
         expect(mockLibrary.code).toBeDefined();
         expect(mockLibrary.address.street).toBeDefined();
         expect(mockLibrary.contact.email).toBeDefined();
-        expect(typeof mockLibrary.settings.defaultLoanPeriodDays).toBe("number");
+        expect(typeof mockLibrary.settings.defaultLoanPeriodDays).toBe(
+          "number"
+        );
         expect(typeof mockLibrary.settings.allowHolds).toBe("boolean");
       });
 
@@ -254,11 +256,13 @@ describe("Type Helpers Completeness Tests", () => {
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
         };
-        
+
         // When: Using BookCopy type
         // Then: Should handle inventory-specific fields
         expect(mockBookCopy.barcode).toBeDefined();
-        expect(mockBookCopy.status).toMatch(/^(available|checked_out|on_hold|lost|damaged|withdrawn)$/);
+        expect(mockBookCopy.status).toMatch(
+          /^(available|checked_out|on_hold|lost|damaged|withdrawn)$/
+        );
         expect(mockBookCopy.location.section).toBeDefined();
         expect(typeof mockBookCopy.acquisition_cost).toBe("number");
         expect(typeof mockBookCopy.circulation_count).toBe("number");
@@ -280,7 +284,7 @@ describe("Type Helpers Completeness Tests", () => {
           address: {
             street: "456 Oak Ave",
             city: "Test City",
-            state: "TS", 
+            state: "TS",
             zip: "12345",
             country: "US",
           },
@@ -299,20 +303,26 @@ describe("Type Helpers Completeness Tests", () => {
             total_checkouts: 25,
             current_checkouts: 2,
             overdue_count: 0,
-            total_fines: 0.00,
+            total_fines: 0.0,
           },
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
         };
-        
+
         // When: Using LibraryMember type
         // Then: Should handle complex member data structure
         expect(mockMember.member_id).toBeDefined();
         expect(mockMember.personal_info.first_name).toBeDefined();
         expect(mockMember.address.street).toBeDefined();
-        expect(mockMember.membership.type).toMatch(/^(adult|child|senior|student)$/);
-        expect(typeof mockMember.preferences.email_notifications).toBe("boolean");
-        expect(typeof mockMember.borrowing_stats.total_checkouts).toBe("number");
+        expect(mockMember.membership.type).toMatch(
+          /^(adult|child|senior|student)$/
+        );
+        expect(typeof mockMember.preferences.email_notifications).toBe(
+          "boolean"
+        );
+        expect(typeof mockMember.borrowing_stats.total_checkouts).toBe(
+          "number"
+        );
       });
 
       it("should provide BorrowingTransaction type for circulation history", () => {
@@ -330,18 +340,20 @@ describe("Type Helpers Completeness Tests", () => {
           staff_id: "staff-1",
           notes: "Standard checkout",
           fees: {
-            overdue_fine: 0.00,
-            damage_fee: 0.00,
-            processing_fee: 0.00,
-            total: 0.00,
+            overdue_fine: 0.0,
+            damage_fee: 0.0,
+            processing_fee: 0.0,
+            total: 0.0,
           },
           created_at: "2025-01-01T10:00:00Z",
           updated_at: "2025-01-01T10:00:00Z",
         };
-        
-        // When: Using BorrowingTransaction type  
+
+        // When: Using BorrowingTransaction type
         // Then: Should handle circulation workflow data
-        expect(mockTransaction.transaction_type).toMatch(/^(checkout|return|renewal|hold)$/);
+        expect(mockTransaction.transaction_type).toMatch(
+          /^(checkout|return|renewal|hold)$/
+        );
         expect(mockTransaction.checkout_date).toBeDefined();
         expect(mockTransaction.due_date).toBeDefined();
         expect(mockTransaction.return_date).toBeNull(); // Still checked out
@@ -356,7 +368,7 @@ describe("Type Helpers Completeness Tests", () => {
       // Given: Database table types
       type AuthorRow = Tables<"authors">;
       // type BookEditionRow = Tables<"book_editions">;
-      
+
       // When: Creating objects that should be compatible
       const dbAuthor: AuthorRow = {
         id: "author-1",
@@ -367,12 +379,12 @@ describe("Type Helpers Completeness Tests", () => {
         verified: true,
         metadata: null,
       };
-      
+
       const domainAuthor: Author = {
         ...dbAuthor,
         metadata: dbAuthor.metadata || {},
       };
-      
+
       // Then: Types should be compatible
       expect(dbAuthor.id).toBe(domainAuthor.id);
       expect(dbAuthor.name).toBe(domainAuthor.name);
@@ -383,18 +395,18 @@ describe("Type Helpers Completeness Tests", () => {
       // Given: Database insert and update types
       type AuthorInsert = Database["public"]["Tables"]["authors"]["Insert"];
       type AuthorUpdate = Database["public"]["Tables"]["authors"]["Update"];
-      
+
       // When: Creating insert and update objects
       const insertData: AuthorInsert = {
         name: "New Author",
         canonical_name: "new-author",
         verified: false,
       };
-      
+
       const updateData: AuthorUpdate = {
         name: "Updated Name",
       };
-      
+
       // Then: Should handle optional fields correctly
       expect(insertData.name).toBeDefined();
       expect(insertData.id).toBeUndefined(); // Auto-generated
@@ -407,26 +419,36 @@ describe("Type Helpers Completeness Tests", () => {
     it("should provide type guards for domain objects", () => {
       // Given: Type guard functions (future implementation)
       const isAuthor = (obj: unknown): obj is Author => {
-        return obj !== null && 
-               typeof obj === "object" &&
-               "id" in obj && typeof (obj as Record<string, unknown>).id === "string" &&
-               "name" in obj && typeof (obj as Record<string, unknown>).name === "string" &&
-               "canonical_name" in obj && typeof (obj as Record<string, unknown>).canonical_name === "string";
+        return (
+          obj !== null &&
+          typeof obj === "object" &&
+          "id" in obj &&
+          typeof (obj as Record<string, unknown>).id === "string" &&
+          "name" in obj &&
+          typeof (obj as Record<string, unknown>).name === "string" &&
+          "canonical_name" in obj &&
+          typeof (obj as Record<string, unknown>).canonical_name === "string"
+        );
       };
-      
+
       const isBookEdition = (obj: unknown): obj is BookEdition => {
-        return obj !== null &&
-               typeof obj === "object" &&
-               "id" in obj && typeof (obj as Record<string, unknown>).id === "string" &&
-               "title" in obj && typeof (obj as Record<string, unknown>).title === "string" &&
-               "general_book_id" in obj && typeof (obj as Record<string, unknown>).general_book_id === "string";
+        return (
+          obj !== null &&
+          typeof obj === "object" &&
+          "id" in obj &&
+          typeof (obj as Record<string, unknown>).id === "string" &&
+          "title" in obj &&
+          typeof (obj as Record<string, unknown>).title === "string" &&
+          "general_book_id" in obj &&
+          typeof (obj as Record<string, unknown>).general_book_id === "string"
+        );
       };
-      
+
       // When: Using type guards
       const authorObj = { id: "1", name: "Test", canonical_name: "test" };
       const bookObj = { id: "1", title: "Test", general_book_id: "gen-1" };
       const invalidObj = { id: 123 };
-      
+
       // Then: Type guards should work correctly
       expect(isAuthor(authorObj)).toBe(true);
       expect(isBookEdition(bookObj)).toBe(true);
@@ -436,28 +458,30 @@ describe("Type Helpers Completeness Tests", () => {
 
     it("should provide type transformation utilities", () => {
       // Given: Transformation utility types
-      type PartialUpdate<T> = Partial<Omit<T, "id" | "created_at" | "updated_at">>;
+      type PartialUpdate<T> = Partial<
+        Omit<T, "id" | "created_at" | "updated_at">
+      >;
       type CreateInput<T> = Omit<T, "id" | "created_at" | "updated_at">;
-      
+
       // When: Using transformation types
       type AuthorPartialUpdate = PartialUpdate<Author>;
       type AuthorCreateInput = CreateInput<Author>;
-      
+
       const partialUpdate: AuthorPartialUpdate = {
         name: "Updated Name",
       };
-      
+
       const createInput: AuthorCreateInput = {
         name: "New Author",
         canonical_name: "new-author",
         verified: false,
       };
-      
+
       // Then: Transformations should exclude system fields
       expect(partialUpdate.name).toBeDefined();
       expect("id" in partialUpdate).toBe(false);
       expect("created_at" in partialUpdate).toBe(false);
-      
+
       expect(createInput.name).toBeDefined();
       expect("id" in createInput).toBe(false);
       expect("created_at" in createInput).toBe(false);
@@ -481,7 +505,7 @@ describe("Type Helpers Completeness Tests", () => {
           by_category: Record<string, number>;
         };
       }
-      
+
       // When: Creating complex nested object
       const libraryWithDetails: LibraryWithDetails = {
         id: "lib-1",
@@ -518,18 +542,22 @@ describe("Type Helpers Completeness Tests", () => {
           available_books: 4500,
           checked_out_books: 500,
           by_category: {
-            "Fiction": 2000,
+            Fiction: 2000,
             "Non-Fiction": 1500,
-            "Children": 1000,
-            "Reference": 500,
+            Children: 1000,
+            Reference: 500,
           },
         },
       };
-      
+
       // Then: Complex nesting should be properly typed
       expect(libraryWithDetails.staff[0].permissions).toContain("checkout");
-      expect(libraryWithDetails.inventory_summary.by_category.Fiction).toBe(2000);
-      expect(typeof libraryWithDetails.inventory_summary.total_books).toBe("number");
+      expect(libraryWithDetails.inventory_summary.by_category.Fiction).toBe(
+        2000
+      );
+      expect(typeof libraryWithDetails.inventory_summary.total_books).toBe(
+        "number"
+      );
     });
   });
 });

@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 /**
  * Authentication callback route implementing AC3: Authentication Callback Handling
  * Handles OTP token exchange and session establishment
- * 
+ *
  * This route is called when users click the magic link in their email
  * It exchanges the OTP tokens for a valid session and redirects appropriately
  */
@@ -47,18 +47,19 @@ export async function GET(request: NextRequest) {
     );
 
     // Exchange the authorization code for a session
-    const { data: authData, error: authError } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: authData, error: authError } =
+      await supabase.auth.exchangeCodeForSession(code);
 
     if (authError) {
       console.error("Auth callback error:", authError.message);
-      
+
       // Handle specific error cases
       if (authError.message.includes("expired")) {
         return NextResponse.redirect(
           new URL("/auth/login?error=link_expired", origin)
         );
       }
-      
+
       if (authError.message.includes("invalid")) {
         return NextResponse.redirect(
           new URL("/auth/login?error=invalid_link", origin)
@@ -67,12 +68,17 @@ export async function GET(request: NextRequest) {
 
       // Generic auth error
       return NextResponse.redirect(
-        new URL(`/auth/login?error=auth_failed&message=${encodeURIComponent(authError.message)}`, origin)
+        new URL(
+          `/auth/login?error=auth_failed&message=${encodeURIComponent(authError.message)}`,
+          origin
+        )
       );
     }
 
     if (!authData.user) {
-      console.error("Auth callback: No user data after successful token exchange");
+      console.error(
+        "Auth callback: No user data after successful token exchange"
+      );
       return NextResponse.redirect(
         new URL("/auth/login?error=no_user_data", origin)
       );
@@ -81,7 +87,7 @@ export async function GET(request: NextRequest) {
     // Note: Library staff validation will be implemented in Task 4 (Permission System)
     // For now, we'll allow any authenticated user to proceed
     // In production, this would check the library_staff table
-    
+
     // TODO: Implement library staff access validation when database schema is updated
     // const { data: staffData, error: staffError } = await supabase
     //   .from("library_staff")
@@ -100,10 +106,9 @@ export async function GET(request: NextRequest) {
     response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
     return response;
-
   } catch (error) {
     console.error("Unexpected error in auth callback:", error);
-    
+
     return NextResponse.redirect(
       new URL("/auth/login?error=unexpected_error", origin)
     );
@@ -114,7 +119,7 @@ export async function GET(request: NextRequest) {
  * Handle POST requests (not typically used for auth callbacks, but good to have)
  * This could be used for programmatic authentication in the future
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
   return NextResponse.json(
     { error: "Method not allowed for auth callback" },
     { status: 405 }

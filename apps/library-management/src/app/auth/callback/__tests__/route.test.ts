@@ -24,9 +24,10 @@ describe("Auth Callback Route", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockExchangeCodeForSession = jest.fn();
-    mockCreateServerClient = jest.requireMock("@supabase/ssr").createServerClient;
+    mockCreateServerClient =
+      jest.requireMock("@supabase/ssr").createServerClient;
 
     mockCreateServerClient.mockReturnValue({
       auth: {
@@ -70,7 +71,9 @@ describe("Auth Callback Route", () => {
       const response = await GET(request);
 
       expect(response.status).toBe(307); // Redirect
-      expect(response.headers.get("location")).toContain("/auth/login?error=missing_code");
+      expect(response.headers.get("location")).toContain(
+        "/auth/login?error=missing_code"
+      );
       expect(mockExchangeCodeForSession).not.toHaveBeenCalled();
     });
 
@@ -84,7 +87,9 @@ describe("Auth Callback Route", () => {
       const response = await GET(request);
 
       expect(response.status).toBe(307); // Redirect
-      expect(response.headers.get("location")).toContain("/auth/login?error=auth_failed");
+      expect(response.headers.get("location")).toContain(
+        "/auth/login?error=auth_failed"
+      );
     });
 
     test("handles expired token errors", async () => {
@@ -97,7 +102,9 @@ describe("Auth Callback Route", () => {
       const response = await GET(request);
 
       expect(response.status).toBe(307); // Redirect
-      expect(response.headers.get("location")).toContain("/auth/login?error=link_expired");
+      expect(response.headers.get("location")).toContain(
+        "/auth/login?error=link_expired"
+      );
     });
 
     test("respects redirect parameter", async () => {
@@ -109,9 +116,9 @@ describe("Auth Callback Route", () => {
         error: null,
       });
 
-      const request = createRequest({ 
+      const request = createRequest({
         code: "auth-code-123",
-        redirectTo: "/books"
+        redirectTo: "/books",
       });
       const response = await GET(request);
 
@@ -133,18 +140,23 @@ describe("Auth Callback Route", () => {
 
       expect(response.headers.get("X-Frame-Options")).toBe("DENY");
       expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
-      expect(response.headers.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
+      expect(response.headers.get("Referrer-Policy")).toBe(
+        "strict-origin-when-cross-origin"
+      );
     });
   });
 
   describe("POST /auth/callback", () => {
     test("returns method not allowed", async () => {
-      const request = new NextRequest("https://manage.ezlib.com/auth/callback", {
-        method: "POST",
-      });
-      
+      const request = new NextRequest(
+        "https://manage.ezlib.com/auth/callback",
+        {
+          method: "POST",
+        }
+      );
+
       const response = await POST(request);
-      
+
       expect(response.status).toBe(405);
       const body = await response.json();
       expect(body.error).toBe("Method not allowed for auth callback");

@@ -1,24 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Session Management for Library Management System
  * Implements AC5: Cross-Domain Session Management
- * 
+ *
  * This module handles session persistence, cleanup, and synchronization
  * for the library management application domain.
  */
 
-'use client';
+"use client";
 
-import { createBrowserClient } from '@supabase/ssr';
-import type { User, Session } from '@supabase/supabase-js';
+import { createBrowserClient } from "@supabase/ssr";
+import type { User, Session } from "@supabase/supabase-js";
 
 /**
  * Session storage keys for browser persistence
  */
 const SESSION_KEYS = {
-  CURRENT_LIBRARY: 'ezlib:library-management:current-library',
-  USER_PREFERENCES: 'ezlib:library-management:user-preferences',
-  LAST_ACTIVITY: 'ezlib:library-management:last-activity',
-  SESSION_ID: 'ezlib:library-management:session-id'
+  CURRENT_LIBRARY: "ezlib:library-management:current-library",
+  USER_PREFERENCES: "ezlib:library-management:user-preferences",
+  LAST_ACTIVITY: "ezlib:library-management:last-activity",
+  SESSION_ID: "ezlib:library-management:session-id",
 } as const;
 
 /**
@@ -30,9 +31,9 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
  * User preferences stored in session
  */
 export interface UserSessionPreferences {
-  theme?: 'light' | 'dark' | 'system';
+  theme?: "light" | "dark" | "system";
   language?: string;
-  dashboardLayout?: 'compact' | 'comfortable';
+  dashboardLayout?: "compact" | "comfortable";
   notificationSettings?: {
     overdueReminders: boolean;
     systemAlerts: boolean;
@@ -102,15 +103,18 @@ export class SessionManager {
    */
   setCurrentLibrary(library: LibrarySessionContext): void {
     try {
-      localStorage.setItem(SESSION_KEYS.CURRENT_LIBRARY, JSON.stringify({
-        ...library,
-        lastAccessed: new Date().toISOString()
-      }));
-      
+      localStorage.setItem(
+        SESSION_KEYS.CURRENT_LIBRARY,
+        JSON.stringify({
+          ...library,
+          lastAccessed: new Date().toISOString(),
+        })
+      );
+
       this.updateLastActivity();
-      this.dispatchSessionEvent('library-changed', library);
+      this.dispatchSessionEvent("library-changed", library);
     } catch (error) {
-      console.error('Failed to store library context:', error);
+      console.error("Failed to store library context:", error);
     }
   }
 
@@ -122,7 +126,7 @@ export class SessionManager {
       const stored = localStorage.getItem(SESSION_KEYS.CURRENT_LIBRARY);
       return stored ? JSON.parse(stored) : null;
     } catch (error) {
-      console.error('Failed to retrieve library context:', error);
+      console.error("Failed to retrieve library context:", error);
       return null;
     }
   }
@@ -134,12 +138,15 @@ export class SessionManager {
     try {
       const current = this.getUserPreferences();
       const updated = { ...current, ...preferences };
-      
-      localStorage.setItem(SESSION_KEYS.USER_PREFERENCES, JSON.stringify(updated));
+
+      localStorage.setItem(
+        SESSION_KEYS.USER_PREFERENCES,
+        JSON.stringify(updated)
+      );
       this.updateLastActivity();
-      this.dispatchSessionEvent('preferences-changed', updated);
+      this.dispatchSessionEvent("preferences-changed", updated);
     } catch (error) {
-      console.error('Failed to store user preferences:', error);
+      console.error("Failed to store user preferences:", error);
     }
   }
 
@@ -151,7 +158,7 @@ export class SessionManager {
       const stored = localStorage.getItem(SESSION_KEYS.USER_PREFERENCES);
       return stored ? JSON.parse(stored) : {};
     } catch (error) {
-      console.error('Failed to retrieve user preferences:', error);
+      console.error("Failed to retrieve user preferences:", error);
       return {};
     }
   }
@@ -160,8 +167,10 @@ export class SessionManager {
    * Get complete session data
    */
   async getSessionData(): Promise<SessionData> {
-    const { data: { session } } = await this.supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await this.supabase.auth.getSession();
+
     return {
       user: session?.user || null,
       session,
@@ -169,7 +178,7 @@ export class SessionManager {
       preferences: this.getUserPreferences(),
       sessionId: this.getSessionId(),
       lastActivity: this.getLastActivity(),
-      expiresAt: this.getExpirationTime()
+      expiresAt: this.getExpirationTime(),
     };
   }
 
@@ -180,26 +189,26 @@ export class SessionManager {
     try {
       // Clear Supabase session
       const { error: supabaseError } = await this.supabase.auth.signOut();
-      
+
       if (supabaseError) {
-        console.error('Supabase logout error:', supabaseError);
+        console.error("Supabase logout error:", supabaseError);
       }
 
       // Clear local session data
       this.clearLocalSession();
-      
+
       // Stop session monitoring
       this.stopSessionMonitoring();
-      
+
       // Dispatch logout event
-      this.dispatchSessionEvent('session-ended', null);
-      
+      this.dispatchSessionEvent("session-ended", null);
+
       // Redirect to login page
-      window.location.href = '/auth/login';
-      
+      window.location.href = "/auth/login";
+
       return { error: supabaseError };
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       return { error: error as Error };
     }
   }
@@ -207,18 +216,24 @@ export class SessionManager {
   /**
    * Refresh session and extend expiration
    */
-  async refreshSession(): Promise<{ session: Session | null; error: Error | null }> {
+  async refreshSession(): Promise<{
+    session: Session | null;
+    error: Error | null;
+  }> {
     try {
-      const { data: { session }, error } = await this.supabase.auth.refreshSession();
-      
+      const {
+        data: { session },
+        error,
+      } = await this.supabase.auth.refreshSession();
+
       if (session) {
         this.updateLastActivity();
-        this.dispatchSessionEvent('session-refreshed', session);
+        this.dispatchSessionEvent("session-refreshed", session);
       }
-      
+
       return { session, error };
     } catch (error) {
-      console.error('Session refresh error:', error);
+      console.error("Session refresh error:", error);
       return { session: null, error: error as Error };
     }
   }
@@ -242,7 +257,7 @@ export class SessionManager {
       const now = new Date().toISOString();
       localStorage.setItem(SESSION_KEYS.LAST_ACTIVITY, now);
     } catch (error) {
-      console.error('Failed to update last activity:', error);
+      console.error("Failed to update last activity:", error);
     }
   }
 
@@ -250,17 +265,28 @@ export class SessionManager {
    * Listen for session events
    */
   addEventListener(
-    event: 'session-ended' | 'session-refreshed' | 'library-changed' | 'preferences-changed' | 'session-timeout',
+    event:
+      | "session-ended"
+      | "session-refreshed"
+      | "library-changed"
+      | "preferences-changed"
+      | "session-timeout",
     callback: (data: any) => void
   ): () => void {
     const handleEvent = (e: CustomEvent) => {
       callback(e.detail);
     };
 
-    window.addEventListener(`ezlib:session:${event}`, handleEvent as EventListener);
+    window.addEventListener(
+      `ezlib:session:${event}`,
+      handleEvent as EventListener
+    );
 
     return () => {
-      window.removeEventListener(`ezlib:session:${event}`, handleEvent as EventListener);
+      window.removeEventListener(
+        `ezlib:session:${event}`,
+        handleEvent as EventListener
+      );
     };
   }
 
@@ -274,7 +300,7 @@ export class SessionManager {
 
     this.sessionCheckInterval = setInterval(() => {
       if (!this.isSessionValid()) {
-        console.log('Session expired due to inactivity');
+        console.log("Session expired due to inactivity");
         this.handleSessionTimeout();
       }
     }, 60000); // Check every minute
@@ -294,7 +320,7 @@ export class SessionManager {
    * Handle session timeout
    */
   private async handleSessionTimeout(): Promise<void> {
-    this.dispatchSessionEvent('session-timeout', null);
+    this.dispatchSessionEvent("session-timeout", null);
     await this.logout();
   }
 
@@ -303,11 +329,11 @@ export class SessionManager {
    */
   private clearLocalSession(): void {
     try {
-      Object.values(SESSION_KEYS).forEach(key => {
+      Object.values(SESSION_KEYS).forEach((key) => {
         localStorage.removeItem(key);
       });
     } catch (error) {
-      console.error('Failed to clear local session:', error);
+      console.error("Failed to clear local session:", error);
     }
   }
 
@@ -317,15 +343,15 @@ export class SessionManager {
   private getSessionId(): string {
     try {
       let sessionId = localStorage.getItem(SESSION_KEYS.SESSION_ID);
-      
+
       if (!sessionId) {
         sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         localStorage.setItem(SESSION_KEYS.SESSION_ID, sessionId);
       }
-      
+
       return sessionId;
     } catch (error) {
-      console.error('Failed to manage session ID:', error);
+      console.error("Failed to manage session ID:", error);
       return `session-${Date.now()}`;
     }
   }
@@ -335,10 +361,10 @@ export class SessionManager {
    */
   private getLastActivity(): string {
     try {
-      return localStorage.getItem(SESSION_KEYS.LAST_ACTIVITY) || '';
+      return localStorage.getItem(SESSION_KEYS.LAST_ACTIVITY) || "";
     } catch (error) {
-      console.error('Failed to get last activity:', error);
-      return '';
+      console.error("Failed to get last activity:", error);
+      return "";
     }
   }
 
@@ -347,9 +373,11 @@ export class SessionManager {
    */
   private getExpirationTime(): string {
     const lastActivity = this.getLastActivity();
-    if (!lastActivity) return '';
+    if (!lastActivity) return "";
 
-    const expirationTime = new Date(new Date(lastActivity).getTime() + SESSION_TIMEOUT_MS);
+    const expirationTime = new Date(
+      new Date(lastActivity).getTime() + SESSION_TIMEOUT_MS
+    );
     return expirationTime.toISOString();
   }
 
@@ -359,11 +387,11 @@ export class SessionManager {
   private dispatchSessionEvent(eventName: string, data: any): void {
     try {
       const event = new CustomEvent(`ezlib:session:${eventName}`, {
-        detail: data
+        detail: data,
       });
       window.dispatchEvent(event);
     } catch (error) {
-      console.error('Failed to dispatch session event:', error);
+      console.error("Failed to dispatch session event:", error);
     }
   }
 
@@ -372,7 +400,7 @@ export class SessionManager {
    */
   private cleanupExpiredSessions(): void {
     if (!this.isSessionValid()) {
-      console.log('Cleaning up expired session data');
+      console.log("Cleaning up expired session data");
       this.clearLocalSession();
     }
   }
@@ -400,7 +428,7 @@ export function useSessionManager() {
     logout: sessionManager.logout.bind(sessionManager),
     refreshSession: sessionManager.refreshSession.bind(sessionManager),
     updateLastActivity: sessionManager.updateLastActivity.bind(sessionManager),
-    addEventListener: sessionManager.addEventListener.bind(sessionManager)
+    addEventListener: sessionManager.addEventListener.bind(sessionManager),
   };
 }
 
@@ -408,23 +436,30 @@ export function useSessionManager() {
  * Initialize session management (call once in app root)
  */
 export function initializeSessionManagement(): void {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const sessionManager = getSessionManager();
     sessionManager.initialize();
 
     // Add activity listeners to update session
-    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
+    const activityEvents = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+      "click",
+    ];
+
     const handleActivity = () => {
       sessionManager.updateLastActivity();
     };
 
-    activityEvents.forEach(event => {
+    activityEvents.forEach((event) => {
       document.addEventListener(event, handleActivity, { passive: true });
     });
 
     // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
+    window.addEventListener("beforeunload", () => {
       sessionManager.updateLastActivity();
     });
   }
