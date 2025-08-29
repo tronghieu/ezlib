@@ -873,6 +873,11 @@ WHERE schemaname = 'public';
 - **Performance**: Support up to 5,000 books and 1,000 members per library efficiently
 - **Supabase Integration**: Always run database commands from database root directory
 - **Type Safety**: Regenerate TypeScript types after every schema change
+- **Package Manager**: This project uses **PNPM** exclusively - never use npm commands
+
+## Process Improvement Guidelines
+
+**Story Creation Enhancement**: Before creating any user stories, SM agents must reference `docs/enhanced-story-creation-guidelines.md` to ensure cross-cutting concerns (i18n, authentication, multi-tenancy, accessibility, performance) are properly considered. This prevents missing critical architectural requirements during story development.
 
 ## Next Steps
 
@@ -889,3 +894,4 @@ When starting development:
 _Library Management System CLAUDE.md - Standalone library management application_
 
 - Use playwright mcp for end-to-end testing web app
+- when working with browser or testing the display of web applications, use playwright mcp

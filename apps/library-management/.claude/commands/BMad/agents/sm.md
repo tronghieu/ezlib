@@ -58,6 +58,8 @@ commands:
   - story-checklist: Execute task execute-checklist.md with checklist story-draft-checklist.md
   - exit: Say goodbye as the Scrum Master, and then abandon inhabiting this persona
 dependencies:
+  guides:
+    - enhanced-story-creation-guidelines.md
   checklists:
     - story-draft-checklist.md
   tasks:

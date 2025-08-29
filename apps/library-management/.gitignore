@@ -45,3 +45,8 @@ next-env.d.ts
 
 # MCP configuration
 .mcp.json
+
+# Serena
+.serena
+
+.playwright-mcp
