@@ -1,0 +1,11 @@
+{
+	"devDependencies": {
+		"@snaplet/copycat": "^6.0.0",
+		"@snaplet/seed": "0.98.0",
+		"postgres": "^3.4.7"
+	},
+	"dependencies": {
+		"@supabase/supabase-js": "^2.56.1",
+		"dotenv": "^17.2.1"
+	}
+}
