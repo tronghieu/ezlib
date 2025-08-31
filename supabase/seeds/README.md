@@ -1,57 +1,26 @@
-# EzLib Database Seeds
+# Supabase Seeds
 
-This directory contains organized seed data for the EzLib database, providing sample data for development and testing.
-
-## Structure
-
-```
-supabase/seeds/
-├── README.md              # This documentation
-├── seed.sql              # Main seed file (auto-executed by Supabase)
-├── 01_authors.sql        # Author seed data (5 authors)
-├── 02_general_books.sql  # General book entries (8 books)
-├── 03_book_editions.sql  # Book editions (9 editions)
-└── 04_book_contributors.sql # Author-book relationships (9 relationships)
-```
-
-## Sample Data Overview
-
-### Authors (5 records)
-- George Orwell (1984, Animal Farm)
-- Jane Austen (Pride and Prejudice, Emma)
-- Isaac Asimov (Foundation, I Robot)
-- Agatha Christie (Murder on the Orient Express)
-- J.K. Rowling (Harry Potter series)
-
-### Books & Editions
-- **8 General Books** (language-agnostic canonical works)
-- **5 Book Editions** (specific published versions with ISBNs)
-- **5 Author-Book Relationships** via book_contributors
-
-### Key Features
-- Realistic metadata including publication years, subjects, social stats
-- Valid ISBN-13 and ISBN-10 numbers
-- Publisher information and format specifications
-- Borrowing activity statistics for testing
-- Proper foreign key relationships
+This project now uses **Snaplet Seed** for database seeding instead of SQL files.
 
 ## Usage
 
-Seeds are automatically applied when running:
 ```bash
-supabase db reset
+# Sync database schema with Snaplet
+pnpm run seed:sync
+
+# Run the seed script
+pnpm run seed
 ```
 
-The main `seed.sql` file:
-1. Clears existing data (in reverse dependency order)
-2. Inserts data in correct dependency order (authors → books → editions → contributors)
-3. Maintains referential integrity throughout
+## Test Credentials
 
-## Development Notes
+All users have the password: `password123`
 
-- All UUIDs are hardcoded for predictable testing
-- Metadata includes JSON fields for flexible data storage
-- Social stats simulate real-world usage metrics
-- Format values must match database constraints: `hardcover`, `paperback`, `ebook`, `audiobook`, `other`
+- **Demo User**: `demo@ezlib.com`
+- **Library Staff**: `sarah.chen@nycentral.org`
+- **Library Staff**: `mike.torres@nycentral.org`  
+- **Library Staff**: `anna.kowalski@nycentral.org`
 
-This seed data provides a solid foundation for testing book discovery, author relationships, and edition management features.
+## Legacy SQL Seeds
+
+Old SQL seed files have been moved to `seeds/archive/` for reference but are no longer used.

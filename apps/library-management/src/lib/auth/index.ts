@@ -31,6 +31,13 @@ export type {
 
 export type { LibraryStaffData } from "./server";
 
+// Import functions needed for authHelpers
+import {
+  hasAnyPermission,
+  type UserPermissions,
+  type Permission,
+} from "./permissions";
+
 // Core permission system
 export {
   ROLE_PERMISSIONS,

@@ -5,7 +5,7 @@
  * Main page component for library selection with authentication
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LibrarySelectionGrid } from "./library-selection-grid";
 import { useLibraryContext } from "@/lib/contexts/library-context";
@@ -31,8 +31,13 @@ export function LibrarySelectionPage(): React.JSX.Element {
   };
 
   // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth/login");
+    }
+  }, [user, router]);
+
   if (!user) {
-    router.push("/auth/login");
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <p className="text-gray-600">Redirecting to login...</p>

@@ -52,7 +52,9 @@ export function LibraryCard({
     active_members?: number;
   } | null;
 
-  const formatRole = (role: string): string => {
+  const formatRole = (role: string | undefined): string => {
+    if (!role) return "User";
+
     switch (role) {
       case "owner":
         return "Owner";
