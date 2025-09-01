@@ -72,7 +72,7 @@ export function LibrarySelectionGrid({
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-1">
         {libraries.map((library) => (
           <LibraryCard
             key={library.id}

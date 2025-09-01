@@ -896,3 +896,141 @@ _Library Management System CLAUDE.md - Standalone library management application
 - Use playwright mcp for end-to-end testing web app
 - when working with browser or testing the display of web applications, use playwright mcp
 - When building frontend interfaces, prioritize using Shadcn UI components, install if not already present. Use context7 mcp to read the latest Shadcn UI documentation
+
+## UAT (User Acceptance Testing) with Authenticated Users
+
+### Overview
+When executing UAT scenarios that require authenticated users, use Playwright MCP to automate browser interactions with existing test users in the database.
+
+### Prerequisites
+1. **Development server running**: Ensure the app is running on port 3001 (`pnpm dev`)
+2. **Supabase services running**: Database and auth services must be active (`supabase start` from database root)
+3. **Test users available**: Use `supabase mcp` to query existing library staff users
+
+### UAT Execution Steps
+
+#### 1. Find Available Test Users
+```sql
+-- Use supabase mcp to find existing library admins/managers
+SELECT 
+  ls.user_id,
+  ls.role,
+  l.code as library_code,
+  l.name as library_name,
+  au.email
+FROM library_staff ls
+JOIN libraries l ON ls.library_id = l.id
+JOIN auth.users au ON ls.user_id = au.id
+WHERE ls.role IN ('admin', 'manager')
+LIMIT 5;
+```
+
+#### 2. Authentication Flow with Playwright MCP
+```javascript
+// Step 1: Navigate to login page
+mcp__playwright__browser_navigate('http://localhost:3001/auth/login')
+
+// Step 2: Enter email address
+mcp__playwright__browser_type(
+  element: "Email input field",
+  ref: [element_ref],
+  text: "test.user@email.com"
+)
+
+// Step 3: Click Send Verification Code
+mcp__playwright__browser_click(
+  element: "Send Verification Code button",
+  ref: [element_ref]
+)
+
+// Step 4: Open new tab for Mailpit to get OTP
+mcp__playwright__browser_tabs(action: "new")
+mcp__playwright__browser_navigate('http://localhost:54324')
+
+// Step 5: Click on latest email to view OTP code
+mcp__playwright__browser_click(
+  element: "Latest email from user",
+  ref: [element_ref]
+)
+
+// Step 6: Extract OTP from email (visible in email body)
+// OTP format: "Alternatively, enter the code: XXXXXX"
+
+// Step 7: Switch back to login tab
+mcp__playwright__browser_tabs(action: "select", index: 0)
+
+// Step 8: Enter OTP code
+mcp__playwright__browser_type(
+  element: "Verification code input",
+  ref: [element_ref],
+  text: "XXXXXX"  // The 6-digit OTP
+)
+
+// Step 9: Authentication completes automatically
+// User is redirected to library selection page
+```
+
+#### 3. Library Selection and Navigation
+```javascript
+// Select a library (if user has access to multiple)
+mcp__playwright__browser_click(
+  element: "Library card for [Library Name]",
+  ref: [element_ref]
+)
+
+// User is now on dashboard at /[library-code]/dashboard
+```
+
+### Common UAT Scenarios
+
+#### Scenario 1: Test Dashboard Persistence
+1. Authenticate user and select library
+2. Navigate to dashboard (`/CCL-MAIN/dashboard`)
+3. Switch to another browser tab
+4. Return to application tab
+5. Refresh page (`mcp__playwright__browser_evaluate(() => window.location.reload())`)
+6. Verify: Dashboard should remain visible, not redirect to library selection
+
+#### Scenario 2: Test Multi-Library Access
+1. Authenticate as user with multiple library access
+2. Select first library
+3. Perform operations in first library context
+4. Switch to different library (via library selector in header)
+5. Verify: Data and operations are properly scoped to new library
+
+#### Scenario 3: Test Permission-Based Navigation
+1. Authenticate with different user roles (admin, manager, librarian, clerk)
+2. Verify navigation items are filtered based on permissions
+3. Test access restrictions for unauthorized routes
+
+### Important Service URLs for Testing
+
+- **Application**: http://localhost:3001
+- **Mailpit (Email Testing)**: http://localhost:54324
+- **Supabase Studio**: http://localhost:54323
+- **API Gateway**: http://localhost:54321
+
+### Troubleshooting UAT Issues
+
+#### Issue: Cannot receive OTP emails
+- Check Mailpit is running: http://localhost:54324
+- Verify Supabase auth service is active: `supabase status`
+
+#### Issue: Authentication state lost on refresh
+- Verify library context is properly loaded from URL
+- Check localStorage for saved library selection
+- Ensure `withLibraryAccess` HOC is properly implemented
+
+#### Issue: Wrong library context after navigation
+- Clear browser storage and re-authenticate
+- Check library code in URL matches selected library
+- Verify library staff permissions in database
+
+### Best Practices for UAT
+
+1. **Always use existing test users** - Don't create new users during UAT unless testing registration
+2. **Check service status first** - Ensure all required services are running
+3. **Use realistic scenarios** - Test actual library workflows, not just technical features
+4. **Document issues clearly** - Include steps to reproduce, expected vs actual behavior
+5. **Test edge cases** - Multiple tabs, refresh, back button, session timeout
+6. **Verify data isolation** - Ensure library data is properly scoped in multi-tenant environment

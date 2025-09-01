@@ -150,7 +150,7 @@ export function LibraryDashboardSidebar(): React.JSX.Element {
       <SidebarHeader>
         <LibrarySwitcher />
       </SidebarHeader>
-      
+
       <SidebarContent>
         {/* Main Navigation */}
         <SidebarGroup>
@@ -182,10 +182,7 @@ export function LibraryDashboardSidebar(): React.JSX.Element {
             <SidebarMenu>
               {filteredQuickAccess.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={item.title}
-                  >
+                  <SidebarMenuButton asChild tooltip={item.title}>
                     <a href={item.href}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>

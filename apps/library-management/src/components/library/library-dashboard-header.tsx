@@ -42,7 +42,7 @@ export function LibraryDashboardHeader(): React.JSX.Element {
 
     const items: BreadcrumbItem[] = [
       {
-        label: currentLibrary.name,
+        label: "Dashboard",
         href: `/${libraryCode}/dashboard`,
       },
     ];
@@ -51,7 +51,7 @@ export function LibraryDashboardHeader(): React.JSX.Element {
     const sectionLabels: Record<string, string> = {
       dashboard: "Dashboard",
       inventory: "Inventory",
-      members: "Members", 
+      members: "Members",
       circulation: "Circulation",
       reports: "Reports",
       settings: "Settings",
@@ -90,14 +90,18 @@ export function LibraryDashboardHeader(): React.JSX.Element {
       <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
-        
+
         {/* Breadcrumb Navigation */}
         <Breadcrumb>
           <BreadcrumbList>
             {breadcrumbItems.map((item, index) => (
               <React.Fragment key={index}>
-                {index > 0 && <BreadcrumbSeparator className="hidden md:block" />}
-                <BreadcrumbItem className={index === 0 ? "hidden md:block" : ""}>
+                {index > 0 && (
+                  <BreadcrumbSeparator className="hidden md:block" />
+                )}
+                <BreadcrumbItem
+                  className={index === 0 ? "hidden md:block" : ""}
+                >
                   {item.href && index < breadcrumbItems.length - 1 ? (
                     <BreadcrumbLink href={item.href}>
                       {item.label}
@@ -129,16 +133,6 @@ export function LibraryDashboardHeader(): React.JSX.Element {
           <Bell className="h-4 w-4" />
           <span className="sr-only">Notifications</span>
         </Button>
-
-        {/* Library Context Display */}
-        {currentLibrary && (
-          <div className="hidden lg:flex flex-col text-right">
-            <span className="text-sm font-medium">{currentLibrary.name}</span>
-            <span className="text-xs text-muted-foreground capitalize">
-              {currentLibrary.user_role}
-            </span>
-          </div>
-        )}
       </div>
     </header>
   );
