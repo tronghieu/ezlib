@@ -225,9 +225,9 @@ interface LibraryProviderProps {
 
 export function LibraryProvider({
   children,
-}: LibraryProviderProps): JSX.Element {
+}: LibraryProviderProps): React.JSX.Element {
   const [state, dispatch] = useReducer(libraryReducer, initialState);
-  const { user, isLoading: authLoading } = useAuthContext();
+  const { user, loading: authLoading } = useAuthContext();
 
   // Fetch libraries when user authentication changes
   const refreshLibraries = useCallback(async (): Promise<void> => {

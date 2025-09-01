@@ -35,7 +35,7 @@ interface QueryProviderProps {
   children: React.ReactNode;
 }
 
-export function QueryProvider({ children }: QueryProviderProps): JSX.Element {
+export function QueryProvider({ children }: QueryProviderProps): React.JSX.Element {
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );

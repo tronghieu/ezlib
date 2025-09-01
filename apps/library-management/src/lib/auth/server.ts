@@ -20,8 +20,8 @@ import {
 /**
  * Create authenticated Supabase server client
  */
-export function createAuthenticatedClient() {
-  const cookieStore = cookies();
+export async function createAuthenticatedClient() {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,7 +63,7 @@ export interface LibraryStaffData {
  * Get current authenticated user with library access validation
  */
 export async function getAuthenticatedUser(libraryId?: string) {
-  const supabase = createAuthenticatedClient();
+  const supabase = await createAuthenticatedClient();
 
   // Check user authentication
   const {
@@ -123,7 +123,7 @@ export async function getUserPermissionsForLibrary(
   userId: string,
   libraryId: string
 ): Promise<UserPermissions | null> {
-  const supabase = createAuthenticatedClient();
+  const supabase = await createAuthenticatedClient();
 
   try {
     // Attempt to query real database first
@@ -270,13 +270,13 @@ export async function withPermission<T extends any[]>(
  */
 export async function withLibraryScope<T>(
   query: (
-    supabase: ReturnType<typeof createAuthenticatedClient>,
+    supabase: Awaited<ReturnType<typeof createAuthenticatedClient>>,
     libraryId: string
   ) => Promise<T>,
   requiredPermission?: Permission,
   libraryId?: string
 ): Promise<T> {
-  const supabase = createAuthenticatedClient();
+  const supabase = await createAuthenticatedClient();
   const { permissions, staffData } = await requireLibraryAccess(libraryId);
 
   // Check permission if specified
@@ -312,7 +312,7 @@ export async function validateLibraryContext(libraryId: string) {
  * Get user's accessible libraries (for library switching)
  */
 export async function getUserLibraries(userId: string) {
-  const supabase = createAuthenticatedClient();
+  const supabase = await createAuthenticatedClient();
 
   try {
     // Attempt to query real database first

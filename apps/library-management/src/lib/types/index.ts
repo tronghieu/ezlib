@@ -394,7 +394,7 @@ export interface MemberFormData {
     state: string;
     zip_code: string;
   };
-  membership_type: MemberPersonalInfo["membership_type"];
+  membership_type: "adult" | "child" | "senior" | "student";
 }
 
 /**

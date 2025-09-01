@@ -9,7 +9,7 @@ import { useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/lib/contexts/library-context";
-import type { TablesInsert, TablesUpdate } from "@/lib/types";
+import type { TablesInsert, TablesUpdate } from "@/lib/types/database";
 
 // =============================================================================
 // BASE HOOK FOR LIBRARY-SCOPED OPERATIONS

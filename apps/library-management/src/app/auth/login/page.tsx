@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { EmailStep } from "@/components/auth/email-step";
@@ -10,7 +10,7 @@ import { OtpStep } from "@/components/auth/otp-step";
  * Login page component implementing AC2: Login Interface Implementation
  * Provides passwordless email OTP authentication with professional UI
  */
-export default function LoginPage() {
+function LoginPageContent() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -150,18 +150,6 @@ export default function LoginPage() {
     abortControllerRef.current = abortController;
 
     try {
-      // Set timeout for OTP verification (45 seconds - longer than email submission)
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutRef.current = setTimeout(() => {
-          abortController.abort();
-          reject(
-            new Error(
-              "OTP verification timed out. Please check your connection and try again."
-            )
-          );
-        }, 45000);
-      });
-
       logDebug("Attempting OTP verification via Supabase");
 
       // Verify OTP code - use 'email' type for OTP codes from signInWithOtp
@@ -171,14 +159,34 @@ export default function LoginPage() {
         type: "email", // Use 'email' type for OTP verification from signInWithOtp
       });
 
+      // Set up timeout with proper signal handling
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          abortController.abort();
+          reject(new Error("OTP_TIMEOUT"));
+        }, 45000);
+      });
+
       // Race between verification and timeout
-      const { error: verifyError, data } = (await Promise.race([
-        verifyPromise,
-        timeoutPromise,
-      ])) as {
-        error?: { message: string; status?: number };
-        data?: { user?: { id: string; email: string }; session?: unknown };
-      };
+      let result;
+      try {
+        result = await Promise.race([verifyPromise, timeoutPromise]);
+      } catch (raceError) {
+        // Clear timeout on any error
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        
+        if (raceError instanceof Error && raceError.message === "OTP_TIMEOUT") {
+          setError("Verification timed out. Please check your connection and try again.");
+          return;
+        }
+        
+        // Re-throw other errors to be handled by outer catch
+        throw raceError;
+      }
+
+      const { error: verifyError, data } = result;
 
       // Clear timeout if we got here
       if (timeoutRef.current) {
@@ -299,5 +307,23 @@ export default function LoginPage() {
       error={error}
       debugInfo={debugInfo}
     />
+  );
+}
+
+// Loading fallback component
+function LoginPageFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+    </div>
+  );
+}
+
+// Main export wrapped with Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

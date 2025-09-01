@@ -754,4 +754,139 @@ describe("useLibraryData", () => {
       expect(cachedData).toEqual(mockBookCopies);
     });
   });
+
+  // NEW: Critical multi-tenant isolation tests based on QA gaps
+  describe("Multi-tenant Data Isolation (Critical Security Tests)", () => {
+    it("should validate library_id is always included in statistics queries", async () => {
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === "book_copies") {
+          mockSupabase.eq.mockResolvedValueOnce({
+            data: [{ id: "book-1" }, { id: "book-2" }],
+            error: null,
+          });
+        } else if (table === "library_members") {
+          mockSupabase.eq.mockResolvedValueOnce({
+            data: [{ id: "member-1" }],
+            error: null,
+          });
+        } else if (table === "borrowing_transactions") {
+          mockSupabase.is.mockResolvedValueOnce({
+            data: [{ id: "trans-1" }],
+            error: null,
+          });
+        }
+        return mockSupabase;
+      });
+
+      const { result } = renderHook(() => useLibraryStats(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Verify ALL queries include library_id filter
+      expect(mockSupabase.eq).toHaveBeenCalledWith("library_id", "lib-1");
+      expect(mockSupabase.eq).toHaveBeenCalledTimes(3); // books, members, transactions
+    });
+
+    it("should prevent data leakage between libraries", async () => {
+      const library2: LibraryWithAccess = {
+        ...mockLibrary,
+        id: "lib-2",
+        name: "Library 2",
+        code: "TEST-LIB2",
+      };
+
+      mockSupabase.order.mockResolvedValue({
+        data: mockBookCopies,
+        error: null,
+      });
+
+      // Test with first library
+      const { result: result1 } = renderHook(() => useLibraryBooks(), {
+        wrapper: createWrapper({ currentLibrary: mockLibrary }),
+      });
+
+      await waitFor(() => {
+        expect(result1.current.isLoading).toBe(false);
+      });
+
+      expect(mockSupabase.eq).toHaveBeenCalledWith("library_id", "lib-1");
+
+      // Reset mocks
+      jest.clearAllMocks();
+      mockSupabase.order.mockResolvedValue({
+        data: [],
+        error: null,
+      });
+
+      // Test with second library - should use different library_id
+      const { result: result2 } = renderHook(() => useLibraryBooks(), {
+        wrapper: createWrapper({ currentLibrary: library2 }),
+      });
+
+      await waitFor(() => {
+        expect(result2.current.isLoading).toBe(false);
+      });
+
+      expect(mockSupabase.eq).toHaveBeenCalledWith("library_id", "lib-2");
+      expect(mockSupabase.eq).not.toHaveBeenCalledWith("library_id", "lib-1");
+    });
+
+    it("should validate RLS policy enforcement simulation", async () => {
+      // Simulate RLS blocking cross-library access
+      mockSupabase.eq.mockImplementation((field: string, value: string) => {
+        if (field === "library_id" && value !== "lib-1") {
+          mockSupabase.order.mockResolvedValue({
+            data: null,
+            error: { message: "Row Level Security policy violation", code: "42501" },
+          });
+        }
+        return mockSupabase;
+      });
+
+      const unauthorizedLibrary: LibraryWithAccess = {
+        ...mockLibrary,
+        id: "unauthorized-lib",
+        code: "UNAUTH",
+      };
+
+      const { result } = renderHook(() => useLibraryBooks(), {
+        wrapper: createWrapper({ currentLibrary: unauthorizedLibrary }),
+      });
+
+      await waitFor(() => {
+        expect(result.current.error).toBeDefined();
+      });
+
+      expect(result.current.books).toEqual([]);
+      expect(mockSupabase.eq).toHaveBeenCalledWith("library_id", "unauthorized-lib");
+    });
+
+    it("should ensure activity feed respects library boundaries", async () => {
+      mockSupabase.limit.mockResolvedValue({
+        data: mockTransactions,
+        error: null,
+      });
+
+      const { result } = renderHook(() => useLibraryTransactions(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Verify transactions query is scoped to library
+      expect(mockSupabase.eq).toHaveBeenCalledWith("library_id", "lib-1");
+      expect(result.current.transactions).toEqual(mockTransactions);
+
+      // Ensure all returned transactions belong to the correct library
+      result.current.transactions.forEach((transaction) => {
+        expect(transaction.library_id).toBe("lib-1");
+      });
+    });
+  });
 });

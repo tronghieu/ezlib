@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const { data: sessionData, error: sessionError } =
       await supabase.auth.admin.generateLink({
         type: "magiclink",
-        email: user.email,
+        email: user.email!,
       });
 
     if (sessionError) {

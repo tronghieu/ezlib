@@ -14,7 +14,7 @@ import type { LibraryWithAccess } from "@/lib/types";
 
 export function LibrarySelectionPage(): React.JSX.Element {
   const router = useRouter();
-  const { user } = useAuthContext();
+  const { user, loading, isInitialized } = useAuthContext();
   const {
     availableLibraries,
     isLoading: libraryLoading,
@@ -30,13 +30,23 @@ export function LibrarySelectionPage(): React.JSX.Element {
     router.push(`/${library.code}/dashboard`);
   };
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated - but only after auth is initialized
   useEffect(() => {
-    if (!user) {
+    if (isInitialized && !user) {
       router.push("/auth/login");
     }
-  }, [user, router]);
+  }, [user, isInitialized, router]);
 
+  // Show loading state while authentication is initializing
+  if (loading || !isInitialized) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-gray-600">Loading your libraries...</p>
+      </div>
+    );
+  }
+
+  // Show redirect message only after we've confirmed user is not authenticated
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
