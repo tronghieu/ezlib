@@ -3,7 +3,7 @@
  * Comprehensive tests for the main dashboard page component
  */
 
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 
@@ -141,7 +141,9 @@ describe("LibraryDashboardPage", () => {
       render(<LibraryDashboardPage />);
 
       expect(screen.getByText("Welcome back")).toBeInTheDocument();
-      expect(screen.getByText("Here's an overview of your library operations")).toBeInTheDocument();
+      expect(
+        screen.getByText("Here's an overview of your library operations")
+      ).toBeInTheDocument();
     });
 
     it("should render statistics cards with correct values", async () => {
@@ -150,13 +152,13 @@ describe("LibraryDashboardPage", () => {
       await waitFor(() => {
         expect(screen.getByText("Total Books")).toBeInTheDocument();
         expect(screen.getByText("150")).toBeInTheDocument();
-        
+
         expect(screen.getByText("Active Members")).toBeInTheDocument();
         expect(screen.getByText("75")).toBeInTheDocument();
-        
+
         expect(screen.getByText("Checked Out")).toBeInTheDocument();
         expect(screen.getByText("25")).toBeInTheDocument();
-        
+
         expect(screen.getByText("Library Score")).toBeInTheDocument();
         expect(screen.getByText("95%")).toBeInTheDocument();
       });
@@ -192,14 +194,29 @@ describe("LibraryDashboardPage", () => {
       const addBookLink = screen.getByRole("link", { name: /Add Book/i });
       expect(addBookLink).toHaveAttribute("href", "/TEST-LIB/inventory/add");
 
-      const registerMemberLink = screen.getByRole("link", { name: /Register Member/i });
-      expect(registerMemberLink).toHaveAttribute("href", "/TEST-LIB/members/add");
+      const registerMemberLink = screen.getByRole("link", {
+        name: /Register Member/i,
+      });
+      expect(registerMemberLink).toHaveAttribute(
+        "href",
+        "/TEST-LIB/members/add"
+      );
 
-      const quickCheckoutLink = screen.getByRole("link", { name: /Quick Checkout/i });
-      expect(quickCheckoutLink).toHaveAttribute("href", "/TEST-LIB/circulation/checkout");
+      const quickCheckoutLink = screen.getByRole("link", {
+        name: /Quick Checkout/i,
+      });
+      expect(quickCheckoutLink).toHaveAttribute(
+        "href",
+        "/TEST-LIB/circulation/checkout"
+      );
 
-      const returnBooksLink = screen.getByRole("link", { name: /Return Books/i });
-      expect(returnBooksLink).toHaveAttribute("href", "/TEST-LIB/circulation/checkin");
+      const returnBooksLink = screen.getByRole("link", {
+        name: /Return Books/i,
+      });
+      expect(returnBooksLink).toHaveAttribute(
+        "href",
+        "/TEST-LIB/circulation/checkin"
+      );
     });
 
     it("should render recent activity feed", () => {
@@ -209,7 +226,7 @@ describe("LibraryDashboardPage", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
       expect(screen.getByText("checked out")).toBeInTheDocument();
       expect(screen.getByText("The Great Gatsby")).toBeInTheDocument();
-      
+
       expect(screen.getByText("Jane Smith")).toBeInTheDocument();
       expect(screen.getByText("returned")).toBeInTheDocument();
       expect(screen.getByText("1984")).toBeInTheDocument();
@@ -243,25 +260,31 @@ describe("LibraryDashboardPage", () => {
       render(<LibraryDashboardPage />);
 
       expect(screen.getByText("No recent activity")).toBeInTheDocument();
-      expect(screen.getByText("Activity will appear here as operations are performed")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Activity will appear here as operations are performed"
+        )
+      ).toBeInTheDocument();
     });
 
     it("should limit recent activity to 5 items", () => {
-      const manyTransactions = Array(10).fill(null).map((_, i) => ({
-        id: `trans-${i}`,
-        transaction_type: "checkout",
-        created_at: `2024-01-${15 - i}T10:00:00.000Z`,
-        book_copies: {
-          book_editions: {
-            title: `Book ${i}`,
+      const manyTransactions = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          id: `trans-${i}`,
+          transaction_type: "checkout",
+          created_at: `2024-01-${15 - i}T10:00:00.000Z`,
+          book_copies: {
+            book_editions: {
+              title: `Book ${i}`,
+            },
           },
-        },
-        library_members: {
-          personal_info: {
-            full_name: `User ${i}`,
+          library_members: {
+            personal_info: {
+              full_name: `User ${i}`,
+            },
           },
-        },
-      }));
+        }));
 
       mockUseLibraryTransactions.mockReturnValue({
         transactions: manyTransactions,
@@ -344,7 +367,7 @@ describe("LibraryDashboardPage", () => {
       render(<LibraryDashboardPage />);
 
       const buttons = screen.getAllByRole("link");
-      buttons.forEach(button => {
+      buttons.forEach((button) => {
         expect(button).toHaveAccessibleName();
       });
     });

@@ -13,11 +13,15 @@ import { LibraryDashboardHeader } from "../library-dashboard-header";
 jest.mock("next/navigation");
 jest.mock("@/lib/contexts/library-context");
 jest.mock("@/components/ui/sidebar", () => ({
-  SidebarTrigger: () => <button data-testid="sidebar-trigger">Toggle Sidebar</button>,
+  SidebarTrigger: () => (
+    <button data-testid="sidebar-trigger">Toggle Sidebar</button>
+  ),
 }));
 
 const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
-const mockUseLibraryContext = useLibraryContext as jest.MockedFunction<typeof useLibraryContext>;
+const mockUseLibraryContext = useLibraryContext as jest.MockedFunction<
+  typeof useLibraryContext
+>;
 
 const mockLibrary = {
   id: "library-1",
@@ -45,7 +49,7 @@ describe("LibraryDashboardHeader", () => {
   describe("basic rendering", () => {
     it("should render sidebar trigger", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByTestId("sidebar-trigger")).toBeInTheDocument();
@@ -53,23 +57,27 @@ describe("LibraryDashboardHeader", () => {
 
     it("should render header actions", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardHeader />);
 
       // Check for search input (disabled)
-      const searchInput = screen.getByPlaceholderText("Search books, members...");
+      const searchInput = screen.getByPlaceholderText(
+        "Search books, members..."
+      );
       expect(searchInput).toBeInTheDocument();
       expect(searchInput).toBeDisabled();
 
       // Check for notifications button (disabled)
-      const notificationsButton = screen.getByRole("button", { name: /Notifications/i });
+      const notificationsButton = screen.getByRole("button", {
+        name: /Notifications/i,
+      });
       expect(notificationsButton).toBeInTheDocument();
       expect(notificationsButton).toBeDisabled();
     });
 
     it("should display library context information", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -80,7 +88,7 @@ describe("LibraryDashboardHeader", () => {
   describe("breadcrumb navigation", () => {
     it("should show library name for dashboard route", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -88,7 +96,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show inventory breadcrumb", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/inventory");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -97,7 +105,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show members breadcrumb", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/members");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -106,7 +114,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show circulation breadcrumb", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/circulation");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -115,7 +123,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show reports breadcrumb", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/reports");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -124,7 +132,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show settings breadcrumb", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/settings");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -133,7 +141,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show search breadcrumb", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/search");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -142,7 +150,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show nested breadcrumbs for add pages", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/inventory/add");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -152,7 +160,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show nested breadcrumbs for edit pages", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/members/edit");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -162,7 +170,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show circulation subsection breadcrumbs", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/circulation/checkout");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -172,7 +180,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show circulation check-in breadcrumbs", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/circulation/checkin");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -182,7 +190,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show circulation history breadcrumbs", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/circulation/history");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -192,7 +200,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should handle breadcrumbs with proper links", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/inventory/add");
-      
+
       render(<LibraryDashboardHeader />);
 
       // Library name should be a link
@@ -204,7 +212,9 @@ describe("LibraryDashboardHeader", () => {
       expect(inventoryLink).toHaveAttribute("href", "/TEST-LIB/inventory");
 
       // Last breadcrumb item should not be a link
-      expect(screen.queryByRole("link", { name: "Add New" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: "Add New" })
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -220,12 +230,14 @@ describe("LibraryDashboardHeader", () => {
       });
 
       mockUsePathname.mockReturnValue("/some/path");
-      
+
       render(<LibraryDashboardHeader />);
 
       // Should still render basic header structure
       expect(screen.getByTestId("sidebar-trigger")).toBeInTheDocument();
-      expect(screen.getByPlaceholderText("Search books, members...")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Search books, members...")
+      ).toBeInTheDocument();
     });
 
     it("should not show library context information", () => {
@@ -239,7 +251,7 @@ describe("LibraryDashboardHeader", () => {
       });
 
       mockUsePathname.mockReturnValue("/some/path");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.queryByText("Test Library")).not.toBeInTheDocument();
@@ -250,16 +262,18 @@ describe("LibraryDashboardHeader", () => {
   describe("responsive behavior", () => {
     it("should hide search input on mobile", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardHeader />);
 
-      const searchContainer = screen.getByPlaceholderText("Search books, members...").closest("div");
+      const searchContainer = screen
+        .getByPlaceholderText("Search books, members...")
+        .closest("div");
       expect(searchContainer).toHaveClass("hidden", "md:flex");
     });
 
     it("should hide library context on smaller screens", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardHeader />);
 
       const libraryContext = screen.getByText("Test Library").closest("div");
@@ -268,7 +282,7 @@ describe("LibraryDashboardHeader", () => {
 
     it("should show breadcrumb separators conditionally", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/inventory");
-      
+
       render(<LibraryDashboardHeader />);
 
       // Breadcrumb separators should be hidden on mobile
@@ -280,7 +294,7 @@ describe("LibraryDashboardHeader", () => {
   describe("accessibility", () => {
     it("should have proper navigation structure", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/inventory/add");
-      
+
       render(<LibraryDashboardHeader />);
 
       // Should have navigation landmark
@@ -288,27 +302,34 @@ describe("LibraryDashboardHeader", () => {
 
       // Links should have accessible names
       const links = screen.getAllByRole("link");
-      links.forEach(link => {
+      links.forEach((link) => {
         expect(link).toHaveAccessibleName();
       });
     });
 
     it("should have proper button labeling", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardHeader />);
 
-      const notificationsButton = screen.getByRole("button", { name: /Notifications/i });
+      const notificationsButton = screen.getByRole("button", {
+        name: /Notifications/i,
+      });
       expect(notificationsButton).toHaveAccessibleName();
     });
 
     it("should have proper input labeling", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardHeader />);
 
-      const searchInput = screen.getByPlaceholderText("Search books, members...");
-      expect(searchInput).toHaveAttribute("placeholder", "Search books, members...");
+      const searchInput = screen.getByPlaceholderText(
+        "Search books, members..."
+      );
+      expect(searchInput).toHaveAttribute(
+        "placeholder",
+        "Search books, members..."
+      );
     });
   });
 
@@ -321,7 +342,7 @@ describe("LibraryDashboardHeader", () => {
       };
 
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       const { rerender } = render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("Test Library")).toBeInTheDocument();
@@ -361,7 +382,7 @@ describe("LibraryDashboardHeader", () => {
       });
 
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardHeader />);
 
       expect(screen.getByText("admin")).toBeInTheDocument();

@@ -23,9 +23,7 @@ function LibraryLayout({ children }: LibraryLayoutProps): React.JSX.Element {
         <LibraryDashboardSidebar />
         <SidebarInset>
           <LibraryDashboardHeader />
-          <main className="flex-1 overflow-auto p-4 md:p-6">
-            {children}
-          </main>
+          <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </div>

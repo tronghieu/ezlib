@@ -279,7 +279,7 @@ export function LibraryProvider({
   // Initialize libraries when user authentication is ready
   // Track if libraries have been initialized to prevent re-fetching
   const [hasInitialized, setHasInitialized] = React.useState(false);
-  
+
   useEffect(() => {
     if (!authLoading) {
       if (user && !hasInitialized) {
@@ -392,30 +392,35 @@ export function withLibraryAccess<P extends object>(
   const { requireLibrarySelection = true, redirectTo = "/" } = options;
 
   return function WrappedComponent(props: P) {
-    const { 
-      currentLibrary, 
-      availableLibraries, 
-      isLoading, 
-      error, 
-      selectLibrary 
+    const {
+      currentLibrary,
+      availableLibraries,
+      isLoading,
+      error,
+      selectLibrary,
     } = useLibraryContext();
 
     // Try to get library code from URL path
     const hasSelectedRef = React.useRef(false);
-    
+
     React.useEffect(() => {
-      if (!currentLibrary && !isLoading && availableLibraries.length > 0 && !hasSelectedRef.current) {
+      if (
+        !currentLibrary &&
+        !isLoading &&
+        availableLibraries.length > 0 &&
+        !hasSelectedRef.current
+      ) {
         // Extract library code from URL path (e.g., /CCL-MAIN/dashboard -> CCL-MAIN)
         if (typeof window !== "undefined") {
-          const pathSegments = window.location.pathname.split('/');
+          const pathSegments = window.location.pathname.split("/");
           const libraryCode = pathSegments[1]; // First segment after root
-          
+
           if (libraryCode) {
             // Find library by code
             const libraryByCode = availableLibraries.find(
-              lib => lib.code === libraryCode
+              (lib) => lib.code === libraryCode
             );
-            
+
             if (libraryByCode) {
               // Auto-select the library from URL
               hasSelectedRef.current = true;
@@ -449,14 +454,17 @@ export function withLibraryAccess<P extends object>(
 
     if (requireLibrarySelection && !currentLibrary) {
       // Check if we're waiting for library to be selected from URL
-      const pathSegments = typeof window !== "undefined" 
-        ? window.location.pathname.split('/') 
-        : [];
+      const pathSegments =
+        typeof window !== "undefined"
+          ? window.location.pathname.split("/")
+          : [];
       const libraryCode = pathSegments[1];
-      
+
       // If there's a library code in URL and libraries are loaded, wait a bit more
       if (libraryCode && availableLibraries.length > 0) {
-        const matchingLibrary = availableLibraries.find(lib => lib.code === libraryCode);
+        const matchingLibrary = availableLibraries.find(
+          (lib) => lib.code === libraryCode
+        );
         if (matchingLibrary) {
           // Library exists but not selected yet, show loading
           return (
@@ -466,7 +474,7 @@ export function withLibraryAccess<P extends object>(
           );
         }
       }
-      
+
       // Redirect to library selection page
       if (typeof window !== "undefined") {
         window.location.href = redirectTo;

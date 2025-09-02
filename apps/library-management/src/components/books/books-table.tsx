@@ -68,12 +68,7 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   // Data fetching
-  const {
-    books,
-    isLoading,
-    error,
-    totalCount,
-  } = useBooks({
+  const { books, isLoading, error, totalCount } = useBooks({
     page: currentPage,
     pageSize,
     sortBy: sortField,
@@ -87,7 +82,9 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
 
   // Use search results if searching, otherwise use paginated books
   const displayBooks = searchQuery.length > 0 ? searchResults : books;
-  const totalPages = Math.ceil((searchQuery.length > 0 ? searchResults.length : totalCount) / pageSize);
+  const totalPages = Math.ceil(
+    (searchQuery.length > 0 ? searchResults.length : totalCount) / pageSize
+  );
 
   // Pagination helpers
   const canGoPrevious = currentPage > 1;
@@ -161,7 +158,7 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
             className="pl-9"
           />
         </div>
-        
+
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Rows per page:</span>
           <Select
@@ -231,7 +228,9 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
                 <TableCell colSpan={6} className="text-center py-8">
                   {searchQuery.length > 0 ? (
                     <div>
-                      <p className="text-muted-foreground">No books found for &quot;{searchQuery}&quot;</p>
+                      <p className="text-muted-foreground">
+                        No books found for &quot;{searchQuery}&quot;
+                      </p>
                       <Button
                         variant="link"
                         onClick={() => setSearchQuery("")}
@@ -242,7 +241,9 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
                     </div>
                   ) : (
                     <div>
-                      <p className="text-muted-foreground">No books in inventory</p>
+                      <p className="text-muted-foreground">
+                        No books in inventory
+                      </p>
                       <p className="text-sm text-muted-foreground mt-1">
                         Get started by adding your first book
                       </p>
@@ -257,7 +258,9 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
                   <TableCell>{book.author}</TableCell>
                   <TableCell>{book.publisher || "—"}</TableCell>
                   <TableCell>{book.publicationYear || "—"}</TableCell>
-                  <TableCell className="font-mono text-sm">{book.isbn || "—"}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {book.isbn || "—"}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge
                       status={book.status}
@@ -275,11 +278,15 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
       {totalPages > 1 && (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing {((currentPage - 1) * pageSize) + 1} to{" "}
-            {Math.min(currentPage * pageSize, searchQuery.length > 0 ? searchResults.length : totalCount)}{" "}
-            of {searchQuery.length > 0 ? searchResults.length : totalCount} books
+            Showing {(currentPage - 1) * pageSize + 1} to{" "}
+            {Math.min(
+              currentPage * pageSize,
+              searchQuery.length > 0 ? searchResults.length : totalCount
+            )}{" "}
+            of {searchQuery.length > 0 ? searchResults.length : totalCount}{" "}
+            books
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -297,14 +304,14 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            
+
             {/* Page numbers */}
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const startPage = Math.max(1, currentPage - 2);
                 const pageNum = startPage + i;
                 if (pageNum > totalPages) return null;
-                
+
                 return (
                   <Button
                     key={pageNum}
@@ -318,7 +325,7 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
                 );
               })}
             </div>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -349,7 +356,7 @@ interface StatusBadgeProps {
 
 function StatusBadge({ status, count }: StatusBadgeProps): React.JSX.Element {
   const isAvailable = status === "available";
-  
+
   return (
     <Badge
       variant={isAvailable ? "default" : "destructive"}

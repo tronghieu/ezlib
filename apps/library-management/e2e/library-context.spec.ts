@@ -517,41 +517,51 @@ test.describe("Dashboard Responsive Design Validation", () => {
     test.describe(`${device.toUpperCase()} (${viewport.width}x${viewport.height})`, () => {
       test.use({ viewport });
 
-      test(`should display dashboard properly on ${device}`, async ({ page }) => {
+      test(`should display dashboard properly on ${device}`, async ({
+        page,
+      }) => {
         await authenticateUser(page, TEST_USER.email);
-        
+
         // Select a library
         await page.locator('[data-testid^="library-card-"]').first().click();
         await page.waitForURL(/dashboard/);
 
         // Verify dashboard layout
         await expect(page.getByTestId("dashboard-container")).toBeVisible();
-        
+
         if (device === "mobile") {
           // Mobile: Single column layout
           const statsGrid = page.getByTestId("stats-grid");
           const gridCols = await statsGrid.evaluate((el) =>
-            window.getComputedStyle(el).getPropertyValue("grid-template-columns")
+            window
+              .getComputedStyle(el)
+              .getPropertyValue("grid-template-columns")
           );
           expect(gridCols).toMatch(/repeat\(1,|1fr/); // Single column
         } else if (device === "tablet") {
           // Tablet: 2-column layout for stats
           const statsGrid = page.getByTestId("stats-grid");
           const gridCols = await statsGrid.evaluate((el) =>
-            window.getComputedStyle(el).getPropertyValue("grid-template-columns")
+            window
+              .getComputedStyle(el)
+              .getPropertyValue("grid-template-columns")
           );
           expect(gridCols).toMatch(/repeat\(2,|fr.*fr/); // Two columns
         } else if (device === "desktop") {
           // Desktop: 4-column layout for stats
           const statsGrid = page.getByTestId("stats-grid");
           const gridCols = await statsGrid.evaluate((el) =>
-            window.getComputedStyle(el).getPropertyValue("grid-template-columns")
+            window
+              .getComputedStyle(el)
+              .getPropertyValue("grid-template-columns")
           );
           expect(gridCols).toMatch(/repeat\(4,|fr.*fr.*fr.*fr/); // Four columns
         }
       });
 
-      test(`should handle navigation properly on ${device}`, async ({ page }) => {
+      test(`should handle navigation properly on ${device}`, async ({
+        page,
+      }) => {
         await authenticateUser(page, TEST_USER.email);
         await page.locator('[data-testid^="library-card-"]').first().click();
         await page.waitForURL(/dashboard/);
@@ -560,27 +570,34 @@ test.describe("Dashboard Responsive Design Validation", () => {
           // Mobile: Navigation should be collapsible/hamburger
           const sidebarTrigger = page.getByTestId("sidebar-trigger");
           await expect(sidebarTrigger).toBeVisible();
-          
+
           // Click to open sidebar
           await sidebarTrigger.click();
           await expect(page.getByTestId("sidebar-nav")).toBeVisible();
-          
+
           // Should close when clicking outside
           await page.click('[data-testid="main-content"]');
           await expect(page.getByTestId("sidebar-nav")).not.toBeVisible();
-          
         } else {
           // Tablet/Desktop: Sidebar should be visible by default
           await expect(page.getByTestId("sidebar-nav")).toBeVisible();
-          
+
           // Navigation items should be accessible
-          await expect(page.getByRole("link", { name: /dashboard/i })).toBeVisible();
-          await expect(page.getByRole("link", { name: /inventory/i })).toBeVisible();
-          await expect(page.getByRole("link", { name: /members/i })).toBeVisible();
+          await expect(
+            page.getByRole("link", { name: /dashboard/i })
+          ).toBeVisible();
+          await expect(
+            page.getByRole("link", { name: /inventory/i })
+          ).toBeVisible();
+          await expect(
+            page.getByRole("link", { name: /members/i })
+          ).toBeVisible();
         }
       });
 
-      test(`should have proper touch targets on ${device}`, async ({ page }) => {
+      test(`should have proper touch targets on ${device}`, async ({
+        page,
+      }) => {
         await authenticateUser(page, TEST_USER.email);
         await page.locator('[data-testid^="library-card-"]').first().click();
         await page.waitForURL(/dashboard/);
@@ -589,15 +606,15 @@ test.describe("Dashboard Responsive Design Validation", () => {
           // Touch devices: Check minimum 44px touch targets
           const quickActions = page.locator('[data-testid^="quick-action-"]');
           const actionCount = await quickActions.count();
-          
+
           for (let i = 0; i < actionCount; i++) {
             const action = quickActions.nth(i);
             const box = await action.boundingBox();
-            
+
             expect(box?.height).toBeGreaterThanOrEqual(44);
             expect(box?.width).toBeGreaterThanOrEqual(44);
           }
-          
+
           // Library switcher should also meet touch target requirements
           const switcher = page.getByTestId("library-switcher");
           const switcherBox = await switcher.boundingBox();

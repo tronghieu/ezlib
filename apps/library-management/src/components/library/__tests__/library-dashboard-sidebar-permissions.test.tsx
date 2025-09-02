@@ -294,11 +294,19 @@ describe("Permission-based Navigation Tests", () => {
       const addBookLink = screen.getByText("Add Book").closest("a");
       expect(addBookLink).toHaveAttribute("href", "/TEST-LIB/inventory/add");
 
-      const registerMemberLink = screen.getByText("Register Member").closest("a");
-      expect(registerMemberLink).toHaveAttribute("href", "/TEST-LIB/members/add");
+      const registerMemberLink = screen
+        .getByText("Register Member")
+        .closest("a");
+      expect(registerMemberLink).toHaveAttribute(
+        "href",
+        "/TEST-LIB/members/add"
+      );
 
       const checkoutLink = screen.getByText("Quick Checkout").closest("a");
-      expect(checkoutLink).toHaveAttribute("href", "/TEST-LIB/circulation/checkout");
+      expect(checkoutLink).toHaveAttribute(
+        "href",
+        "/TEST-LIB/circulation/checkout"
+      );
     });
   });
 
@@ -333,7 +341,7 @@ describe("Permission-based Navigation Tests", () => {
       // Should handle mixed permissions appropriately
       expect(screen.getByText("Dashboard")).toBeInTheDocument();
       expect(screen.getByText("Inventory")).toBeInTheDocument();
-      
+
       // Members section should be hidden due to no members.view permission
       expect(screen.queryByText("Members")).not.toBeInTheDocument();
     });
@@ -353,7 +361,7 @@ describe("Permission-based Navigation Tests", () => {
 
       // Links should have proper accessibility
       const links = screen.getAllByRole("link");
-      links.forEach(link => {
+      links.forEach((link) => {
         expect(link).toHaveAttribute("href");
         expect(link.textContent).toBeTruthy();
       });

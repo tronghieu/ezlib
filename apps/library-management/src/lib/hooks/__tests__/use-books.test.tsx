@@ -17,8 +17,12 @@ jest.mock("../use-debounce", () => ({
   useDebounce: (value: unknown) => value, // Return value immediately for tests
 }));
 
-const mockUseLibraryContext = useLibraryContext as jest.MockedFunction<typeof useLibraryContext>;
-const mockCreateClient = createClient as jest.MockedFunction<typeof createClient>;
+const mockUseLibraryContext = useLibraryContext as jest.MockedFunction<
+  typeof useLibraryContext
+>;
+const mockCreateClient = createClient as jest.MockedFunction<
+  typeof createClient
+>;
 
 const mockSupabaseClient = {
   from: jest.fn(),
@@ -52,7 +56,7 @@ function createWrapper() {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  Wrapper.displayName = 'TestWrapper';
+  Wrapper.displayName = "TestWrapper";
   return Wrapper;
 }
 
@@ -62,7 +66,7 @@ describe("useBooks", () => {
     mockUseLibraryContext.mockReturnValue({
       currentLibrary: {
         id: "lib-1",
-        code: "test-lib", 
+        code: "test-lib",
         name: "Test Library",
         address: {},
         contact_info: {},
@@ -74,8 +78,10 @@ describe("useBooks", () => {
     });
 
     // Mock Supabase client
-    mockCreateClient.mockReturnValue(mockSupabaseClient as ReturnType<typeof createClient>);
-    
+    mockCreateClient.mockReturnValue(
+      mockSupabaseClient as ReturnType<typeof createClient>
+    );
+
     // Setup query chain
     mockSupabaseClient.from.mockReturnValue(mockQuery);
     mockQuery.select.mockReturnValue(mockQuery);
@@ -338,12 +344,14 @@ describe("useBookSearch", () => {
         contact_info: {},
         settings: {},
         stats: {},
-        status: "active", 
+        status: "active",
         created_at: "2023-01-01",
       },
     });
 
-    mockCreateClient.mockReturnValue(mockSupabaseClient as ReturnType<typeof createClient>);
+    mockCreateClient.mockReturnValue(
+      mockSupabaseClient as ReturnType<typeof createClient>
+    );
     mockSupabaseClient.from.mockReturnValue(mockQuery as MockQuery);
     mockQuery.select.mockReturnValue(mockQuery as MockQuery);
     mockQuery.eq.mockReturnValue(mockQuery as MockQuery);

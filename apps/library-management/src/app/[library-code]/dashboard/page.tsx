@@ -7,16 +7,29 @@
 
 import React from "react";
 import { useLibraryContext } from "@/lib/contexts/library-context";
-import { useLibraryStats, useLibraryTransactions } from "@/lib/hooks/use-library-data";
+import {
+  useLibraryStats,
+  useLibraryTransactions,
+} from "@/lib/hooks/use-library-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Book, Users, ArrowRightLeft, TrendingUp, Plus, UserPlus, Scan, Clock } from "lucide-react";
+import {
+  Book,
+  Users,
+  ArrowRightLeft,
+  TrendingUp,
+  Plus,
+  UserPlus,
+  Scan,
+  Clock,
+} from "lucide-react";
 import type { Json } from "@/lib/types/database";
 
 export default function LibraryDashboardPage(): React.JSX.Element {
   const { currentLibrary } = useLibraryContext();
   const { stats, isLoading: statsLoading } = useLibraryStats();
-  const { transactions, isLoading: transactionsLoading } = useLibraryTransactions();
+  const { transactions, isLoading: transactionsLoading } =
+    useLibraryTransactions();
 
   if (!currentLibrary) {
     return (
@@ -33,9 +46,7 @@ export default function LibraryDashboardPage(): React.JSX.Element {
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
         <p className="text-muted-foreground">
           Here&apos;s an overview of your library operations
         </p>
@@ -152,7 +163,9 @@ export default function LibraryDashboardPage(): React.JSX.Element {
                 <div className="text-center py-6 text-muted-foreground">
                   <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>No recent activity</p>
-                  <p className="text-sm">Activity will appear here as operations are performed</p>
+                  <p className="text-sm">
+                    Activity will appear here as operations are performed
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -182,9 +195,7 @@ function StatsCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
-          {title}
-        </CardTitle>
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <div className="text-muted-foreground">{icon}</div>
       </CardHeader>
       <CardContent>
@@ -217,11 +228,7 @@ function QuickActionButton({
   icon,
 }: QuickActionButtonProps) {
   return (
-    <Button
-      variant="ghost"
-      className="w-full justify-start h-auto p-4"
-      asChild
-    >
+    <Button variant="ghost" className="w-full justify-start h-auto p-4" asChild>
       <a href={href}>
         <div className="flex items-start gap-3 text-left">
           <div className="mt-0.5 text-muted-foreground">{icon}</div>
@@ -253,23 +260,33 @@ interface RecentActivityItemProps {
 
 function RecentActivityItem({ transaction }: RecentActivityItemProps) {
   const getTransactionDisplay = () => {
-    const bookTitle = transaction.book_copies?.book_editions?.title || "Unknown Book";
+    const bookTitle =
+      transaction.book_copies?.book_editions?.title || "Unknown Book";
     const memberInfo = transaction.library_members?.personal_info;
-    
+
     // Safely extract member name from Json type
     let memberName = "Unknown Member";
-    if (memberInfo && typeof memberInfo === "object" && !Array.isArray(memberInfo) && memberInfo !== null) {
+    if (
+      memberInfo &&
+      typeof memberInfo === "object" &&
+      !Array.isArray(memberInfo) &&
+      memberInfo !== null
+    ) {
       const info = memberInfo as { full_name?: string; first_name?: string };
       memberName = info.full_name || info.first_name || "Unknown Member";
     }
-    
+
     const isCheckout = transaction.transaction_type === "checkout";
-    
+
     return {
       action: isCheckout ? "checked out" : "returned",
       member: memberName,
       book: bookTitle,
-      icon: isCheckout ? <ArrowRightLeft className="h-4 w-4" /> : <Book className="h-4 w-4" />,
+      icon: isCheckout ? (
+        <ArrowRightLeft className="h-4 w-4" />
+      ) : (
+        <Book className="h-4 w-4" />
+      ),
       time: new Date(transaction.created_at).toLocaleDateString(),
     };
   };
@@ -281,8 +298,7 @@ function RecentActivityItem({ transaction }: RecentActivityItemProps) {
       <div className="mt-1 text-muted-foreground">{display.icon}</div>
       <div className="flex-1 min-w-0">
         <p className="text-sm">
-          <span className="font-medium">{display.member}</span>{" "}
-          {display.action}{" "}
+          <span className="font-medium">{display.member}</span> {display.action}{" "}
           <span className="font-medium">{display.book}</span>
         </p>
         <p className="text-xs text-muted-foreground">{display.time}</p>

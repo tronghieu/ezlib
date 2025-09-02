@@ -1,4 +1,4 @@
-import type { defaultLocale } from '@/i18n/config';
+import type { defaultLocale } from "@/i18n/config";
 
 export type LocaleLayoutProps = {
   children: React.ReactNode;
@@ -17,18 +17,19 @@ export type LocaleMessages = {
 
 // Utility type for nested translation keys (simplified to avoid circular reference)
 export type NestedKeyOf<ObjectType extends object> = {
-  [Key in keyof ObjectType]: ObjectType[Key] extends object
-    ? Key
-    : Key;
+  [Key in keyof ObjectType]: ObjectType[Key] extends object ? Key : Key;
 }[keyof ObjectType] &
   string;
 
 // Type for translation function parameters
-export type TranslationValues = Record<string, string | number | boolean | null | undefined>;
+export type TranslationValues = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
 
 // Type for locale-specific formatting options
 export type LocaleFormatOptions = {
-  locale: typeof defaultLocale | 'vi';
+  locale: typeof defaultLocale | "vi";
   timeZone: string;
-  currency: 'USD' | 'VND';
+  currency: "USD" | "VND";
 };

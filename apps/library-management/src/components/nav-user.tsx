@@ -17,11 +17,7 @@ import {
   User,
   Library,
 } from "lucide-react";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,7 +69,8 @@ export function NavUser(): React.JSX.Element {
       .slice(0, 2);
   };
 
-  const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+  const displayName =
+    user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
   const userInitials = getUserInitials(displayName);
 
   return (

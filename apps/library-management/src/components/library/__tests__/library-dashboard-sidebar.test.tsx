@@ -18,11 +18,15 @@ jest.mock("@/components/nav-user", () => ({
   NavUser: () => <div data-testid="nav-user">Nav User</div>,
 }));
 jest.mock("@/components/library/library-switcher", () => ({
-  LibrarySwitcher: () => <div data-testid="library-switcher">Library Switcher</div>,
+  LibrarySwitcher: () => (
+    <div data-testid="library-switcher">Library Switcher</div>
+  ),
 }));
 
 const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
-const mockUseLibraryContext = useLibraryContext as jest.MockedFunction<typeof useLibraryContext>;
+const mockUseLibraryContext = useLibraryContext as jest.MockedFunction<
+  typeof useLibraryContext
+>;
 const mockUseSidebar = useSidebar as jest.MockedFunction<typeof useSidebar>;
 
 const mockLibrary = {
@@ -53,7 +57,7 @@ describe("LibraryDashboardSidebar", () => {
   describe("when library is selected", () => {
     it("should render sidebar header with library switcher", () => {
       render(<LibraryDashboardSidebar />);
-      
+
       expect(screen.getByTestId("library-switcher")).toBeInTheDocument();
     });
 
@@ -80,7 +84,9 @@ describe("LibraryDashboardSidebar", () => {
       const membersLink = screen.getByRole("link", { name: /Members/i });
       expect(membersLink).toHaveAttribute("href", "/TEST-LIB/members");
 
-      const circulationLink = screen.getByRole("link", { name: /Circulation/i });
+      const circulationLink = screen.getByRole("link", {
+        name: /Circulation/i,
+      });
       expect(circulationLink).toHaveAttribute("href", "/TEST-LIB/circulation");
 
       const reportsLink = screen.getByRole("link", { name: /Reports/i });
@@ -106,18 +112,28 @@ describe("LibraryDashboardSidebar", () => {
       const addBookLink = screen.getByRole("link", { name: /Add Book/i });
       expect(addBookLink).toHaveAttribute("href", "/TEST-LIB/inventory/add");
 
-      const registerMemberLink = screen.getByRole("link", { name: /Register Member/i });
-      expect(registerMemberLink).toHaveAttribute("href", "/TEST-LIB/members/add");
+      const registerMemberLink = screen.getByRole("link", {
+        name: /Register Member/i,
+      });
+      expect(registerMemberLink).toHaveAttribute(
+        "href",
+        "/TEST-LIB/members/add"
+      );
 
-      const quickCheckoutLink = screen.getByRole("link", { name: /Quick Checkout/i });
-      expect(quickCheckoutLink).toHaveAttribute("href", "/TEST-LIB/circulation/checkout");
+      const quickCheckoutLink = screen.getByRole("link", {
+        name: /Quick Checkout/i,
+      });
+      expect(quickCheckoutLink).toHaveAttribute(
+        "href",
+        "/TEST-LIB/circulation/checkout"
+      );
     });
 
     it("should render settings section", () => {
       render(<LibraryDashboardSidebar />);
 
       expect(screen.getByText("Settings")).toBeInTheDocument();
-      
+
       const settingsLink = screen.getByRole("link", { name: /Settings/i });
       expect(settingsLink).toHaveAttribute("href", "/TEST-LIB/settings");
     });
@@ -130,7 +146,7 @@ describe("LibraryDashboardSidebar", () => {
 
     it("should highlight active navigation item", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
-      
+
       render(<LibraryDashboardSidebar />);
 
       // Check that the dashboard link is active
@@ -140,7 +156,7 @@ describe("LibraryDashboardSidebar", () => {
 
     it("should highlight different active navigation item", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/inventory");
-      
+
       render(<LibraryDashboardSidebar />);
 
       // Check that inventory section would be highlighted
@@ -175,7 +191,7 @@ describe("LibraryDashboardSidebar", () => {
       expect(links.length).toBeGreaterThan(0);
 
       // Each link should have accessible name
-      links.forEach(link => {
+      links.forEach((link) => {
         expect(link).toHaveAccessibleName();
       });
     });
@@ -200,7 +216,7 @@ describe("LibraryDashboardSidebar", () => {
 
     it("should handle collapsed sidebar state", () => {
       mockUseSidebar.mockReturnValue({ open: false });
-      
+
       render(<LibraryDashboardSidebar />);
 
       // Should still render main elements

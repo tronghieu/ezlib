@@ -19,7 +19,9 @@ jest.mock("@/lib/contexts/library-context", () => ({
 }));
 
 const mockUseBooks = useBooks as jest.MockedFunction<typeof useBooks>;
-const mockUseBookSearch = useBookSearch as jest.MockedFunction<typeof useBookSearch>;
+const mockUseBookSearch = useBookSearch as jest.MockedFunction<
+  typeof useBookSearch
+>;
 
 const mockBooks: BookWithDetails[] = [
   {
@@ -31,12 +33,12 @@ const mockBooks: BookWithDetails[] = [
     isbn: "978-0123456789",
     status: "available",
     availability: { status: "available", count: 1 },
-    book_copy: {} as BookWithDetails['book_copy'],
-    book_edition: {} as BookWithDetails['book_edition'],
-    general_book: {} as BookWithDetails['general_book'],
+    book_copy: {} as BookWithDetails["book_copy"],
+    book_edition: {} as BookWithDetails["book_edition"],
+    general_book: {} as BookWithDetails["general_book"],
   },
   {
-    id: "book-2", 
+    id: "book-2",
     title: "Another Book",
     author: "Another Author",
     publisher: "Another Publisher",
@@ -44,9 +46,9 @@ const mockBooks: BookWithDetails[] = [
     isbn: "978-0987654321",
     status: "checked_out",
     availability: { status: "checked_out", count: 0 },
-    book_copy: {} as BookWithDetails['book_copy'],
-    book_edition: {} as BookWithDetails['book_edition'],
-    general_book: {} as BookWithDetails['general_book'],
+    book_copy: {} as BookWithDetails["book_copy"],
+    book_edition: {} as BookWithDetails["book_edition"],
+    general_book: {} as BookWithDetails["general_book"],
   },
 ];
 
@@ -109,7 +111,7 @@ describe("BooksTable", () => {
       // Status badges should be present (implementation uses StatusBadge component)
       const table = screen.getByRole("table");
       expect(table).toBeInTheDocument();
-      
+
       // The badges exist but testing their exact text requires the data to be fully mocked
       // which is complex with the current component structure that uses actual hooks
       const tableCells = screen.getAllByRole("cell");
@@ -119,7 +121,9 @@ describe("BooksTable", () => {
     it("should render search input", () => {
       renderBooksTable();
 
-      const searchInput = screen.getByPlaceholderText("Search books by title or author...");
+      const searchInput = screen.getByPlaceholderText(
+        "Search books by title or author..."
+      );
       expect(searchInput).toBeInTheDocument();
     });
   });
@@ -151,9 +155,11 @@ describe("BooksTable", () => {
       renderBooksTable();
 
       // Enter search query to trigger search state
-      const searchInput = screen.getByPlaceholderText("Search books by title or author...");
+      const searchInput = screen.getByPlaceholderText(
+        "Search books by title or author..."
+      );
       fireEvent.change(searchInput, { target: { value: "test" } });
-      
+
       // Should show loading state
       expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
     });
@@ -186,7 +192,7 @@ describe("BooksTable", () => {
 
       const retryButton = screen.getByText("Try Again");
       expect(retryButton).toBeInTheDocument();
-      
+
       // The retry functionality exists and is working
       // Detailed testing of window.location.reload is complex in Jest
       // but the button is properly rendered and accessible
@@ -197,7 +203,9 @@ describe("BooksTable", () => {
     it("should update search input value", async () => {
       renderBooksTable();
 
-      const searchInput = screen.getByPlaceholderText("Search books by title or author...");
+      const searchInput = screen.getByPlaceholderText(
+        "Search books by title or author..."
+      );
       fireEvent.change(searchInput, { target: { value: "test query" } });
 
       expect(searchInput).toHaveValue("test query");
@@ -214,9 +222,9 @@ describe("BooksTable", () => {
           isbn: "978-1111111111",
           status: "available",
           availability: { status: "available", count: 1 },
-          book_copy: {} as BookWithDetails['book_copy'],
-          book_edition: {} as BookWithDetails['book_edition'],
-          general_book: {} as BookWithDetails['general_book'],
+          book_copy: {} as BookWithDetails["book_copy"],
+          book_edition: {} as BookWithDetails["book_edition"],
+          general_book: {} as BookWithDetails["general_book"],
         },
       ];
 
@@ -229,7 +237,9 @@ describe("BooksTable", () => {
       renderBooksTable();
 
       // Enter search query
-      const searchInput = screen.getByPlaceholderText("Search books by title or author...");
+      const searchInput = screen.getByPlaceholderText(
+        "Search books by title or author..."
+      );
       fireEvent.change(searchInput, { target: { value: "search" } });
 
       // Should show search results instead of regular books
@@ -247,7 +257,9 @@ describe("BooksTable", () => {
 
       renderBooksTable();
 
-      const searchInput = screen.getByPlaceholderText("Search books by title or author...");
+      const searchInput = screen.getByPlaceholderText(
+        "Search books by title or author..."
+      );
       fireEvent.change(searchInput, { target: { value: "nonexistent" } });
 
       expect(screen.getByText(/No books found for/)).toBeInTheDocument();
@@ -294,19 +306,25 @@ describe("BooksTable", () => {
 
     it("should show pagination controls when there are multiple pages", () => {
       // Create enough mock books to fill more than one page
-      const manyBooks: BookWithDetails[] = Array.from({ length: 60 }, (_, i) => ({
-        id: `book-${i}`,
-        title: `Book ${i}`,
-        author: `Author ${i}`,
-        publisher: `Publisher ${i}`,
-        publicationYear: 2020 + i,
-        isbn: `978-${i.toString().padStart(10, '0')}`,
-        status: i % 2 === 0 ? "available" : "checked_out",
-        availability: { status: i % 2 === 0 ? "available" : "checked_out", count: i % 2 === 0 ? 1 : 0 },
-        book_copy: {} as BookWithDetails['book_copy'],
-        book_edition: {} as BookWithDetails['book_edition'],
-        general_book: {} as BookWithDetails['general_book'],
-      }));
+      const manyBooks: BookWithDetails[] = Array.from(
+        { length: 60 },
+        (_, i) => ({
+          id: `book-${i}`,
+          title: `Book ${i}`,
+          author: `Author ${i}`,
+          publisher: `Publisher ${i}`,
+          publicationYear: 2020 + i,
+          isbn: `978-${i.toString().padStart(10, "0")}`,
+          status: i % 2 === 0 ? "available" : "checked_out",
+          availability: {
+            status: i % 2 === 0 ? "available" : "checked_out",
+            count: i % 2 === 0 ? 1 : 0,
+          },
+          book_copy: {} as BookWithDetails["book_copy"],
+          book_edition: {} as BookWithDetails["book_edition"],
+          general_book: {} as BookWithDetails["general_book"],
+        })
+      );
 
       mockUseBooks.mockReturnValue({
         books: manyBooks,
@@ -314,12 +332,14 @@ describe("BooksTable", () => {
         isLoading: false,
         error: null,
       });
-      
+
       renderBooksTable();
 
       // With 120 total and 50 per page, should show pagination
-      expect(screen.getByText(/Showing \d+ to \d+ of 120 books/)).toBeInTheDocument();
-      
+      expect(
+        screen.getByText(/Showing \d+ to \d+ of 120 books/)
+      ).toBeInTheDocument();
+
       // Should have navigation buttons (at least 2 sort buttons + several pagination buttons)
       const paginationButtons = screen.getAllByRole("button");
       expect(paginationButtons.length).toBeGreaterThan(4);
@@ -345,7 +365,9 @@ describe("BooksTable", () => {
       renderBooksTable();
 
       expect(screen.getByText("No books in inventory")).toBeInTheDocument();
-      expect(screen.getByText("Get started by adding your first book")).toBeInTheDocument();
+      expect(
+        screen.getByText("Get started by adding your first book")
+      ).toBeInTheDocument();
     });
   });
 
@@ -353,7 +375,9 @@ describe("BooksTable", () => {
     it("should have proper ARIA labels for interactive elements", () => {
       renderBooksTable();
 
-      const searchInput = screen.getByPlaceholderText("Search books by title or author...");
+      const searchInput = screen.getByPlaceholderText(
+        "Search books by title or author..."
+      );
       expect(searchInput).toBeInTheDocument();
 
       // Sort buttons should be accessible

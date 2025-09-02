@@ -19,7 +19,8 @@ jest.mock("@/lib/supabase/client", () => ({
 
 // Mock real-time subscription behavior
 class MockRealtimeChannel {
-  private eventHandlers: Map<string, ((...args: unknown[]) => void)[]> = new Map();
+  private eventHandlers: Map<string, ((...args: unknown[]) => void)[]> =
+    new Map();
   private subscriptionCallback?: (status: string) => void;
 
   constructor(private channelName: string) {}
@@ -48,7 +49,7 @@ class MockRealtimeChannel {
   // Helper to simulate real-time events
   simulateEvent(event: string, payload: Record<string, unknown>) {
     const handlers = this.eventHandlers.get(event) || [];
-    handlers.forEach(handler => handler(payload));
+    handlers.forEach((handler) => handler(payload));
   }
 }
 
@@ -182,7 +183,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result } = renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });
@@ -205,7 +206,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result } = renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });
@@ -265,7 +266,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result } = renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });
@@ -300,7 +301,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });
@@ -326,7 +327,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result } = renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });
@@ -382,7 +383,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result } = renderHook(() => useLibraryStats(), {
         wrapper: TestWrapper,
       });
@@ -408,7 +409,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result } = renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });
@@ -455,7 +456,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result, unmount } = renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });
@@ -482,7 +483,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result } = renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });
@@ -508,7 +509,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result } = renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });
@@ -543,7 +544,7 @@ describe("Real-time Update Tests", () => {
       });
 
       const { TestWrapper } = createRealtimeWrapper();
-      
+
       const { result } = renderHook(() => useLibraryTransactions(), {
         wrapper: TestWrapper,
       });

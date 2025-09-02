@@ -1,19 +1,19 @@
-import { type Locale, locales, defaultLocale } from '@/i18n/config';
+import { type Locale, locales, defaultLocale } from "@/i18n/config";
 
-const COOKIE_NAME = 'NEXT_LOCALE';
+const COOKIE_NAME = "NEXT_LOCALE";
 
 /**
  * Get locale from client-side cookies
  */
 export function getClientLocale(): Locale {
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return defaultLocale;
   }
 
-  const cookies = document.cookie.split(';');
+  const cookies = document.cookie.split(";");
   const localeCookie = cookies
-    .find(cookie => cookie.trim().startsWith(`${COOKIE_NAME}=`))
-    ?.split('=')[1];
+    .find((cookie) => cookie.trim().startsWith(`${COOKIE_NAME}=`))
+    ?.split("=")[1];
 
   if (localeCookie && locales.includes(localeCookie as Locale)) {
     return localeCookie as Locale;
@@ -26,7 +26,7 @@ export function getClientLocale(): Locale {
  * Set locale in client-side cookies
  */
 export function setClientLocale(locale: Locale): void {
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return;
   }
 
@@ -36,10 +36,12 @@ export function setClientLocale(locale: Locale): void {
   document.cookie = [
     `${COOKIE_NAME}=${locale}`,
     `expires=${expires.toUTCString()}`,
-    'path=/',
-    'SameSite=Strict',
-    process.env.NODE_ENV === 'production' ? 'Secure' : '',
-  ].filter(Boolean).join('; ');
+    "path=/",
+    "SameSite=Strict",
+    process.env.NODE_ENV === "production" ? "Secure" : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
 }
 
 /**

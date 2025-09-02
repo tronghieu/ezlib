@@ -19,7 +19,8 @@ import type { Database } from "@/lib/types/database";
 type BookCopy = Database["public"]["Tables"]["book_copies"]["Row"];
 type BookEdition = Database["public"]["Tables"]["book_editions"]["Row"];
 type GeneralBook = Database["public"]["Tables"]["general_books"]["Row"];
-type BorrowingTransaction = Database["public"]["Tables"]["borrowing_transactions"]["Row"];
+type BorrowingTransaction =
+  Database["public"]["Tables"]["borrowing_transactions"]["Row"];
 
 // Database join result types - using complex nested Supabase joins
 // TypeScript struggles with deeply nested join types, so we use any for the map parameter
@@ -127,8 +128,10 @@ export function useBooks(options: UseBooksOptions = {}) {
       baseQuery.order("created_at", { ascending: true });
 
       // Add pagination
-      const { data, error, count } = await baseQuery
-        .range(offset, offset + pageSize - 1);
+      const { data, error, count } = await baseQuery.range(
+        offset,
+        offset + pageSize - 1
+      );
 
       if (error) throw error;
 
@@ -137,24 +140,28 @@ export function useBooks(options: UseBooksOptions = {}) {
       const books: BookWithDetails[] = (data || []).map((copy: any) => {
         const bookEdition = copy.book_editions;
         const generalBook = bookEdition?.general_books;
-        
+
         // Get author from general book subjects or use fallback
         const author = generalBook?.subjects?.[0] || "Unknown Author";
-        
+
         // Parse availability JSON
         const availability = copy.availability as { status: string } | null;
-        
+
         // Determine availability status
         const hasActiveCheckout = copy.borrowing_transactions?.some(
           (transaction: BorrowingTransaction) => !transaction.return_date
         );
-        
-        const status: "available" | "checked_out" = hasActiveCheckout 
-          ? "checked_out" 
-          : (availability?.status === "checked_out" ? "checked_out" : "available");
+
+        const status: "available" | "checked_out" = hasActiveCheckout
+          ? "checked_out"
+          : availability?.status === "checked_out"
+            ? "checked_out"
+            : "available";
 
         // Extract publication info from edition metadata
-        const editionMetadata = bookEdition?.edition_metadata as { publisher?: string } | null;
+        const editionMetadata = bookEdition?.edition_metadata as {
+          publisher?: string;
+        } | null;
         const publisher = editionMetadata?.publisher || "Unknown Publisher";
         const publicationYear = generalBook?.first_publication_year || 0;
 
@@ -182,13 +189,13 @@ export function useBooks(options: UseBooksOptions = {}) {
       // Client-side sorting for both title and author
       books.sort((a, b) => {
         let comparison = 0;
-        
+
         if (sortBy === "title") {
           comparison = a.title.localeCompare(b.title);
         } else if (sortBy === "author") {
           comparison = a.author.localeCompare(b.author);
         }
-        
+
         return sortOrder === "asc" ? comparison : -comparison;
       });
 
@@ -217,7 +224,9 @@ export function useBooks(options: UseBooksOptions = {}) {
         },
         () => {
           // Invalidate the books query to refresh data
-          queryClient.invalidateQueries({ queryKey: ["books", currentLibrary.id] });
+          queryClient.invalidateQueries({
+            queryKey: ["books", currentLibrary.id],
+          });
         }
       )
       .on(
@@ -230,7 +239,9 @@ export function useBooks(options: UseBooksOptions = {}) {
         },
         () => {
           // Invalidate books query when borrowing status changes
-          queryClient.invalidateQueries({ queryKey: ["books", currentLibrary.id] });
+          queryClient.invalidateQueries({
+            queryKey: ["books", currentLibrary.id],
+          });
         }
       )
       .subscribe();
@@ -255,7 +266,7 @@ export function useBooks(options: UseBooksOptions = {}) {
 export function useBookSearch({ query, enabled = true }: UseBookSearchOptions) {
   const { currentLibrary } = useLibraryContext();
   const supabase = createClient();
-  
+
   // Debounce search query to avoid excessive API calls
   const debouncedQuery = useDebounce(query, 300);
 
@@ -311,45 +322,51 @@ export function useBookSearch({ query, enabled = true }: UseBookSearchOptions) {
 
       // Transform search results similar to the main books hook
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const transformedBooks: BookWithDetails[] = (data || []).map((copy: any) => {
-        const bookEdition = copy.book_editions;
-        const generalBook = bookEdition?.general_books;
-        
-        const author = generalBook?.subjects?.[0] || "Unknown Author";
-        
-        // Parse availability JSON
-        const availability = copy.availability as { status: string } | null;
-        
-        const hasActiveCheckout = copy.borrowing_transactions?.some(
-          (transaction: BorrowingTransaction) => !transaction.return_date
-        );
-        
-        const status: "available" | "checked_out" = hasActiveCheckout 
-          ? "checked_out" 
-          : (availability?.status === "checked_out" ? "checked_out" : "available");
+      const transformedBooks: BookWithDetails[] = (data || []).map(
+        (copy: any) => {
+          const bookEdition = copy.book_editions;
+          const generalBook = bookEdition?.general_books;
 
-        const editionMetadata = bookEdition?.edition_metadata as { publisher?: string } | null;
-        const publisher = editionMetadata?.publisher || "Unknown Publisher";
-        const publicationYear = generalBook?.first_publication_year || 0;
-        const isbn = bookEdition?.isbn_13 || bookEdition?.isbn_10 || "";
+          const author = generalBook?.subjects?.[0] || "Unknown Author";
 
-        return {
-          id: copy.id,
-          title: generalBook?.canonical_title || "Unknown Title",
-          author,
-          publisher,
-          publicationYear,
-          isbn,
-          status,
-          availability: {
-            status: status,
-            count: status === "available" ? 1 : 0,
-          },
-          book_copy: copy as unknown as BookCopy,
-          book_edition: bookEdition as unknown as BookEdition,
-          general_book: generalBook as unknown as GeneralBook,
-        } as BookWithDetails;
-      });
+          // Parse availability JSON
+          const availability = copy.availability as { status: string } | null;
+
+          const hasActiveCheckout = copy.borrowing_transactions?.some(
+            (transaction: BorrowingTransaction) => !transaction.return_date
+          );
+
+          const status: "available" | "checked_out" = hasActiveCheckout
+            ? "checked_out"
+            : availability?.status === "checked_out"
+              ? "checked_out"
+              : "available";
+
+          const editionMetadata = bookEdition?.edition_metadata as {
+            publisher?: string;
+          } | null;
+          const publisher = editionMetadata?.publisher || "Unknown Publisher";
+          const publicationYear = generalBook?.first_publication_year || 0;
+          const isbn = bookEdition?.isbn_13 || bookEdition?.isbn_10 || "";
+
+          return {
+            id: copy.id,
+            title: generalBook?.canonical_title || "Unknown Title",
+            author,
+            publisher,
+            publicationYear,
+            isbn,
+            status,
+            availability: {
+              status: status,
+              count: status === "available" ? 1 : 0,
+            },
+            book_copy: copy as unknown as BookCopy,
+            book_edition: bookEdition as unknown as BookEdition,
+            general_book: generalBook as unknown as GeneralBook,
+          } as BookWithDetails;
+        }
+      );
 
       // Client-side filtering for search
       const filteredBooks = transformedBooks.filter((book) => {
@@ -357,7 +374,7 @@ export function useBookSearch({ query, enabled = true }: UseBookSearchOptions) {
         const titleMatch = book.title.toLowerCase().includes(searchLower);
         const authorMatch = book.author.toLowerCase().includes(searchLower);
         const isbnMatch = book.isbn.toLowerCase().includes(searchLower);
-        
+
         return titleMatch || authorMatch || isbnMatch;
       });
 

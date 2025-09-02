@@ -3,26 +3,32 @@
  * Tests for the language switching API endpoint
  */
 
-import { NextRequest } from 'next/server';
-import { POST } from '../route';
-import { setUserLocale } from '@/i18n/locale';
-import { validateLocale } from '@/lib/locale-cookie';
+import { NextRequest } from "next/server";
+import { POST } from "../route";
+import { setUserLocale } from "@/i18n/locale";
+import { validateLocale } from "@/lib/locale-cookie";
 
 // Mock the locale utilities
-jest.mock('@/i18n/locale', () => ({
+jest.mock("@/i18n/locale", () => ({
   setUserLocale: jest.fn(),
 }));
 
-jest.mock('@/lib/locale-cookie', () => ({
+jest.mock("@/lib/locale-cookie", () => ({
   validateLocale: jest.fn(),
 }));
 
 // Mock console.error to avoid test output noise
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+const mockConsoleError = jest
+  .spyOn(console, "error")
+  .mockImplementation(() => {});
 
-describe('/api/locale POST', () => {
-  const mockSetUserLocale = setUserLocale as jest.MockedFunction<typeof setUserLocale>;
-  const mockValidateLocale = validateLocale as jest.MockedFunction<typeof validateLocale>;
+describe("/api/locale POST", () => {
+  const mockSetUserLocale = setUserLocale as jest.MockedFunction<
+    typeof setUserLocale
+  >;
+  const mockValidateLocale = validateLocale as jest.MockedFunction<
+    typeof validateLocale
+  >;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -36,19 +42,19 @@ describe('/api/locale POST', () => {
     mockConsoleError.mockRestore();
   });
 
-  describe('Successful locale updates', () => {
+  describe("Successful locale updates", () => {
     beforeEach(() => {
       mockValidateLocale.mockReturnValue(true);
       mockSetUserLocale.mockResolvedValue(undefined);
     });
 
-    it('should update locale to English and return success', async () => {
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+    it("should update locale to English and return success", async () => {
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ locale: 'en' }),
+        body: JSON.stringify({ locale: "en" }),
       });
 
       const response = await POST(request);
@@ -56,20 +62,20 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(200);
       expect(data).toEqual({
-        message: 'Locale updated successfully',
-        locale: 'en',
+        message: "Locale updated successfully",
+        locale: "en",
       });
-      expect(mockValidateLocale).toHaveBeenCalledWith('en');
-      expect(mockSetUserLocale).toHaveBeenCalledWith('en');
+      expect(mockValidateLocale).toHaveBeenCalledWith("en");
+      expect(mockSetUserLocale).toHaveBeenCalledWith("en");
     });
 
-    it('should update locale to Vietnamese and return success', async () => {
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+    it("should update locale to Vietnamese and return success", async () => {
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ locale: 'vi' }),
+        body: JSON.stringify({ locale: "vi" }),
       });
 
       const response = await POST(request);
@@ -77,28 +83,28 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(200);
       expect(data).toEqual({
-        message: 'Locale updated successfully',
-        locale: 'vi',
+        message: "Locale updated successfully",
+        locale: "vi",
       });
-      expect(mockValidateLocale).toHaveBeenCalledWith('vi');
-      expect(mockSetUserLocale).toHaveBeenCalledWith('vi');
+      expect(mockValidateLocale).toHaveBeenCalledWith("vi");
+      expect(mockSetUserLocale).toHaveBeenCalledWith("vi");
     });
   });
 
-  describe('Invalid locale handling', () => {
+  describe("Invalid locale handling", () => {
     beforeEach(() => {
       mockSetUserLocale.mockResolvedValue(undefined);
     });
 
-    it('should reject invalid locale and return 400', async () => {
+    it("should reject invalid locale and return 400", async () => {
       mockValidateLocale.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ locale: 'invalid-locale' }),
+        body: JSON.stringify({ locale: "invalid-locale" }),
       });
 
       const response = await POST(request);
@@ -106,17 +112,17 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(400);
       expect(data).toEqual({
-        error: 'Invalid locale',
+        error: "Invalid locale",
       });
-      expect(mockValidateLocale).toHaveBeenCalledWith('invalid-locale');
+      expect(mockValidateLocale).toHaveBeenCalledWith("invalid-locale");
       expect(mockSetUserLocale).not.toHaveBeenCalled();
     });
 
-    it('should reject missing locale and return 400', async () => {
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+    it("should reject missing locale and return 400", async () => {
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
       });
@@ -126,16 +132,16 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(400);
       expect(data).toEqual({
-        error: 'Invalid locale',
+        error: "Invalid locale",
       });
       expect(mockSetUserLocale).not.toHaveBeenCalled();
     });
 
-    it('should reject null locale and return 400', async () => {
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+    it("should reject null locale and return 400", async () => {
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ locale: null }),
       });
@@ -145,20 +151,20 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(400);
       expect(data).toEqual({
-        error: 'Invalid locale',
+        error: "Invalid locale",
       });
       expect(mockSetUserLocale).not.toHaveBeenCalled();
     });
 
-    it('should reject empty string locale and return 400', async () => {
+    it("should reject empty string locale and return 400", async () => {
       mockValidateLocale.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ locale: '' }),
+        body: JSON.stringify({ locale: "" }),
       });
 
       const response = await POST(request);
@@ -166,26 +172,26 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(400);
       expect(data).toEqual({
-        error: 'Invalid locale',
+        error: "Invalid locale",
       });
-      expect(mockValidateLocale).toHaveBeenCalledWith('');
+      expect(mockValidateLocale).toHaveBeenCalledWith("");
       expect(mockSetUserLocale).not.toHaveBeenCalled();
     });
   });
 
-  describe('Malformed request handling', () => {
+  describe("Malformed request handling", () => {
     beforeEach(() => {
       mockValidateLocale.mockReturnValue(true);
       mockSetUserLocale.mockResolvedValue(undefined);
     });
 
-    it('should handle invalid JSON and return 500', async () => {
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+    it("should handle invalid JSON and return 500", async () => {
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: 'invalid-json',
+        body: "invalid-json",
       });
 
       const response = await POST(request);
@@ -193,16 +199,19 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(500);
       expect(data).toEqual({
-        error: 'Failed to update locale',
+        error: "Failed to update locale",
       });
-      expect(mockConsoleError).toHaveBeenCalledWith('Failed to update locale:', expect.any(Error));
+      expect(mockConsoleError).toHaveBeenCalledWith(
+        "Failed to update locale:",
+        expect.any(Error)
+      );
       expect(mockSetUserLocale).not.toHaveBeenCalled();
     });
 
-    it('should handle missing Content-Type header', async () => {
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
-        body: JSON.stringify({ locale: 'en' }),
+    it("should handle missing Content-Type header", async () => {
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
+        body: JSON.stringify({ locale: "en" }),
       });
 
       const response = await POST(request);
@@ -211,26 +220,26 @@ describe('/api/locale POST', () => {
       // Should still work despite missing Content-Type
       expect(response.status).toBe(200);
       expect(data).toEqual({
-        message: 'Locale updated successfully',
-        locale: 'en',
+        message: "Locale updated successfully",
+        locale: "en",
       });
     });
   });
 
-  describe('Server error handling', () => {
+  describe("Server error handling", () => {
     beforeEach(() => {
       mockValidateLocale.mockReturnValue(true);
     });
 
-    it('should handle setUserLocale failure and return 500', async () => {
-      mockSetUserLocale.mockRejectedValue(new Error('Cookie setting failed'));
+    it("should handle setUserLocale failure and return 500", async () => {
+      mockSetUserLocale.mockRejectedValue(new Error("Cookie setting failed"));
 
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ locale: 'en' }),
+        body: JSON.stringify({ locale: "en" }),
       });
 
       const response = await POST(request);
@@ -238,27 +247,30 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(500);
       expect(data).toEqual({
-        error: 'Failed to update locale',
+        error: "Failed to update locale",
       });
-      expect(mockConsoleError).toHaveBeenCalledWith('Failed to update locale:', expect.any(Error));
-      expect(mockSetUserLocale).toHaveBeenCalledWith('en');
+      expect(mockConsoleError).toHaveBeenCalledWith(
+        "Failed to update locale:",
+        expect.any(Error)
+      );
+      expect(mockSetUserLocale).toHaveBeenCalledWith("en");
     });
   });
 
-  describe('Input validation edge cases', () => {
+  describe("Input validation edge cases", () => {
     beforeEach(() => {
       mockSetUserLocale.mockResolvedValue(undefined);
     });
 
-    it('should handle locale with extra whitespace', async () => {
+    it("should handle locale with extra whitespace", async () => {
       mockValidateLocale.mockReturnValue(true);
 
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ locale: '  en  ' }),
+        body: JSON.stringify({ locale: "  en  " }),
       });
 
       const response = await POST(request);
@@ -266,22 +278,22 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(200);
       expect(data).toEqual({
-        message: 'Locale updated successfully',
-        locale: '  en  ',
+        message: "Locale updated successfully",
+        locale: "  en  ",
       });
-      expect(mockValidateLocale).toHaveBeenCalledWith('  en  ');
-      expect(mockSetUserLocale).toHaveBeenCalledWith('  en  ');
+      expect(mockValidateLocale).toHaveBeenCalledWith("  en  ");
+      expect(mockSetUserLocale).toHaveBeenCalledWith("  en  ");
     });
 
-    it('should handle mixed case locale', async () => {
+    it("should handle mixed case locale", async () => {
       mockValidateLocale.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ locale: 'EN' }),
+        body: JSON.stringify({ locale: "EN" }),
       });
 
       const response = await POST(request);
@@ -289,19 +301,19 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(400);
       expect(data).toEqual({
-        error: 'Invalid locale',
+        error: "Invalid locale",
       });
-      expect(mockValidateLocale).toHaveBeenCalledWith('EN');
+      expect(mockValidateLocale).toHaveBeenCalledWith("EN");
       expect(mockSetUserLocale).not.toHaveBeenCalled();
     });
 
-    it('should handle numeric locale', async () => {
+    it("should handle numeric locale", async () => {
       mockValidateLocale.mockReturnValue(false);
 
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ locale: 123 }),
       });
@@ -311,24 +323,24 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(400);
       expect(data).toEqual({
-        error: 'Invalid locale',
+        error: "Invalid locale",
       });
       expect(mockValidateLocale).toHaveBeenCalledWith(123);
       expect(mockSetUserLocale).not.toHaveBeenCalled();
     });
 
-    it('should handle additional request body parameters', async () => {
+    it("should handle additional request body parameters", async () => {
       mockValidateLocale.mockReturnValue(true);
 
-      const request = new NextRequest('http://localhost:3001/api/locale', {
-        method: 'POST',
+      const request = new NextRequest("http://localhost:3001/api/locale", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          locale: 'vi',
-          extraParam: 'should-be-ignored',
-          userId: '123'
+        body: JSON.stringify({
+          locale: "vi",
+          extraParam: "should-be-ignored",
+          userId: "123",
         }),
       });
 
@@ -337,10 +349,10 @@ describe('/api/locale POST', () => {
 
       expect(response.status).toBe(200);
       expect(data).toEqual({
-        message: 'Locale updated successfully',
-        locale: 'vi',
+        message: "Locale updated successfully",
+        locale: "vi",
       });
-      expect(mockSetUserLocale).toHaveBeenCalledWith('vi');
+      expect(mockSetUserLocale).toHaveBeenCalledWith("vi");
     });
   });
 });

@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 
 // Extend Jest matchers with Testing Library custom matchers
 declare global {

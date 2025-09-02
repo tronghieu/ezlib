@@ -20,7 +20,10 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -41,7 +44,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   render() {
     if (this.state.hasError) {
       const FallbackComponent = this.props.fallback || DefaultErrorFallback;
-      return <FallbackComponent error={this.state.error!} retry={this.handleRetry} />;
+      return (
+        <FallbackComponent error={this.state.error!} retry={this.handleRetry} />
+      );
     }
 
     return this.props.children;
@@ -53,7 +58,10 @@ interface DefaultErrorFallbackProps {
   retry: () => void;
 }
 
-function DefaultErrorFallback({ error, retry }: DefaultErrorFallbackProps): React.JSX.Element {
+function DefaultErrorFallback({
+  error,
+  retry,
+}: DefaultErrorFallbackProps): React.JSX.Element {
   return (
     <Card className="mx-auto max-w-md">
       <CardHeader className="text-center">

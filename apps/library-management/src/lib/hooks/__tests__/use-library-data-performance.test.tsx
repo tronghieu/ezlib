@@ -6,7 +6,11 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { useLibraryStats, useLibraryBooks, useLibraryTransactions } from "../use-library-data";
+import {
+  useLibraryStats,
+  useLibraryBooks,
+  useLibraryTransactions,
+} from "../use-library-data";
 import { LibraryProvider } from "@/lib/contexts/library-context";
 import { AuthProvider } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/client";
@@ -233,7 +237,7 @@ describe("Library Data Performance Tests", () => {
       );
 
       const loadTime = performance.now() - startTime;
-      
+
       expect(loadTime).toBeLessThan(2000); // Should load within 2 seconds
       expect(result.current.stats).toEqual({
         totalBooks: 5000,
@@ -297,8 +301,8 @@ describe("Library Data Performance Tests", () => {
     it("should calculate statistics efficiently for large libraries", async () => {
       // Test statistics calculation time
       mockSupabase.from.mockImplementation((table: string) => {
-        const delay = new Promise(resolve => setTimeout(resolve, 100)); // Simulate DB delay
-        
+        const delay = new Promise((resolve) => setTimeout(resolve, 100)); // Simulate DB delay
+
         if (table === "book_copies") {
           return {
             ...mockSupabase,
@@ -314,7 +318,10 @@ describe("Library Data Performance Tests", () => {
               ...mockSupabase,
               eq: jest.fn().mockImplementation(async () => {
                 await delay;
-                return { data: Array(1000).fill({ id: "member" }), error: null };
+                return {
+                  data: Array(1000).fill({ id: "member" }),
+                  error: null,
+                };
               }),
             })),
           };
@@ -327,7 +334,10 @@ describe("Library Data Performance Tests", () => {
                 ...mockSupabase,
                 is: jest.fn().mockImplementation(async () => {
                   await delay;
-                  return { data: Array(250).fill({ id: "checkout" }), error: null };
+                  return {
+                    data: Array(250).fill({ id: "checkout" }),
+                    error: null,
+                  };
                 }),
               })),
             })),
@@ -387,7 +397,7 @@ describe("Library Data Performance Tests", () => {
   describe("Real-time Update Performance", () => {
     it("should handle concurrent user activity without performance degradation", async () => {
       const initialTransactions = generateLargeTransactionDataset(100);
-      
+
       mockSupabase.limit.mockResolvedValue({
         data: initialTransactions,
         error: null,
@@ -410,16 +420,22 @@ describe("Library Data Performance Tests", () => {
           book_copy_id: `book-${i}`,
           member_id: `member-${i}`,
           transaction_type: "checkout" as const,
-          due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          due_date: new Date(
+            Date.now() + 14 * 24 * 60 * 60 * 1000
+          ).toISOString(),
         };
 
         mockSupabase.single.mockResolvedValueOnce({
-          data: { id: `new-trans-${i}`, ...newTransaction, library_id: "lib-1" },
+          data: {
+            id: `new-trans-${i}`,
+            ...newTransaction,
+            library_id: "lib-1",
+          },
           error: null,
         });
 
         updatePromises.push(
-          new Promise(resolve => {
+          new Promise((resolve) => {
             setTimeout(() => {
               result.current.createTransaction(newTransaction);
               resolve(true);
@@ -429,7 +445,7 @@ describe("Library Data Performance Tests", () => {
       }
 
       await Promise.all(updatePromises);
-      
+
       const updateTime = performance.now() - startTime;
 
       // Should handle 10 concurrent updates within reasonable time

@@ -176,12 +176,14 @@ function LoginPageContent() {
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
-        
+
         if (raceError instanceof Error && raceError.message === "OTP_TIMEOUT") {
-          setError("Verification timed out. Please check your connection and try again.");
+          setError(
+            "Verification timed out. Please check your connection and try again."
+          );
           return;
         }
-        
+
         // Re-throw other errors to be handled by outer catch
         throw raceError;
       }

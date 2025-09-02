@@ -841,7 +841,10 @@ describe("useLibraryData", () => {
         if (field === "library_id" && value !== "lib-1") {
           mockSupabase.order.mockResolvedValue({
             data: null,
-            error: { message: "Row Level Security policy violation", code: "42501" },
+            error: {
+              message: "Row Level Security policy violation",
+              code: "42501",
+            },
           });
         }
         return mockSupabase;
@@ -862,7 +865,10 @@ describe("useLibraryData", () => {
       });
 
       expect(result.current.books).toEqual([]);
-      expect(mockSupabase.eq).toHaveBeenCalledWith("library_id", "unauthorized-lib");
+      expect(mockSupabase.eq).toHaveBeenCalledWith(
+        "library_id",
+        "unauthorized-lib"
+      );
     });
 
     it("should ensure activity feed respects library boundaries", async () => {
