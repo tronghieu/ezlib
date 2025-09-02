@@ -3,7 +3,7 @@
  * Tests complete user journeys for library selection and multi-tenant operations
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 // Responsive breakpoints for testing
 const BREAKPOINTS = {
@@ -22,7 +22,7 @@ const TEST_USER = {
 };
 
 // Helper to handle OTP authentication
-async function authenticateUser(page, email: string) {
+async function authenticateUser(page: Page, email: string) {
   // Navigate to login page
   await page.goto(`${BASE_URL}/auth/login`);
 

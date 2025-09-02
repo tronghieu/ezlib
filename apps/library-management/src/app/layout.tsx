@@ -4,6 +4,12 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth/context";
 import { LibraryProvider } from "@/lib/contexts/library-context";
 import { QueryProvider } from "@/lib/providers/query-provider";
+// Temporarily disabled for debugging
+// import { NextIntlClientProvider } from 'next-intl';
+// import { getMessages } from 'next-intl/server';
+// import { notFound } from 'next/navigation';
+// import { getUserLocale } from '@/i18n/locale';
+// import { locales } from '@/i18n/config';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +32,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Temporarily disabled i18n integration
+  // const locale = await getUserLocale();
+  // if (!locales.includes(locale)) {
+  //   notFound();
+  // }
+  // const messages = await getMessages();
+
   return (
     <html lang="en">
       <body

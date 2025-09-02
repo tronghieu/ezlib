@@ -1,0 +1,237 @@
+{
+  "navigation": {
+    "dashboard": "Trang chủ",
+    "books": "Sách",
+    "inventory": "Kho sách",
+    "members": "Thành viên",
+    "circulation": "Lưu thông",
+    "reports": "Báo cáo",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất",
+    "profile": "Hồ sơ"
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển thư viện",
+    "welcome": "Chào mừng trở lại",
+    "stats": {
+      "totalBooks": "Tổng số sách",
+      "checkedOut": "Đã mượn",
+      "overdue": "Quá hạn",
+      "totalMembers": "Tổng thành viên",
+      "activeMembers": "Thành viên hoạt động",
+      "newMembers": "Thành viên mới tháng này"
+    },
+    "recentActivity": "Hoạt động gần đây",
+    "quickActions": {
+      "title": "Thao tác nhanh",
+      "addBook": "Thêm sách mới",
+      "addMember": "Thêm thành viên mới",
+      "checkout": "Cho mượn sách",
+      "checkin": "Trả sách"
+    }
+  },
+  "books": {
+    "title": "Quản lý sách",
+    "addNew": "Thêm sách mới",
+    "search": "Tìm kiếm sách...",
+    "filters": {
+      "all": "Tất cả sách",
+      "available": "Có sẵn",
+      "checkedOut": "Đã mượn",
+      "overdue": "Quá hạn"
+    },
+    "table": {
+      "title": "Tên sách",
+      "author": "Tác giả",
+      "isbn": "ISBN",
+      "status": "Trạng thái",
+      "actions": "Thao tác"
+    },
+    "status": {
+      "available": "Có sẵn",
+      "checkedOut": "Đã mượn",
+      "overdue": "Quá hạn",
+      "reserved": "Đã đặt trước"
+    },
+    "form": {
+      "title": "Tên sách",
+      "author": "Tác giả",
+      "isbn": "ISBN",
+      "description": "Mô tả",
+      "category": "Thể loại",
+      "publisher": "Nhà xuất bản",
+      "publicationYear": "Năm xuất bản",
+      "language": "Ngôn ngữ",
+      "pages": "Số trang",
+      "save": "Lưu sách",
+      "cancel": "Hủy"
+    }
+  },
+  "members": {
+    "title": "Quản lý thành viên",
+    "addNew": "Thêm thành viên mới",
+    "search": "Tìm kiếm thành viên...",
+    "table": {
+      "name": "Họ tên",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "membershipType": "Loại thành viên",
+      "status": "Trạng thái",
+      "joinDate": "Ngày tham gia",
+      "actions": "Thao tác"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "inactive": "Không hoạt động",
+      "suspended": "Tạm dừng"
+    },
+    "form": {
+      "firstName": "Tên",
+      "lastName": "Họ",
+      "email": "Địa chỉ email",
+      "phone": "Số điện thoại",
+      "address": "Địa chỉ",
+      "membershipType": "Loại thành viên",
+      "dateOfBirth": "Ngày sinh",
+      "save": "Lưu thành viên",
+      "cancel": "Hủy"
+    }
+  },
+  "circulation": {
+    "title": "Lưu thông sách",
+    "checkout": {
+      "title": "Cho mượn sách",
+      "memberSearch": "Tìm thành viên...",
+      "bookSearch": "Tìm sách...",
+      "dueDate": "Ngày hết hạn",
+      "submit": "Cho mượn"
+    },
+    "checkin": {
+      "title": "Trả sách",
+      "bookSearch": "Tìm sách hoặc quét mã vạch...",
+      "submit": "Trả sách"
+    },
+    "history": {
+      "title": "Lịch sử giao dịch",
+      "member": "Thành viên",
+      "book": "Sách",
+      "type": "Loại",
+      "date": "Ngày",
+      "dueDate": "Ngày hết hạn",
+      "returnDate": "Ngày trả",
+      "status": "Trạng thái"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Hệ thống quản lý thư viện",
+      "subtitle": "Đăng nhập vào tài khoản của bạn",
+      "email": "Địa chỉ email",
+      "password": "Mật khẩu",
+      "signIn": "Đăng nhập",
+      "forgotPassword": "Quên mật khẩu?",
+      "noAccount": "Chưa có tài khoản? Liên hệ quản trị viên."
+    },
+    "logout": {
+      "confirm": "Bạn có chắc chắn muốn đăng xuất?",
+      "yes": "Có, đăng xuất",
+      "cancel": "Hủy"
+    }
+  },
+  "common": {
+    "loading": "Đang tải...",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "view": "Xem",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "clear": "Xóa",
+    "close": "Đóng",
+    "confirm": "Xác nhận",
+    "yes": "Có",
+    "no": "Không",
+    "actions": "Thao tác",
+    "status": "Trạng thái",
+    "date": "Ngày",
+    "time": "Giờ",
+    "name": "Tên",
+    "email": "Email",
+    "phone": "Điện thoại",
+    "address": "Địa chỉ",
+    "language": "Ngôn ngữ",
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt"
+  },
+  "errors": {
+    "required": "Trường này là bắt buộc",
+    "invalid": "Dữ liệu không hợp lệ",
+    "emailInvalid": "Vui lòng nhập địa chỉ email hợp lệ",
+    "phoneInvalid": "Vui lòng nhập số điện thoại hợp lệ",
+    "isbnInvalid": "Vui lòng nhập ISBN hợp lệ",
+    "networkError": "Lỗi mạng. Vui lòng thử lại.",
+    "serverError": "Lỗi máy chủ. Vui lòng liên hệ hỗ trợ.",
+    "notFound": "Không tìm thấy mục",
+    "unauthorized": "Bạn không có quyền thực hiện thao tác này",
+    "validationError": "Vui lòng kiểm tra dữ liệu và thử lại",
+    "bookNotAvailable": "Sách này hiện không có sẵn để mượn",
+    "memberSuspended": "Tài khoản thành viên này đã bị tạm dừng",
+    "overdueBooks": "Thành viên có sách quá hạn"
+  },
+  "validation": {
+    "minLength": "Phải có ít nhất {min} ký tự",
+    "maxLength": "Không được quá {max} ký tự",
+    "email": "Phải là địa chỉ email hợp lệ",
+    "phone": "Phải là số điện thoại hợp lệ",
+    "isbn": "Phải là ISBN hợp lệ",
+    "required": "Trường này là bắt buộc",
+    "numeric": "Phải là một số",
+    "date": "Phải là ngày hợp lệ"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "profile": {
+      "title": "Cài đặt hồ sơ",
+      "name": "Họ và tên",
+      "email": "Địa chỉ email",
+      "language": "Ngôn ngữ ưa thích",
+      "save": "Lưu thay đổi"
+    },
+    "library": {
+      "title": "Cài đặt thư viện",
+      "name": "Tên thư viện",
+      "address": "Địa chỉ thư viện",
+      "phone": "Điện thoại thư viện",
+      "email": "Email thư viện",
+      "website": "Website thư viện"
+    },
+    "circulation": {
+      "title": "Cài đặt lưu thông",
+      "loanPeriod": "Thời gian mượn mặc định (ngày)",
+      "maxRenewals": "Số lần gia hạn tối đa",
+      "finePerDay": "Phạt mỗi ngày",
+      "maxFine": "Số tiền phạt tối đa"
+    }
+  },
+  "messages": {
+    "success": {
+      "bookAdded": "Thêm sách thành công",
+      "bookUpdated": "Cập nhật sách thành công",
+      "bookDeleted": "Xóa sách thành công",
+      "memberAdded": "Thêm thành viên thành công",
+      "memberUpdated": "Cập nhật thành viên thành công",
+      "memberDeleted": "Xóa thành viên thành công",
+      "checkedOut": "Cho mượn sách thành công",
+      "checkedIn": "Trả sách thành công",
+      "settingsSaved": "Lưu cài đặt thành công",
+      "languageChanged": "Đổi ngôn ngữ thành công"
+    },
+    "info": {
+      "noResults": "Không tìm thấy kết quả",
+      "emptyLibrary": "Chưa có sách nào trong thư viện",
+      "noMembers": "Chưa có thành viên nào đăng ký",
+      "noTransactions": "Không tìm thấy giao dịch"
+    }
+  }
+}

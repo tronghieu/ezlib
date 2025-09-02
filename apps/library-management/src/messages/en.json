@@ -1,0 +1,237 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "books": "Books",
+    "inventory": "Inventory",
+    "members": "Members",
+    "circulation": "Circulation",
+    "reports": "Reports",
+    "settings": "Settings",
+    "logout": "Logout",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "title": "Library Dashboard",
+    "welcome": "Welcome back",
+    "stats": {
+      "totalBooks": "Total Books",
+      "checkedOut": "Checked Out",
+      "overdue": "Overdue",
+      "totalMembers": "Total Members",
+      "activeMembers": "Active Members",
+      "newMembers": "New Members This Month"
+    },
+    "recentActivity": "Recent Activity",
+    "quickActions": {
+      "title": "Quick Actions",
+      "addBook": "Add New Book",
+      "addMember": "Add New Member",
+      "checkout": "Check Out Book",
+      "checkin": "Check In Book"
+    }
+  },
+  "books": {
+    "title": "Book Management",
+    "addNew": "Add New Book",
+    "search": "Search books...",
+    "filters": {
+      "all": "All Books",
+      "available": "Available",
+      "checkedOut": "Checked Out",
+      "overdue": "Overdue"
+    },
+    "table": {
+      "title": "Title",
+      "author": "Author",
+      "isbn": "ISBN",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "available": "Available",
+      "checkedOut": "Checked Out",
+      "overdue": "Overdue",
+      "reserved": "Reserved"
+    },
+    "form": {
+      "title": "Book Title",
+      "author": "Author",
+      "isbn": "ISBN",
+      "description": "Description",
+      "category": "Category",
+      "publisher": "Publisher",
+      "publicationYear": "Publication Year",
+      "language": "Language",
+      "pages": "Number of Pages",
+      "save": "Save Book",
+      "cancel": "Cancel"
+    }
+  },
+  "members": {
+    "title": "Member Management",
+    "addNew": "Add New Member",
+    "search": "Search members...",
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "membershipType": "Membership Type",
+      "status": "Status",
+      "joinDate": "Join Date",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended"
+    },
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "address": "Address",
+      "membershipType": "Membership Type",
+      "dateOfBirth": "Date of Birth",
+      "save": "Save Member",
+      "cancel": "Cancel"
+    }
+  },
+  "circulation": {
+    "title": "Circulation",
+    "checkout": {
+      "title": "Check Out Books",
+      "memberSearch": "Search member...",
+      "bookSearch": "Search book...",
+      "dueDate": "Due Date",
+      "submit": "Check Out"
+    },
+    "checkin": {
+      "title": "Check In Books",
+      "bookSearch": "Search book or scan barcode...",
+      "submit": "Check In"
+    },
+    "history": {
+      "title": "Transaction History",
+      "member": "Member",
+      "book": "Book",
+      "type": "Type",
+      "date": "Date",
+      "dueDate": "Due Date",
+      "returnDate": "Return Date",
+      "status": "Status"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Library Management System",
+      "subtitle": "Sign in to your account",
+      "email": "Email Address",
+      "password": "Password",
+      "signIn": "Sign In",
+      "forgotPassword": "Forgot your password?",
+      "noAccount": "Don't have an account? Contact your administrator."
+    },
+    "logout": {
+      "confirm": "Are you sure you want to sign out?",
+      "yes": "Yes, sign out",
+      "cancel": "Cancel"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "actions": "Actions",
+    "status": "Status",
+    "date": "Date",
+    "time": "Time",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "language": "Language",
+    "english": "English",
+    "vietnamese": "Vietnamese"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalid": "Invalid input",
+    "emailInvalid": "Please enter a valid email address",
+    "phoneInvalid": "Please enter a valid phone number",
+    "isbnInvalid": "Please enter a valid ISBN",
+    "networkError": "Network error. Please try again.",
+    "serverError": "Server error. Please contact support.",
+    "notFound": "Item not found",
+    "unauthorized": "You are not authorized to perform this action",
+    "validationError": "Please check your input and try again",
+    "bookNotAvailable": "This book is not available for checkout",
+    "memberSuspended": "This member's account is suspended",
+    "overdueBooks": "Member has overdue books"
+  },
+  "validation": {
+    "minLength": "Must be at least {min} characters",
+    "maxLength": "Must be no more than {max} characters",
+    "email": "Must be a valid email address",
+    "phone": "Must be a valid phone number",
+    "isbn": "Must be a valid ISBN",
+    "required": "This field is required",
+    "numeric": "Must be a number",
+    "date": "Must be a valid date"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": {
+      "title": "Profile Settings",
+      "name": "Full Name",
+      "email": "Email Address",
+      "language": "Preferred Language",
+      "save": "Save Changes"
+    },
+    "library": {
+      "title": "Library Settings",
+      "name": "Library Name",
+      "address": "Library Address",
+      "phone": "Library Phone",
+      "email": "Library Email",
+      "website": "Library Website"
+    },
+    "circulation": {
+      "title": "Circulation Settings",
+      "loanPeriod": "Default Loan Period (days)",
+      "maxRenewals": "Maximum Renewals",
+      "finePerDay": "Fine Per Day",
+      "maxFine": "Maximum Fine Amount"
+    }
+  },
+  "messages": {
+    "success": {
+      "bookAdded": "Book added successfully",
+      "bookUpdated": "Book updated successfully",
+      "bookDeleted": "Book deleted successfully",
+      "memberAdded": "Member added successfully",
+      "memberUpdated": "Member updated successfully",
+      "memberDeleted": "Member deleted successfully",
+      "checkedOut": "Book checked out successfully",
+      "checkedIn": "Book checked in successfully",
+      "settingsSaved": "Settings saved successfully",
+      "languageChanged": "Language changed successfully"
+    },
+    "info": {
+      "noResults": "No results found",
+      "emptyLibrary": "No books in the library yet",
+      "noMembers": "No members registered yet",
+      "noTransactions": "No transactions found"
+    }
+  }
+}

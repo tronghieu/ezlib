@@ -61,7 +61,7 @@ export function LibraryDashboardSidebar(): React.JSX.Element {
     },
     {
       title: "Inventory",
-      href: `/${currentLibrary.code}/inventory`,
+      href: `/${currentLibrary.code}/books`,
       icon: Book,
       description: "Manage book collection",
       requiredPermissions: ["books.view"],
@@ -99,7 +99,7 @@ export function LibraryDashboardSidebar(): React.JSX.Element {
     },
     {
       title: "Add Book",
-      href: `/${currentLibrary.code}/inventory/add`,
+      href: `/${currentLibrary.code}/books/add`,
       icon: BookOpen,
       description: "Add new book to inventory",
       requiredPermissions: ["books.create"],

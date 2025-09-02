@@ -1,11 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+// Temporarily disable intl middleware for debugging
+// import createIntlMiddleware from 'next-intl/middleware';
+// import { locales, defaultLocale, localePrefix } from './i18n/config';
 
 /**
  * Authentication middleware for protecting admin routes
  * Implements AC1: Authentication Middleware Implementation
  */
 export async function middleware(request: NextRequest) {
+  // TODO: Re-enable intl middleware once configuration issues are resolved
   let supabaseResponse = NextResponse.next({
     request,
   });

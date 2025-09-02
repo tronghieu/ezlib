@@ -3,6 +3,7 @@
  * Comprehensive tests for the main dashboard page component
  */
 
+import '@testing-library/jest-dom';
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 

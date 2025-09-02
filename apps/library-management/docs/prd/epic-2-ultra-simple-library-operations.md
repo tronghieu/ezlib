@@ -10,7 +10,7 @@ so that **I can quickly see what books we have and their availability status wit
 
 **Acceptance Criteria:**
 
-1. Simple book list displays title, author, ISBN, and available/checked-out status only
+1. Simple book list displays title, author, publisher, publication years, ISBN, and available/checked-out status only
 2. Basic search functionality across title and author fields with simple text matching
 3. Clear available/checked-out status indicators using color coding (green/red)
 4. Simple pagination for book lists (up to 5,000 books)
@@ -28,8 +28,8 @@ so that **I can quickly build our book inventory without complex cataloging work
 
 **Acceptance Criteria:**
 
-1. Simple add book form with only required fields: title, author, ISBN (optional)
-2. Optional ISBN lookup integration with crawler service for metadata enrichment
+1. Simple add book form with only required fields: title, author, publisher, publication year, ISBN (optional)
+2. Optional ISBN lookup integration with crawler service for metadata enrichment if crawler service is available
 3. Manual entry fallback for books without ISBNs - title and author minimum required
 4. Duplicate detection prevents adding books with same title/author combination
 5. All new books automatically set to "available" status
@@ -110,7 +110,7 @@ so that **I can assist patrons effectively and make informed decisions about len
 8. Member since date and membership renewal requirements
 9. Quick action buttons for common tasks (check out book, send notification, update contact)
 
-## Story 2.6: Global Search and Discovery
+## Story 2.7: Global Search and Discovery
 
 As a **library staff member**,  
 I want **to search across all library data from a single interface**,  
