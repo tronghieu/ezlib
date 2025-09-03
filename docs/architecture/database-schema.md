@@ -136,6 +136,9 @@ CREATE TABLE library_members (
         "total_late_fees": 0
     }'::jsonb,
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'banned')),
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at TIMESTAMPTZ,
+    deleted_by UUID REFERENCES library_staff(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(library_id, member_id)
@@ -162,6 +165,9 @@ CREATE TABLE library_staff (
         "work_schedule": null
     }'::jsonb,
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'terminated')),
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at TIMESTAMPTZ,
+    deleted_by UUID REFERENCES library_staff(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(user_id, library_id)
@@ -294,6 +300,10 @@ CREATE TABLE book_copies (
         "due_date": null,
         "hold_queue": []
     }'::jsonb,
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'damaged', 'lost', 'maintenance')),
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at TIMESTAMPTZ,
+    deleted_by UUID REFERENCES library_staff(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(library_id, book_edition_id, copy_number)
@@ -417,6 +427,43 @@ CREATE TABLE social_follows (
 );
 
 -- =============================================================================
+-- INVITATION SYSTEM
+-- =============================================================================
+
+-- Invitations for library staff and members
+CREATE TABLE invitations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    library_id UUID NOT NULL REFERENCES libraries(id) ON DELETE CASCADE,
+    inviter_id UUID NOT NULL REFERENCES library_staff(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('owner', 'manager', 'librarian', 'volunteer')),
+    permissions JSONB DEFAULT '{}', -- For granular permissions override
+    invitation_type TEXT NOT NULL CHECK (invitation_type IN ('library_staff', 'library_member')),
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'expired', 'cancelled')),
+    token TEXT UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'base64url'), -- Secure invitation token
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '7 days'),
+    personal_message TEXT,
+    metadata JSONB DEFAULT '{}', -- Additional invitation-specific data
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(library_id, email, invitation_type) -- Prevent duplicate pending invitations
+);
+
+-- Invitation responses (audit trail)
+CREATE TABLE invitation_responses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    invitation_id UUID NOT NULL REFERENCES invitations(id) ON DELETE CASCADE,
+    responder_user_id UUID REFERENCES auth.users(id), -- NULL if not yet registered
+    response_type TEXT NOT NULL CHECK (response_type IN ('accepted', 'declined', 'expired')),
+    response_date TIMESTAMPTZ DEFAULT NOW(),
+    ip_address INET,
+    user_agent TEXT,
+    notes TEXT,
+    created_library_staff_id UUID REFERENCES library_staff(id), -- Created staff record if accepted
+    created_library_member_id UUID REFERENCES library_members(id) -- Created member record if accepted
+);
+
+-- =============================================================================
 -- PERFORMANCE INDEXES
 -- =============================================================================
 
@@ -425,10 +472,12 @@ CREATE INDEX idx_user_profiles_email ON user_profiles(email);
 CREATE INDEX idx_user_profiles_display_name ON user_profiles(display_name);
 
 -- Library relationship indexes
-CREATE INDEX idx_library_members_user_library ON library_members(user_id, library_id) WHERE user_id IS NOT NULL;
-CREATE INDEX idx_library_members_library_active ON library_members(library_id, status) WHERE status = 'active';
-CREATE INDEX idx_library_members_member_id ON library_members(library_id, member_id);
-CREATE INDEX idx_library_staff_user_library ON library_staff(user_id, library_id);
+CREATE INDEX idx_library_members_user_library ON library_members(user_id, library_id) WHERE user_id IS NOT NULL AND is_deleted = FALSE;
+CREATE INDEX idx_library_members_library_active ON library_members(library_id, status) WHERE status = 'active' AND is_deleted = FALSE;
+CREATE INDEX idx_library_members_member_id ON library_members(library_id, member_id) WHERE is_deleted = FALSE;
+CREATE INDEX idx_library_members_deleted ON library_members(library_id, is_deleted, deleted_at) WHERE is_deleted = TRUE;
+CREATE INDEX idx_library_staff_user_library ON library_staff(user_id, library_id) WHERE is_deleted = FALSE;
+CREATE INDEX idx_library_staff_deleted ON library_staff(library_id, is_deleted, deleted_at) WHERE is_deleted = TRUE;
 
 -- Book discovery indexes
 CREATE INDEX idx_authors_canonical_name ON authors(canonical_name);
@@ -439,10 +488,13 @@ CREATE INDEX idx_book_contributors_general_book ON book_contributors(general_boo
 CREATE INDEX idx_book_contributors_author ON book_contributors(author_id, role);
 
 -- Book copy and availability indexes
-CREATE INDEX idx_book_copies_library ON book_copies(library_id);
-CREATE INDEX idx_book_copies_edition ON book_copies(book_edition_id);
-CREATE INDEX idx_book_copies_barcode ON book_copies(barcode) WHERE barcode IS NOT NULL;
-CREATE INDEX idx_book_copies_availability ON book_copies USING GIN (availability);
+CREATE INDEX idx_book_copies_library ON book_copies(library_id) WHERE is_deleted = FALSE;
+CREATE INDEX idx_book_copies_library_active ON book_copies(library_id, status) WHERE is_deleted = FALSE AND status = 'active';
+CREATE INDEX idx_book_copies_edition ON book_copies(book_edition_id) WHERE is_deleted = FALSE;
+CREATE INDEX idx_book_copies_barcode ON book_copies(barcode) WHERE barcode IS NOT NULL AND is_deleted = FALSE;
+CREATE INDEX idx_book_copies_availability ON book_copies USING GIN (availability) WHERE is_deleted = FALSE AND status = 'active';
+CREATE INDEX idx_book_copies_status ON book_copies(library_id, status, is_deleted);
+CREATE INDEX idx_book_copies_deleted ON book_copies(library_id, is_deleted, deleted_at) WHERE is_deleted = TRUE;
 
 -- Borrowing workflow indexes
 CREATE INDEX idx_borrowing_transactions_member ON borrowing_transactions(member_id, status);
@@ -467,6 +519,15 @@ CREATE INDEX idx_collections_library_public ON collections(library_id, is_public
 CREATE INDEX idx_collection_books_collection ON collection_books(collection_id);
 CREATE INDEX idx_collection_books_copy ON collection_books(book_copy_id);
 
+-- Invitation system indexes
+CREATE INDEX idx_invitations_library_status ON invitations(library_id, status) WHERE status = 'pending';
+CREATE INDEX idx_invitations_token ON invitations(token) WHERE status = 'pending';
+CREATE INDEX idx_invitations_email_library ON invitations(email, library_id, invitation_type);
+CREATE INDEX idx_invitations_inviter ON invitations(inviter_id, created_at DESC);
+CREATE INDEX idx_invitations_expires ON invitations(expires_at) WHERE status = 'pending';
+CREATE INDEX idx_invitation_responses_invitation ON invitation_responses(invitation_id, response_date DESC);
+CREATE INDEX idx_invitation_responses_responder ON invitation_responses(responder_user_id) WHERE responder_user_id IS NOT NULL;
+
 -- =============================================================================
 -- ROW LEVEL SECURITY POLICIES
 -- =============================================================================
@@ -483,6 +544,8 @@ ALTER TABLE collection_books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE borrowing_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transaction_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invitation_responses ENABLE ROW LEVEL SECURITY;
 
 -- User access policies
 CREATE POLICY "Users can view own profile" ON user_profiles FOR SELECT USING (auth.uid() = id);
@@ -498,26 +561,40 @@ CREATE POLICY "Library staff can modify their libraries" ON libraries FOR ALL US
 );
 
 -- Library member policies
-CREATE POLICY "Users can view own memberships" ON library_members FOR SELECT USING (user_id = auth.uid());
-CREATE POLICY "Library staff can manage members" ON library_members FOR ALL USING (
-    library_id IN (SELECT library_id FROM library_staff WHERE user_id = auth.uid())
+CREATE POLICY "Users can view own memberships" ON library_members FOR SELECT USING (user_id = auth.uid() AND is_deleted = FALSE);
+CREATE POLICY "Library staff can view deleted members" ON library_members FOR SELECT USING (
+    library_id IN (SELECT library_id FROM library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
+);
+CREATE POLICY "Library staff can manage members" ON library_members FOR INSERT, UPDATE USING (
+    library_id IN (SELECT library_id FROM library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
 );
 
 -- Library staff policies
 CREATE POLICY "Staff can view own employment" ON library_staff FOR SELECT USING (user_id = auth.uid());
-CREATE POLICY "Managers can manage staff" ON library_staff FOR ALL USING (
+CREATE POLICY "Managers can view all staff" ON library_staff FOR SELECT USING (
     library_id IN (
         SELECT library_id FROM library_staff 
-        WHERE user_id = auth.uid() AND role IN ('owner', 'manager')
+        WHERE user_id = auth.uid() AND role IN ('owner', 'manager') AND is_deleted = FALSE
+    )
+);
+CREATE POLICY "Managers can manage staff" ON library_staff FOR INSERT, UPDATE USING (
+    library_id IN (
+        SELECT library_id FROM library_staff 
+        WHERE user_id = auth.uid() AND role IN ('owner', 'manager') AND is_deleted = FALSE
     )
 );
 
 -- Book copy policies
 CREATE POLICY "Public catalog visible to all" ON book_copies FOR SELECT USING (
-    library_id IN (SELECT id FROM libraries WHERE status = 'active')
+    library_id IN (SELECT id FROM libraries WHERE status = 'active') 
+    AND is_deleted = FALSE 
+    AND status = 'active'
 );
-CREATE POLICY "Library staff can manage inventory" ON book_copies FOR ALL USING (
-    library_id IN (SELECT library_id FROM library_staff WHERE user_id = auth.uid())
+CREATE POLICY "Library staff can view all inventory" ON book_copies FOR SELECT USING (
+    library_id IN (SELECT library_id FROM library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
+);
+CREATE POLICY "Library staff can manage inventory" ON book_copies FOR INSERT, UPDATE USING (
+    library_id IN (SELECT library_id FROM library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
 );
 
 -- Borrowing transaction policies
@@ -539,6 +616,48 @@ CREATE POLICY "Library staff can view transaction events" ON transaction_events 
 -- Review policies
 CREATE POLICY "Public reviews visible to all" ON reviews FOR SELECT USING (visibility = 'public');
 CREATE POLICY "Users can manage own reviews" ON reviews FOR ALL USING (reviewer_id = auth.uid());
+
+-- Invitation policies
+CREATE POLICY "Staff can view library invitations" ON invitations FOR SELECT USING (
+    library_id IN (SELECT library_id FROM library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
+);
+CREATE POLICY "Public can view pending invitations by token" ON invitations FOR SELECT USING (
+    status = 'pending' AND expires_at > NOW()
+);
+CREATE POLICY "Staff can manage invitations" ON invitations FOR INSERT, UPDATE USING (
+    library_id IN (
+        SELECT library_id FROM library_staff 
+        WHERE user_id = auth.uid() 
+        AND is_deleted = FALSE 
+        AND (
+            role IN ('owner', 'manager') 
+            OR (invitation_type = 'library_staff' AND permissions->>'manage_staff' = 'true')
+            OR (invitation_type = 'library_member' AND permissions->>'manage_members' = 'true')
+        )
+    )
+);
+CREATE POLICY "Inviters can delete own invitations" ON invitations FOR DELETE USING (
+    inviter_id IN (SELECT id FROM library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
+    OR library_id IN (
+        SELECT library_id FROM library_staff 
+        WHERE user_id = auth.uid() AND role IN ('owner', 'manager') AND is_deleted = FALSE
+    )
+);
+
+-- Invitation response policies
+CREATE POLICY "Staff can view invitation responses" ON invitation_responses FOR SELECT USING (
+    invitation_id IN (
+        SELECT id FROM invitations 
+        WHERE library_id IN (
+            SELECT library_id FROM library_staff 
+            WHERE user_id = auth.uid() AND is_deleted = FALSE
+        )
+    )
+);
+CREATE POLICY "Users can view own invitation responses" ON invitation_responses FOR SELECT USING (
+    responder_user_id = auth.uid()
+);
+CREATE POLICY "System can create invitation responses" ON invitation_responses FOR INSERT USING (true);
 
 -- =============================================================================
 -- TRIGGERS AND FUNCTIONS
@@ -562,6 +681,7 @@ CREATE TRIGGER update_library_staff_updated_at BEFORE UPDATE ON library_staff FO
 CREATE TRIGGER update_book_editions_updated_at BEFORE UPDATE ON book_editions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_book_copies_updated_at BEFORE UPDATE ON book_copies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_borrowing_transactions_updated_at BEFORE UPDATE ON borrowing_transactions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_invitations_updated_at BEFORE UPDATE ON invitations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to update book availability when transactions change
 CREATE OR REPLACE FUNCTION update_book_availability()
@@ -569,14 +689,19 @@ RETURNS TRIGGER AS $$
 BEGIN
     -- Update book copy availability and create audit event
     IF NEW.status = 'active' AND OLD.status != 'active' THEN
-        -- Book checked out
+        -- Book checked out - only if book copy is active
         UPDATE book_copies 
         SET availability = jsonb_set(
             jsonb_set(availability, '{status}', '"borrowed"'),
             '{current_borrower_id}', 
             to_jsonb(NEW.member_id::text)
         )
-        WHERE id = NEW.book_copy_id;
+        WHERE id = NEW.book_copy_id AND status = 'active' AND is_deleted = FALSE;
+        
+        -- Verify the update was successful (book copy must be active)
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Cannot checkout book copy: book is not active or has been deleted';
+        END IF;
         
         -- Create transaction event
         INSERT INTO transaction_events (transaction_id, event_type, staff_id, member_id, event_data)
@@ -606,6 +731,140 @@ CREATE TRIGGER update_copy_availability
     AFTER UPDATE ON borrowing_transactions 
     FOR EACH ROW 
     EXECUTE FUNCTION update_book_availability();
+
+-- =============================================================================
+-- SOFT DELETE FUNCTIONALITY
+-- =============================================================================
+
+-- Function to handle soft delete operations
+CREATE OR REPLACE FUNCTION handle_soft_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Prevent actual deletion, convert to soft delete
+    UPDATE library_members 
+    SET is_deleted = TRUE, 
+        deleted_at = NOW(),
+        deleted_by = (
+            SELECT id FROM library_staff 
+            WHERE user_id = auth.uid() 
+            AND library_id = OLD.library_id 
+            AND is_deleted = FALSE
+            LIMIT 1
+        ),
+        updated_at = NOW()
+    WHERE id = OLD.id;
+    
+    -- Prevent the actual DELETE
+    RETURN NULL;
+END;
+$$ language 'plpgsql' SECURITY DEFINER;
+
+-- Function to handle soft delete for library_staff
+CREATE OR REPLACE FUNCTION handle_staff_soft_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Prevent actual deletion, convert to soft delete
+    UPDATE library_staff 
+    SET is_deleted = TRUE, 
+        deleted_at = NOW(),
+        deleted_by = (
+            SELECT id FROM library_staff 
+            WHERE user_id = auth.uid() 
+            AND library_id = OLD.library_id 
+            AND is_deleted = FALSE
+            AND role IN ('owner', 'manager')
+            LIMIT 1
+        ),
+        updated_at = NOW()
+    WHERE id = OLD.id;
+    
+    -- Prevent the actual DELETE
+    RETURN NULL;
+END;
+$$ language 'plpgsql' SECURITY DEFINER;
+
+-- Function to handle soft delete for book_copies
+CREATE OR REPLACE FUNCTION handle_book_copy_soft_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Prevent actual deletion, convert to soft delete
+    UPDATE book_copies 
+    SET is_deleted = TRUE, 
+        deleted_at = NOW(),
+        deleted_by = (
+            SELECT id FROM library_staff 
+            WHERE user_id = auth.uid() 
+            AND library_id = OLD.library_id 
+            AND is_deleted = FALSE
+            LIMIT 1
+        ),
+        updated_at = NOW()
+    WHERE id = OLD.id;
+    
+    -- Prevent the actual DELETE
+    RETURN NULL;
+END;
+$$ language 'plpgsql' SECURITY DEFINER;
+
+-- Function to restore soft deleted records (undelete)
+CREATE OR REPLACE FUNCTION restore_soft_deleted(
+    table_name TEXT,
+    record_id UUID,
+    library_id UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+    user_is_authorized BOOLEAN := FALSE;
+BEGIN
+    -- Check if user has permission to restore records for this library
+    SELECT EXISTS (
+        SELECT 1 FROM library_staff 
+        WHERE user_id = auth.uid() 
+        AND library_id = restore_soft_deleted.library_id 
+        AND is_deleted = FALSE
+        AND role IN ('owner', 'manager')
+    ) INTO user_is_authorized;
+    
+    IF NOT user_is_authorized THEN
+        RAISE EXCEPTION 'Insufficient permissions to restore records';
+    END IF;
+    
+    -- Restore the record based on table name
+    CASE table_name
+        WHEN 'library_members' THEN
+            UPDATE library_members 
+            SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL, updated_at = NOW()
+            WHERE id = record_id AND library_id = restore_soft_deleted.library_id;
+        WHEN 'library_staff' THEN
+            UPDATE library_staff 
+            SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL, updated_at = NOW()
+            WHERE id = record_id AND library_id = restore_soft_deleted.library_id;
+        WHEN 'book_copies' THEN
+            UPDATE book_copies 
+            SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL, updated_at = NOW()
+            WHERE id = record_id AND library_id = restore_soft_deleted.library_id;
+        ELSE
+            RAISE EXCEPTION 'Invalid table name for soft delete restoration';
+    END CASE;
+    
+    RETURN TRUE;
+END;
+$$ language 'plpgsql' SECURITY DEFINER;
+
+-- Apply soft delete triggers
+CREATE TRIGGER library_members_soft_delete 
+    BEFORE DELETE ON library_members 
+    FOR EACH ROW 
+    EXECUTE FUNCTION handle_soft_delete();
+
+CREATE TRIGGER library_staff_soft_delete 
+    BEFORE DELETE ON library_staff 
+    FOR EACH ROW 
+    EXECUTE FUNCTION handle_staff_soft_delete();
+
+CREATE TRIGGER book_copies_soft_delete 
+    BEFORE DELETE ON book_copies 
+    FOR EACH ROW 
+    EXECUTE FUNCTION handle_book_copy_soft_delete();
 
 -- =============================================================================
 -- USER PROFILE SYNCHRONIZATION TRIGGERS
@@ -690,4 +949,203 @@ CREATE TRIGGER on_auth_user_deleted
     AFTER DELETE ON auth.users
     FOR EACH ROW 
     EXECUTE FUNCTION handle_user_delete();
+
+-- =============================================================================
+-- INVITATION SYSTEM FUNCTIONS
+-- =============================================================================
+
+-- Function to handle invitation expiration
+CREATE OR REPLACE FUNCTION handle_invitation_expiration()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Automatically expire invitations that have passed their expiry date
+    IF NEW.expires_at <= NOW() AND OLD.status = 'pending' THEN
+        NEW.status = 'expired';
+        
+        -- Create audit trail
+        INSERT INTO invitation_responses (invitation_id, response_type, notes)
+        VALUES (NEW.id, 'expired', 'Automatically expired');
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Function to process invitation acceptance
+CREATE OR REPLACE FUNCTION process_invitation_acceptance(
+    invitation_token TEXT,
+    accepting_user_id UUID,
+    response_notes TEXT DEFAULT NULL
+) RETURNS JSONB AS $$
+DECLARE
+    invitation_record invitations%ROWTYPE;
+    created_staff_id UUID;
+    created_member_id UUID;
+    result JSONB;
+BEGIN
+    -- Get the invitation
+    SELECT * INTO invitation_record 
+    FROM invitations 
+    WHERE token = invitation_token 
+    AND status = 'pending' 
+    AND expires_at > NOW();
+    
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Invalid or expired invitation token'
+        );
+    END IF;
+    
+    -- Check if user email matches invitation email
+    IF NOT EXISTS (
+        SELECT 1 FROM user_profiles 
+        WHERE id = accepting_user_id 
+        AND email = invitation_record.email
+    ) THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Email does not match invitation'
+        );
+    END IF;
+    
+    -- Process based on invitation type
+    IF invitation_record.invitation_type = 'library_staff' THEN
+        -- Check if staff record already exists
+        IF EXISTS (
+            SELECT 1 FROM library_staff 
+            WHERE user_id = accepting_user_id 
+            AND library_id = invitation_record.library_id
+        ) THEN
+            RETURN jsonb_build_object(
+                'success', false,
+                'error', 'User is already a staff member of this library'
+            );
+        END IF;
+        
+        -- Create library staff record
+        INSERT INTO library_staff (
+            user_id, 
+            library_id, 
+            role, 
+            permissions,
+            employment_info
+        ) VALUES (
+            accepting_user_id,
+            invitation_record.library_id,
+            invitation_record.role,
+            COALESCE(invitation_record.permissions, '{}'),
+            jsonb_build_object('hire_date', NOW()::date)
+        ) RETURNING id INTO created_staff_id;
+        
+    ELSIF invitation_record.invitation_type = 'library_member' THEN
+        -- Check if member record already exists
+        IF EXISTS (
+            SELECT 1 FROM library_members 
+            WHERE user_id = accepting_user_id 
+            AND library_id = invitation_record.library_id
+        ) THEN
+            RETURN jsonb_build_object(
+                'success', false,
+                'error', 'User is already a member of this library'
+            );
+        END IF;
+        
+        -- Create library member record
+        INSERT INTO library_members (
+            user_id,
+            library_id,
+            member_id,
+            personal_info
+        ) VALUES (
+            accepting_user_id,
+            invitation_record.library_id,
+            'INV-' || substring(invitation_record.token from 1 for 8),
+            jsonb_build_object(
+                'first_name', (SELECT display_name FROM user_profiles WHERE id = accepting_user_id),
+                'email', invitation_record.email
+            )
+        ) RETURNING id INTO created_member_id;
+    END IF;
+    
+    -- Update invitation status
+    UPDATE invitations 
+    SET status = 'accepted', updated_at = NOW()
+    WHERE id = invitation_record.id;
+    
+    -- Create response record
+    INSERT INTO invitation_responses (
+        invitation_id,
+        responder_user_id,
+        response_type,
+        notes,
+        created_library_staff_id,
+        created_library_member_id
+    ) VALUES (
+        invitation_record.id,
+        accepting_user_id,
+        'accepted',
+        response_notes,
+        created_staff_id,
+        created_member_id
+    );
+    
+    RETURN jsonb_build_object(
+        'success', true,
+        'invitation_type', invitation_record.invitation_type,
+        'library_id', invitation_record.library_id,
+        'role', invitation_record.role,
+        'created_staff_id', created_staff_id,
+        'created_member_id', created_member_id
+    );
+END;
+$$ language 'plpgsql' SECURITY DEFINER;
+
+-- Function to decline invitation
+CREATE OR REPLACE FUNCTION decline_invitation(
+    invitation_token TEXT,
+    declining_user_id UUID DEFAULT NULL,
+    response_notes TEXT DEFAULT NULL
+) RETURNS BOOLEAN AS $$
+DECLARE
+    invitation_record invitations%ROWTYPE;
+BEGIN
+    -- Get the invitation
+    SELECT * INTO invitation_record 
+    FROM invitations 
+    WHERE token = invitation_token 
+    AND status = 'pending' 
+    AND expires_at > NOW();
+    
+    IF NOT FOUND THEN
+        RETURN false;
+    END IF;
+    
+    -- Update invitation status
+    UPDATE invitations 
+    SET status = 'declined', updated_at = NOW()
+    WHERE id = invitation_record.id;
+    
+    -- Create response record
+    INSERT INTO invitation_responses (
+        invitation_id,
+        responder_user_id,
+        response_type,
+        notes
+    ) VALUES (
+        invitation_record.id,
+        declining_user_id,
+        'declined',
+        response_notes
+    );
+    
+    RETURN true;
+END;
+$$ language 'plpgsql' SECURITY DEFINER;
+
+-- Apply invitation triggers
+CREATE TRIGGER invitation_expiration_check 
+    BEFORE UPDATE ON invitations 
+    FOR EACH ROW 
+    EXECUTE FUNCTION handle_invitation_expiration();
 ```
