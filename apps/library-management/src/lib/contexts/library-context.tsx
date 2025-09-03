@@ -25,7 +25,7 @@ import { useAuthContext } from "@/lib/auth/context";
 // CONTEXT DEFINITION
 // =============================================================================
 
-const LibraryContext = createContext<LibraryContextValue | null>(null);
+export const LibraryContext = createContext<LibraryContextValue | null>(null);
 
 // =============================================================================
 // REDUCER FOR STATE MANAGEMENT

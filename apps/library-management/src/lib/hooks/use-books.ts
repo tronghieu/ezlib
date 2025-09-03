@@ -321,9 +321,14 @@ export function useBookSearch({ query, enabled = true }: UseBookSearchOptions) {
       if (error) throw error;
 
       // Transform search results similar to the main books hook
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const transformedBooks: BookWithDetails[] = (data || []).map(
-        (copy: any) => {
+        (copy: Database["public"]["Tables"]["book_copies"]["Row"] & {
+          book_editions: Database["public"]["Tables"]["book_editions"]["Row"] & {
+            general_books: Database["public"]["Tables"]["general_books"]["Row"];
+          };
+          authors: Database["public"]["Tables"]["authors"]["Row"];
+        }) => {
           const bookEdition = copy.book_editions;
           const generalBook = bookEdition?.general_books;
 

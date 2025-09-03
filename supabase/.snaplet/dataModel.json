@@ -250,7 +250,7 @@
           "name": "notification_preferences",
           "columnName": "notification_preferences",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -264,7 +264,7 @@
           "name": "followed_at",
           "columnName": "followed_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -394,7 +394,7 @@
           "name": "metadata",
           "columnName": "metadata",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -408,7 +408,7 @@
           "name": "social_stats",
           "columnName": "social_stats",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -422,7 +422,7 @@
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -436,7 +436,7 @@
           "name": "updated_at",
           "columnName": "updated_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -475,13 +475,6 @@
         }
       ],
       "uniqueConstraints": [
-        {
-          "name": "authors_canonical_name_key",
-          "fields": [
-            "canonical_name"
-          ],
-          "nullNotDistinct": false
-        },
         {
           "name": "authors_pkey",
           "fields": [
@@ -562,7 +555,7 @@
           "isList": false,
           "isGenerated": false,
           "sequence": false,
-          "hasDefaultValue": true,
+          "hasDefaultValue": false,
           "isId": false,
           "maxLength": null
         },
@@ -585,7 +578,7 @@
           "name": "sort_order",
           "columnName": "sort_order",
           "type": "int4",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -599,21 +592,7 @@
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": true,
-          "isId": false,
-          "maxLength": null
-        },
-        {
-          "id": "public.book_contributors.updated_at",
-          "name": "updated_at",
-          "columnName": "updated_at",
-          "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -682,16 +661,6 @@
           "name": "book_contributors_pkey",
           "fields": [
             "id"
-          ],
-          "nullNotDistinct": false
-        },
-        {
-          "name": "unique_book_author_role",
-          "fields": [
-            "author_id",
-            "book_edition_id",
-            "general_book_id",
-            "role"
           ],
           "nullNotDistinct": false
         }
@@ -815,11 +784,67 @@
           "maxLength": null
         },
         {
+          "id": "public.book_copies.status",
+          "name": "status",
+          "columnName": "status",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.book_copies.is_deleted",
+          "name": "is_deleted",
+          "columnName": "is_deleted",
+          "type": "bool",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.book_copies.deleted_at",
+          "name": "deleted_at",
+          "columnName": "deleted_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.book_copies.deleted_by",
+          "name": "deleted_by",
+          "columnName": "deleted_by",
+          "type": "uuid",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
           "id": "public.book_copies.created_at",
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -833,7 +858,7 @@
           "name": "updated_at",
           "columnName": "updated_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -879,11 +904,43 @@
           "hasDefaultValue": false
         },
         {
+          "name": "library_staff",
+          "type": "library_staff",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "book_copiesTolibrary_staff",
+          "relationFromFields": [
+            "deleted_by"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
           "name": "borrowing_transactions",
           "type": "borrowing_transactions",
           "isRequired": false,
           "kind": "object",
           "relationName": "borrowing_transactionsTobook_copies",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "collection_books",
+          "type": "collection_books",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "collection_booksTobook_copies",
           "relationFromFields": [],
           "relationToFields": [],
           "isList": true,
@@ -967,20 +1024,6 @@
           "maxLength": null
         },
         {
-          "id": "public.book_editions.isbn_10",
-          "name": "isbn_10",
-          "columnName": "isbn_10",
-          "type": "text",
-          "isRequired": false,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": false,
-          "isId": false,
-          "maxLength": null
-        },
-        {
           "id": "public.book_editions.title",
           "name": "title",
           "columnName": "title",
@@ -1018,7 +1061,7 @@
           "isList": false,
           "isGenerated": false,
           "sequence": false,
-          "hasDefaultValue": true,
+          "hasDefaultValue": false,
           "isId": false,
           "maxLength": null
         },
@@ -1041,7 +1084,7 @@
           "name": "edition_metadata",
           "columnName": "edition_metadata",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -1055,7 +1098,7 @@
           "name": "social_stats",
           "columnName": "social_stats",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -1069,7 +1112,7 @@
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -1083,7 +1126,7 @@
           "name": "updated_at",
           "columnName": "updated_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -1158,13 +1201,6 @@
           "name": "book_editions_pkey",
           "fields": [
             "id"
-          ],
-          "nullNotDistinct": false
-        },
-        {
-          "name": "idx_book_editions_isbn_13",
-          "fields": [
-            "isbn_13"
           ],
           "nullNotDistinct": false
         }
@@ -1260,11 +1296,25 @@
           "maxLength": null
         },
         {
+          "id": "public.borrowing_transactions.status",
+          "name": "status",
+          "columnName": "status",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
           "id": "public.borrowing_transactions.transaction_date",
           "name": "transaction_date",
           "columnName": "transaction_date",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -1334,7 +1384,7 @@
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -1348,7 +1398,7 @@
           "name": "updated_at",
           "columnName": "updated_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -1424,6 +1474,20 @@
             "id"
           ],
           "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "transaction_events",
+          "type": "transaction_events",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "transaction_eventsToborrowing_transactions",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
           "isId": false,
           "isGenerated": false,
           "sequence": false,
@@ -1771,6 +1835,296 @@
         }
       ],
       "uniqueConstraints": []
+    },
+    "collection_books": {
+      "id": "public.collection_books",
+      "schemaName": "public",
+      "tableName": "collection_books",
+      "fields": [
+        {
+          "id": "public.collection_books.id",
+          "name": "id",
+          "columnName": "id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": true,
+          "maxLength": null
+        },
+        {
+          "id": "public.collection_books.collection_id",
+          "name": "collection_id",
+          "columnName": "collection_id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.collection_books.book_copy_id",
+          "name": "book_copy_id",
+          "columnName": "book_copy_id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.collection_books.added_at",
+          "name": "added_at",
+          "columnName": "added_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "name": "book_copies",
+          "type": "book_copies",
+          "isRequired": true,
+          "kind": "object",
+          "relationName": "collection_booksTobook_copies",
+          "relationFromFields": [
+            "book_copy_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "collections",
+          "type": "collections",
+          "isRequired": true,
+          "kind": "object",
+          "relationName": "collection_booksTocollections",
+          "relationFromFields": [
+            "collection_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        }
+      ],
+      "uniqueConstraints": [
+        {
+          "name": "collection_books_collection_id_book_copy_id_key",
+          "fields": [
+            "book_copy_id",
+            "collection_id"
+          ],
+          "nullNotDistinct": false
+        },
+        {
+          "name": "collection_books_pkey",
+          "fields": [
+            "id"
+          ],
+          "nullNotDistinct": false
+        }
+      ]
+    },
+    "collections": {
+      "id": "public.collections",
+      "schemaName": "public",
+      "tableName": "collections",
+      "fields": [
+        {
+          "id": "public.collections.id",
+          "name": "id",
+          "columnName": "id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": true,
+          "maxLength": null
+        },
+        {
+          "id": "public.collections.library_id",
+          "name": "library_id",
+          "columnName": "library_id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.collections.name",
+          "name": "name",
+          "columnName": "name",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.collections.description",
+          "name": "description",
+          "columnName": "description",
+          "type": "text",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.collections.type",
+          "name": "type",
+          "columnName": "type",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.collections.is_public",
+          "name": "is_public",
+          "columnName": "is_public",
+          "type": "bool",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.collections.sort_order",
+          "name": "sort_order",
+          "columnName": "sort_order",
+          "type": "int4",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.collections.created_at",
+          "name": "created_at",
+          "columnName": "created_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.collections.updated_at",
+          "name": "updated_at",
+          "columnName": "updated_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "name": "libraries",
+          "type": "libraries",
+          "isRequired": true,
+          "kind": "object",
+          "relationName": "collectionsTolibraries",
+          "relationFromFields": [
+            "library_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "collection_books",
+          "type": "collection_books",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "collection_booksTocollections",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        }
+      ],
+      "uniqueConstraints": [
+        {
+          "name": "collections_pkey",
+          "fields": [
+            "id"
+          ],
+          "nullNotDistinct": false
+        }
+      ]
     },
     "extensions": {
       "id": "_realtime.extensions",
@@ -2133,7 +2487,7 @@
           "name": "subjects",
           "columnName": "subjects",
           "type": "text[]",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -2147,7 +2501,7 @@
           "name": "global_stats",
           "columnName": "global_stats",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -2161,7 +2515,7 @@
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -2175,7 +2529,7 @@
           "name": "updated_at",
           "columnName": "updated_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -2932,6 +3286,512 @@
       ],
       "uniqueConstraints": []
     },
+    "invitation_responses": {
+      "id": "public.invitation_responses",
+      "schemaName": "public",
+      "tableName": "invitation_responses",
+      "fields": [
+        {
+          "id": "public.invitation_responses.id",
+          "name": "id",
+          "columnName": "id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": true,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitation_responses.invitation_id",
+          "name": "invitation_id",
+          "columnName": "invitation_id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitation_responses.responder_user_id",
+          "name": "responder_user_id",
+          "columnName": "responder_user_id",
+          "type": "uuid",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitation_responses.response_type",
+          "name": "response_type",
+          "columnName": "response_type",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitation_responses.response_date",
+          "name": "response_date",
+          "columnName": "response_date",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitation_responses.ip_address",
+          "name": "ip_address",
+          "columnName": "ip_address",
+          "type": "inet",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitation_responses.user_agent",
+          "name": "user_agent",
+          "columnName": "user_agent",
+          "type": "text",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitation_responses.notes",
+          "name": "notes",
+          "columnName": "notes",
+          "type": "text",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitation_responses.created_library_staff_id",
+          "name": "created_library_staff_id",
+          "columnName": "created_library_staff_id",
+          "type": "uuid",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitation_responses.created_library_member_id",
+          "name": "created_library_member_id",
+          "columnName": "created_library_member_id",
+          "type": "uuid",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "name": "users",
+          "type": "users",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "invitation_responsesTousers",
+          "relationFromFields": [
+            "responder_user_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "invitations",
+          "type": "invitations",
+          "isRequired": true,
+          "kind": "object",
+          "relationName": "invitation_responsesToinvitations",
+          "relationFromFields": [
+            "invitation_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "library_members",
+          "type": "library_members",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "invitation_responsesTolibrary_members",
+          "relationFromFields": [
+            "created_library_member_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "library_staff",
+          "type": "library_staff",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "invitation_responsesTolibrary_staff",
+          "relationFromFields": [
+            "created_library_staff_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        }
+      ],
+      "uniqueConstraints": [
+        {
+          "name": "invitation_responses_pkey",
+          "fields": [
+            "id"
+          ],
+          "nullNotDistinct": false
+        }
+      ]
+    },
+    "invitations": {
+      "id": "public.invitations",
+      "schemaName": "public",
+      "tableName": "invitations",
+      "fields": [
+        {
+          "id": "public.invitations.id",
+          "name": "id",
+          "columnName": "id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": true,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.library_id",
+          "name": "library_id",
+          "columnName": "library_id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.inviter_id",
+          "name": "inviter_id",
+          "columnName": "inviter_id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.email",
+          "name": "email",
+          "columnName": "email",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.role",
+          "name": "role",
+          "columnName": "role",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.permissions",
+          "name": "permissions",
+          "columnName": "permissions",
+          "type": "jsonb",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.invitation_type",
+          "name": "invitation_type",
+          "columnName": "invitation_type",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.status",
+          "name": "status",
+          "columnName": "status",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.token",
+          "name": "token",
+          "columnName": "token",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.expires_at",
+          "name": "expires_at",
+          "columnName": "expires_at",
+          "type": "timestamptz",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.personal_message",
+          "name": "personal_message",
+          "columnName": "personal_message",
+          "type": "text",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.metadata",
+          "name": "metadata",
+          "columnName": "metadata",
+          "type": "jsonb",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.created_at",
+          "name": "created_at",
+          "columnName": "created_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.invitations.updated_at",
+          "name": "updated_at",
+          "columnName": "updated_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "name": "libraries",
+          "type": "libraries",
+          "isRequired": true,
+          "kind": "object",
+          "relationName": "invitationsTolibraries",
+          "relationFromFields": [
+            "library_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "library_staff",
+          "type": "library_staff",
+          "isRequired": true,
+          "kind": "object",
+          "relationName": "invitationsTolibrary_staff",
+          "relationFromFields": [
+            "inviter_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "invitation_responses",
+          "type": "invitation_responses",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "invitation_responsesToinvitations",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        }
+      ],
+      "uniqueConstraints": [
+        {
+          "name": "invitations_library_id_email_invitation_type_key",
+          "fields": [
+            "email",
+            "invitation_type",
+            "library_id"
+          ],
+          "nullNotDistinct": false
+        },
+        {
+          "name": "invitations_pkey",
+          "fields": [
+            "id"
+          ],
+          "nullNotDistinct": false
+        },
+        {
+          "name": "invitations_token_key",
+          "fields": [
+            "token"
+          ],
+          "nullNotDistinct": false
+        }
+      ]
+    },
     "libraries": {
       "id": "public.libraries",
       "schemaName": "public",
@@ -3036,11 +3896,25 @@
           "maxLength": null
         },
         {
+          "id": "public.libraries.status",
+          "name": "status",
+          "columnName": "status",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
           "id": "public.libraries.created_at",
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -3054,21 +3928,7 @@
           "name": "updated_at",
           "columnName": "updated_at",
           "type": "timestamptz",
-          "isRequired": true,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": true,
-          "isId": false,
-          "maxLength": null
-        },
-        {
-          "id": "public.libraries.status",
-          "name": "status",
-          "columnName": "status",
-          "type": "text",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -3097,6 +3957,34 @@
           "isRequired": false,
           "kind": "object",
           "relationName": "borrowing_transactionsTolibraries",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "collections",
+          "type": "collections",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "collectionsTolibraries",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "invitations",
+          "type": "invitations",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "invitationsTolibraries",
           "relationFromFields": [],
           "relationToFields": [],
           "isList": true,
@@ -3255,11 +4143,67 @@
           "maxLength": null
         },
         {
+          "id": "public.library_members.status",
+          "name": "status",
+          "columnName": "status",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.library_members.is_deleted",
+          "name": "is_deleted",
+          "columnName": "is_deleted",
+          "type": "bool",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.library_members.deleted_at",
+          "name": "deleted_at",
+          "columnName": "deleted_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.library_members.deleted_by",
+          "name": "deleted_by",
+          "columnName": "deleted_by",
+          "type": "uuid",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
           "id": "public.library_members.created_at",
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -3273,21 +4217,7 @@
           "name": "updated_at",
           "columnName": "updated_at",
           "type": "timestamptz",
-          "isRequired": true,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": true,
-          "isId": false,
-          "maxLength": null
-        },
-        {
-          "id": "public.library_members.status",
-          "name": "status",
-          "columnName": "status",
-          "type": "text",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -3333,11 +4263,57 @@
           "hasDefaultValue": false
         },
         {
+          "name": "library_staff",
+          "type": "library_staff",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "library_membersTolibrary_staff",
+          "relationFromFields": [
+            "deleted_by"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
           "name": "borrowing_transactions",
           "type": "borrowing_transactions",
           "isRequired": false,
           "kind": "object",
           "relationName": "borrowing_transactionsTolibrary_members",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "invitation_responses",
+          "type": "invitation_responses",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "invitation_responsesTolibrary_members",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "transaction_events",
+          "type": "transaction_events",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "transaction_eventsTolibrary_members",
           "relationFromFields": [],
           "relationToFields": [],
           "isList": true,
@@ -3455,11 +4431,67 @@
           "maxLength": null
         },
         {
+          "id": "public.library_staff.status",
+          "name": "status",
+          "columnName": "status",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.library_staff.is_deleted",
+          "name": "is_deleted",
+          "columnName": "is_deleted",
+          "type": "bool",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.library_staff.deleted_at",
+          "name": "deleted_at",
+          "columnName": "deleted_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.library_staff.deleted_by",
+          "name": "deleted_by",
+          "columnName": "deleted_by",
+          "type": "uuid",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
           "id": "public.library_staff.created_at",
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -3473,21 +4505,7 @@
           "name": "updated_at",
           "columnName": "updated_at",
           "type": "timestamptz",
-          "isRequired": true,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": true,
-          "isId": false,
-          "maxLength": null
-        },
-        {
-          "id": "public.library_staff.status",
-          "name": "status",
-          "columnName": "status",
-          "type": "text",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -3533,11 +4551,113 @@
           "hasDefaultValue": false
         },
         {
+          "name": "library_staff",
+          "type": "library_staff",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "library_staffTolibrary_staff",
+          "relationFromFields": [
+            "deleted_by"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "book_copies",
+          "type": "book_copies",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "book_copiesTolibrary_staff",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
           "name": "borrowing_transactions",
           "type": "borrowing_transactions",
           "isRequired": false,
           "kind": "object",
           "relationName": "borrowing_transactionsTolibrary_staff",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "invitation_responses",
+          "type": "invitation_responses",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "invitation_responsesTolibrary_staff",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "invitations",
+          "type": "invitations",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "invitationsTolibrary_staff",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "library_members",
+          "type": "library_members",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "library_membersTolibrary_staff",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "library_staff",
+          "type": "library_staff",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "library_staffTolibrary_staff",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "transaction_events",
+          "type": "transaction_events",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "transaction_eventsTolibrary_staff",
           "relationFromFields": [],
           "relationToFields": [],
           "isList": true,
@@ -5021,7 +6141,7 @@
           "name": "social_metrics",
           "columnName": "social_metrics",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -5035,7 +6155,7 @@
           "name": "created_at",
           "columnName": "created_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -5049,7 +6169,7 @@
           "name": "updated_at",
           "columnName": "updated_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -6077,50 +7197,6 @@
         }
       ]
     },
-    "seed_files": {
-      "id": "supabase_migrations.seed_files",
-      "schemaName": "supabase_migrations",
-      "tableName": "seed_files",
-      "fields": [
-        {
-          "id": "supabase_migrations.seed_files.path",
-          "name": "path",
-          "columnName": "path",
-          "type": "text",
-          "isRequired": true,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": false,
-          "isId": true,
-          "maxLength": null
-        },
-        {
-          "id": "supabase_migrations.seed_files.hash",
-          "name": "hash",
-          "columnName": "hash",
-          "type": "text",
-          "isRequired": true,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": false,
-          "isId": false,
-          "maxLength": null
-        }
-      ],
-      "uniqueConstraints": [
-        {
-          "name": "seed_files_pkey",
-          "fields": [
-            "path"
-          ],
-          "nullNotDistinct": false
-        }
-      ]
-    },
     "sessions": {
       "id": "auth.sessions",
       "schemaName": "auth",
@@ -6381,7 +7457,7 @@
           "name": "followed_at",
           "columnName": "followed_at",
           "type": "timestamptz",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -7091,6 +8167,487 @@
         }
       ]
     },
+    "transaction_events": {
+      "id": "public.transaction_events",
+      "schemaName": "public",
+      "tableName": "transaction_events",
+      "fields": [
+        {
+          "id": "public.transaction_events.id",
+          "name": "id",
+          "columnName": "id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": true,
+          "maxLength": null
+        },
+        {
+          "id": "public.transaction_events.transaction_id",
+          "name": "transaction_id",
+          "columnName": "transaction_id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.transaction_events.event_type",
+          "name": "event_type",
+          "columnName": "event_type",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.transaction_events.staff_id",
+          "name": "staff_id",
+          "columnName": "staff_id",
+          "type": "uuid",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.transaction_events.member_id",
+          "name": "member_id",
+          "columnName": "member_id",
+          "type": "uuid",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.transaction_events.event_data",
+          "name": "event_data",
+          "columnName": "event_data",
+          "type": "jsonb",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.transaction_events.timestamp",
+          "name": "timestamp",
+          "columnName": "timestamp",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.transaction_events.notes",
+          "name": "notes",
+          "columnName": "notes",
+          "type": "text",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "name": "borrowing_transactions",
+          "type": "borrowing_transactions",
+          "isRequired": true,
+          "kind": "object",
+          "relationName": "transaction_eventsToborrowing_transactions",
+          "relationFromFields": [
+            "transaction_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "library_members",
+          "type": "library_members",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "transaction_eventsTolibrary_members",
+          "relationFromFields": [
+            "member_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "library_staff",
+          "type": "library_staff",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "transaction_eventsTolibrary_staff",
+          "relationFromFields": [
+            "staff_id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        }
+      ],
+      "uniqueConstraints": [
+        {
+          "name": "transaction_events_pkey",
+          "fields": [
+            "id"
+          ],
+          "nullNotDistinct": false
+        }
+      ]
+    },
+    "user_preferences": {
+      "id": "public.user_preferences",
+      "schemaName": "public",
+      "tableName": "user_preferences",
+      "fields": [
+        {
+          "id": "public.user_preferences.id",
+          "name": "id",
+          "columnName": "id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": true,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_preferences.notifications",
+          "name": "notifications",
+          "columnName": "notifications",
+          "type": "jsonb",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_preferences.privacy",
+          "name": "privacy",
+          "columnName": "privacy",
+          "type": "jsonb",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_preferences.interface",
+          "name": "interface",
+          "columnName": "interface",
+          "type": "jsonb",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_preferences.created_at",
+          "name": "created_at",
+          "columnName": "created_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_preferences.updated_at",
+          "name": "updated_at",
+          "columnName": "updated_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "name": "users",
+          "type": "users",
+          "isRequired": true,
+          "kind": "object",
+          "relationName": "user_preferencesTousers",
+          "relationFromFields": [
+            "id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        }
+      ],
+      "uniqueConstraints": [
+        {
+          "name": "user_preferences_pkey",
+          "fields": [
+            "id"
+          ],
+          "nullNotDistinct": false
+        }
+      ]
+    },
+    "user_profiles": {
+      "id": "public.user_profiles",
+      "schemaName": "public",
+      "tableName": "user_profiles",
+      "fields": [
+        {
+          "id": "public.user_profiles.id",
+          "name": "id",
+          "columnName": "id",
+          "type": "uuid",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": true,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_profiles.email",
+          "name": "email",
+          "columnName": "email",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_profiles.display_name",
+          "name": "display_name",
+          "columnName": "display_name",
+          "type": "text",
+          "isRequired": true,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_profiles.avatar_url",
+          "name": "avatar_url",
+          "columnName": "avatar_url",
+          "type": "text",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_profiles.bio",
+          "name": "bio",
+          "columnName": "bio",
+          "type": "text",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_profiles.location",
+          "name": "location",
+          "columnName": "location",
+          "type": "jsonb",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_profiles.social_links",
+          "name": "social_links",
+          "columnName": "social_links",
+          "type": "jsonb",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_profiles.reading_stats",
+          "name": "reading_stats",
+          "columnName": "reading_stats",
+          "type": "jsonb",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_profiles.created_at",
+          "name": "created_at",
+          "columnName": "created_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "id": "public.user_profiles.updated_at",
+          "name": "updated_at",
+          "columnName": "updated_at",
+          "type": "timestamptz",
+          "isRequired": false,
+          "kind": "scalar",
+          "isList": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": true,
+          "isId": false,
+          "maxLength": null
+        },
+        {
+          "name": "users",
+          "type": "users",
+          "isRequired": true,
+          "kind": "object",
+          "relationName": "user_profilesTousers",
+          "relationFromFields": [
+            "id"
+          ],
+          "relationToFields": [
+            "id"
+          ],
+          "isList": false,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        }
+      ],
+      "uniqueConstraints": [
+        {
+          "name": "user_profiles_email_key",
+          "fields": [
+            "email"
+          ],
+          "nullNotDistinct": false
+        },
+        {
+          "name": "user_profiles_pkey",
+          "fields": [
+            "id"
+          ],
+          "nullNotDistinct": false
+        }
+      ]
+    },
     "users": {
       "id": "auth.users",
       "schemaName": "auth",
@@ -7657,6 +9214,20 @@
           "hasDefaultValue": false
         },
         {
+          "name": "invitation_responses",
+          "type": "invitation_responses",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "invitation_responsesTousers",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
           "name": "library_members",
           "type": "library_members",
           "isRequired": false,
@@ -7718,6 +9289,34 @@
           "isRequired": false,
           "kind": "object",
           "relationName": "social_follows_following_idTousers",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "user_preferences",
+          "type": "user_preferences",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "user_preferencesTousers",
+          "relationFromFields": [],
+          "relationToFields": [],
+          "isList": true,
+          "isId": false,
+          "isGenerated": false,
+          "sequence": false,
+          "hasDefaultValue": false
+        },
+        {
+          "name": "user_profiles",
+          "type": "user_profiles",
+          "isRequired": false,
+          "kind": "object",
+          "relationName": "user_profilesTousers",
           "relationFromFields": [],
           "relationToFields": [],
           "isList": true,

@@ -33,22 +33,39 @@ const mockLibrary = {
   id: "library-1",
   code: "TEST-LIB",
   name: "Test Library",
+  address: "123 Test Street",
+  contact_info: { email: "test@library.com" },
+  settings: {},
+  stats: {},
   user_role: "librarian",
   staff_status: "active",
   status: "active",
   created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: "2024-01-01T00:00:00.000Z",
+  user_permissions: {},
+  staff_id: "staff-1",
 };
 
 describe("LibraryDashboardSidebar", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseSidebar.mockReturnValue({ open: true });
+    mockUseSidebar.mockReturnValue({ 
+      state: "expanded",
+      open: true, 
+      setOpen: jest.fn(),
+      openMobile: false,
+      setOpenMobile: jest.fn(),
+      isMobile: false,
+      toggleSidebar: jest.fn()
+    });
     mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
     mockUseLibraryContext.mockReturnValue({
       currentLibrary: mockLibrary,
       selectLibrary: jest.fn(),
-      clearLibrary: jest.fn(),
-      userLibraries: [mockLibrary],
+      clearLibrarySelection: jest.fn(),
+      availableLibraries: [mockLibrary],
+      refreshLibraries: jest.fn(),
+      switchLibrary: jest.fn(),
       isLoading: false,
       error: null,
     });
@@ -170,8 +187,10 @@ describe("LibraryDashboardSidebar", () => {
       mockUseLibraryContext.mockReturnValue({
         currentLibrary: null,
         selectLibrary: jest.fn(),
-        clearLibrary: jest.fn(),
-        userLibraries: [],
+        clearLibrarySelection: jest.fn(),
+        availableLibraries: [],
+        refreshLibraries: jest.fn(),
+        switchLibrary: jest.fn(),
         isLoading: false,
         error: null,
       });
@@ -215,7 +234,15 @@ describe("LibraryDashboardSidebar", () => {
     });
 
     it("should handle collapsed sidebar state", () => {
-      mockUseSidebar.mockReturnValue({ open: false });
+      mockUseSidebar.mockReturnValue({ 
+        state: "collapsed",
+        open: false, 
+        setOpen: jest.fn(),
+        openMobile: false,
+        setOpenMobile: jest.fn(),
+        isMobile: false,
+        toggleSidebar: jest.fn()
+      });
 
       render(<LibraryDashboardSidebar />);
 
@@ -260,8 +287,10 @@ describe("LibraryDashboardSidebar", () => {
       mockUseLibraryContext.mockReturnValue({
         currentLibrary: memberLibrary,
         selectLibrary: jest.fn(),
-        clearLibrary: jest.fn(),
-        userLibraries: [memberLibrary],
+        clearLibrarySelection: jest.fn(),
+        availableLibraries: [memberLibrary],
+        refreshLibraries: jest.fn(),
+        switchLibrary: jest.fn(),
         isLoading: false,
         error: null,
       });
@@ -292,8 +321,10 @@ describe("LibraryDashboardSidebar", () => {
       mockUseLibraryContext.mockReturnValue({
         currentLibrary: newLibrary,
         selectLibrary: jest.fn(),
-        clearLibrary: jest.fn(),
-        userLibraries: [newLibrary],
+        clearLibrarySelection: jest.fn(),
+        availableLibraries: [newLibrary],
+        refreshLibraries: jest.fn(),
+        switchLibrary: jest.fn(),
         isLoading: false,
         error: null,
       });

@@ -1,5 +1,10 @@
 # Serena
 .serena/
+**/.serena
+
+#mcp
+.mcp.json
+**/.mcp.json
 
 # Environment variables
 .env

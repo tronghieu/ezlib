@@ -27,10 +27,17 @@ const mockLibrary = {
   id: "library-1",
   code: "TEST-LIB",
   name: "Test Library",
+  address: "123 Test Street",
+  contact_info: { email: "test@library.com" },
+  settings: {},
+  stats: {},
   user_role: "librarian",
   staff_status: "active",
   status: "active",
   created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: "2024-01-01T00:00:00.000Z",
+  user_permissions: {},
+  staff_id: "staff-1",
 };
 
 describe("LibraryDashboardHeader", () => {
@@ -39,8 +46,10 @@ describe("LibraryDashboardHeader", () => {
     mockUseLibraryContext.mockReturnValue({
       currentLibrary: mockLibrary,
       selectLibrary: jest.fn(),
-      clearLibrary: jest.fn(),
-      userLibraries: [mockLibrary],
+      clearLibrarySelection: jest.fn(),
+      availableLibraries: [mockLibrary],
+      refreshLibraries: jest.fn(),
+      switchLibrary: jest.fn(),
       isLoading: false,
       error: null,
     });
@@ -223,8 +232,10 @@ describe("LibraryDashboardHeader", () => {
       mockUseLibraryContext.mockReturnValue({
         currentLibrary: null,
         selectLibrary: jest.fn(),
-        clearLibrary: jest.fn(),
-        userLibraries: [],
+        clearLibrarySelection: jest.fn(),
+        availableLibraries: [],
+        refreshLibraries: jest.fn(),
+        switchLibrary: jest.fn(),
         isLoading: false,
         error: null,
       });
@@ -244,8 +255,10 @@ describe("LibraryDashboardHeader", () => {
       mockUseLibraryContext.mockReturnValue({
         currentLibrary: null,
         selectLibrary: jest.fn(),
-        clearLibrary: jest.fn(),
-        userLibraries: [],
+        clearLibrarySelection: jest.fn(),
+        availableLibraries: [],
+        refreshLibraries: jest.fn(),
+        switchLibrary: jest.fn(),
         isLoading: false,
         error: null,
       });
@@ -351,8 +364,10 @@ describe("LibraryDashboardHeader", () => {
       mockUseLibraryContext.mockReturnValue({
         currentLibrary: newLibrary,
         selectLibrary: jest.fn(),
-        clearLibrary: jest.fn(),
-        userLibraries: [newLibrary],
+        clearLibrarySelection: jest.fn(),
+        availableLibraries: [newLibrary],
+        refreshLibraries: jest.fn(),
+        switchLibrary: jest.fn(),
         isLoading: false,
         error: null,
       });
@@ -375,8 +390,10 @@ describe("LibraryDashboardHeader", () => {
       mockUseLibraryContext.mockReturnValue({
         currentLibrary: adminLibrary,
         selectLibrary: jest.fn(),
-        clearLibrary: jest.fn(),
-        userLibraries: [adminLibrary],
+        clearLibrarySelection: jest.fn(),
+        availableLibraries: [adminLibrary],
+        refreshLibraries: jest.fn(),
+        switchLibrary: jest.fn(),
         isLoading: false,
         error: null,
       });

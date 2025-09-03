@@ -13,9 +13,9 @@ export type Locale = keyof typeof messages;
 export type TranslationKey = keyof Messages;
 
 // Utility function to get all translation keys (for validation)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export function getAllTranslationKeys(
-  messages: Record<string, any>,
+  messages: Record<string, unknown>,
   prefix = ""
 ): string[] {
   const keys: string[] = [];

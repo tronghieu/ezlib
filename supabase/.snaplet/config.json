@@ -1,3 +1,4 @@
 {
-  "adapter": "postgres"
+  "adapter": "postgres",
+  "projectDescription": "This project is about managing a library system where users can borrow books, write reviews, follow authors and social connections, and manage their preferences and profiles."
 }

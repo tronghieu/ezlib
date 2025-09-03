@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Create Supabase client with cookie handling for server-side
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,

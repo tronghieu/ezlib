@@ -23,8 +23,10 @@ apps/library-management/
 ├── src/                                # 🚀 Source code (Next.js App Router)
 │   ├── app/                           # Next.js 15 App Router pages & layouts
 │   ├── components/                    # React components
-│   └── lib/                           # Utility functions
-│   ├── server/                        # Server-side code
+│   │   ├── ui/                       # UI components
+│   │   ├── {features}/               # Components for specific features: library, books, auth, ...
+│   ├── lib/                           # Utility functions
+│   └── server/                        # Server-side code
 ├── public/                             # 🌐 Static assets
 ├── .bmad-core/                        # 🔧 BMad framework files
 ├── .claude/                           # Claude AI configuration

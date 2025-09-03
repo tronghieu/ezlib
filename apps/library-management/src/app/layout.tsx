@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth/context";
 import { LibraryProvider } from "@/lib/contexts/library-context";
 import { QueryProvider } from "@/lib/providers/query-provider";
+import { Toaster } from "@/components/ui/sonner";
 // Temporarily disabled for debugging
 // import { NextIntlClientProvider } from 'next-intl';
 // import { getMessages } from 'next-intl/server';
@@ -49,6 +50,7 @@ export default function RootLayout({
             <LibraryProvider>{children}</LibraryProvider>
           </AuthProvider>
         </QueryProvider>
+        <Toaster />
       </body>
     </html>
   );

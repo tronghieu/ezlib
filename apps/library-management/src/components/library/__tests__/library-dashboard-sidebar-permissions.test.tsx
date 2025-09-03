@@ -6,7 +6,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { LibraryDashboardSidebar } from "../library-dashboard-sidebar";
-import { LibraryProvider } from "@/lib/contexts/library-context";
+import { LibraryContext } from "@/lib/contexts/library-context";
 import type { LibraryWithAccess } from "@/lib/types";
 
 // Mock next/navigation
@@ -101,7 +101,7 @@ function createTestWrapper(library: LibraryWithAccess | null) {
   };
 
   const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-    <LibraryProvider value={mockLibraryValue}>{children}</LibraryProvider>
+    <LibraryContext.Provider value={mockLibraryValue}>{children}</LibraryContext.Provider>
   );
 
   return TestWrapper;
