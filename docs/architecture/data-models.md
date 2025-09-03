@@ -2,108 +2,222 @@
 
 The core data models define the shared business entities across both reader social features and library management operations. These TypeScript interfaces will be used consistently across all frontend applications and API services.
 
-## User
+## UserProfile
 
-**Purpose:** Base user identity - all users are readers by default, with additional library relationships managed separately.
+**Purpose:** Public user profile extending Supabase auth.users with social and reading features.
 
 **Key Attributes:**
 - `id`: string (UUID) - Primary identifier linked to Supabase Auth
-- `email`: string - Authentication email address
+- `email`: string - Authentication email address  
 - `display_name`: string - Public display name for social features
 - `avatar_url`: string | null - Profile image
-- `preferences`: UserPreferences - Reading and notification preferences
+- `bio`: string | null - User biography
+- `location`: UserLocation - Geographic information
+- `social_links`: UserSocialLinks - External social profiles
+- `reading_stats`: ReadingStats - Reading activity metrics
 
 ### TypeScript Interface
 ```typescript
-interface User {
+interface UserProfile {
   id: string;
   email: string;
   display_name: string;
   avatar_url: string | null;
+  bio: string | null;
+  location: UserLocation;
+  social_links: UserSocialLinks;
+  reading_stats: ReadingStats;
   created_at: Date;
   updated_at: Date;
-  preferences: UserPreferences;
 }
 
-interface UserPreferences {
-  notification_email: boolean;
-  notification_sms: boolean;
-  privacy_social_activity: 'public' | 'followers' | 'private';
-  preferred_language: string; // For book edition filtering
-  preferred_country: string;  // For regional book recommendations
+interface UserLocation {
+  city: string | null;
+  country: string | null;
+  timezone: string | null;
+}
+
+interface UserSocialLinks {
+  website: string | null;
+  goodreads: string | null;
+  twitter: string | null;
+  instagram: string | null;
+}
+
+interface ReadingStats {
+  books_read: number;
+  reviews_written: number;
+  favorite_genres: string[];
+  reading_goal_yearly: number | null;
 }
 ```
 
-### Relationships
-- **Has many:** `LibReader`, `LibAdmin`, `Review`, `SocialFollow`
+## UserPreferences
 
-## LibReader
-
-**Purpose:** Library membership with subscription tracking and borrowing privileges.
+**Purpose:** Private user settings and preferences separate from public profile.
 
 **Key Attributes:**
-- `id`: string (UUID) - Primary identifier
-- `user_id`: string - Reference to User
-- `library_id`: string - Reference to Library
-- `state`: 'active' | 'inactive' | 'banned' - Membership status
-- `subscription_start`: Date - Membership start date
-- `subscription_end`: Date | null - Membership expiry (null = lifetime)
-- `notes`: string | null - Staff notes about member
+- `id`: string (UUID) - References auth.users
+- `notifications`: NotificationSettings - Alert preferences
+- `privacy`: PrivacySettings - Visibility controls
+- `interface`: InterfaceSettings - UI/UX preferences
 
 ### TypeScript Interface
 ```typescript
-interface LibReader {
+interface UserPreferences {
   id: string;
-  user_id: string;
-  library_id: string;
-  state: 'active' | 'inactive' | 'banned';
-  subscription_start: Date;
-  subscription_end: Date | null;
-  notes: string | null;
+  notifications: NotificationSettings;
+  privacy: PrivacySettings;
+  interface: InterfaceSettings;
   created_at: Date;
   updated_at: Date;
+}
+
+interface NotificationSettings {
+  email_enabled: boolean;
+  sms_enabled: boolean;
+  push_enabled: boolean;
+  due_date_reminders: boolean;
+  new_book_alerts: boolean;
+  social_activity: boolean;
+}
+
+interface PrivacySettings {
+  profile_visibility: 'public' | 'followers' | 'private';
+  reading_activity: 'public' | 'followers' | 'private';
+  review_visibility: 'public' | 'followers' | 'private';
+  location_sharing: boolean;
+}
+
+interface InterfaceSettings {
+  preferred_language: string; // ISO code for UI language
+  preferred_country: string;  // For regional content
+  theme: 'light' | 'dark' | 'system';
+  books_per_page: number;
+  default_view: 'grid' | 'list';
 }
 ```
 
 ### Relationships
-- **Belongs to:** `User`, `Library`
+- **Has many:** `LibraryMember`, `LibraryStaff`, `Review`, `SocialFollow`
+
+## LibraryMember
+
+**Purpose:** Library membership records supporting both registered users and standalone patrons.
+
+**Key Attributes:**
+- `id`: string (UUID) - Primary identifier
+- `user_id`: string | null - Optional link to registered user
+- `library_id`: string - Reference to Library
+- `member_id`: string - Library-specific member identifier
+- `personal_info`: PersonalInfo - Contact and identity information
+- `membership_info`: MembershipInfo - Membership terms and fees
+- `borrowing_stats`: BorrowingStats - Current borrowing status
+
+### TypeScript Interface
+```typescript
+interface LibraryMember {
+  id: string;
+  user_id: string | null; // Can be null for non-registered members
+  library_id: string;
+  member_id: string; // Library-specific ID (e.g., "M001", "2024-456")
+  personal_info: PersonalInfo;
+  membership_info: MembershipInfo;
+  borrowing_stats: BorrowingStats;
+  status: 'active' | 'inactive' | 'banned';
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface PersonalInfo {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  address: MemberAddress;
+}
+
+interface MemberAddress {
+  street?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
+}
+
+interface MembershipInfo {
+  type: 'regular' | 'student' | 'senior' | 'family' | 'institutional';
+  fees_owed: number;
+  expiry_date: Date | null; // null = no expiration
+  notes: string | null;
+}
+
+interface BorrowingStats {
+  current_loans: number;
+  total_books_borrowed: number;
+  overdue_items: number;
+  total_late_fees: number;
+}
+```
+
+### Relationships
+- **Belongs to:** `UserProfile` (optional), `Library`
 - **Has many:** `BorrowingTransaction`
 
-## LibAdmin
+## LibraryStaff
 
-**Purpose:** Library administration roles separate from reader memberships.
+**Purpose:** Library staff and administrators with role-based permissions.
 
 **Key Attributes:**
 - `id`: string (UUID) - Primary identifier
-- `user_id`: string - Reference to User
+- `user_id`: string - Reference to UserProfile
 - `library_id`: string - Reference to Library
-- `role`: 'owner' | 'manager' | 'librarian' - Administrative level
-- `granted_at`: Date - When role was assigned
-- `granted_by`: string - User ID who granted the role
+- `role`: StaffRole - Administrative level
+- `permissions`: StaffPermissions - Granular access control
+- `employment_info`: EmploymentInfo - HR and scheduling information
 
 ### TypeScript Interface
 ```typescript
-interface LibAdmin {
+interface LibraryStaff {
   id: string;
   user_id: string;
   library_id: string;
-  role: 'owner' | 'manager' | 'librarian';
-  granted_at: Date;
-  granted_by: string;
-  permissions: AdminPermissions;
+  role: StaffRole;
+  permissions: StaffPermissions;
+  employment_info: EmploymentInfo;
+  status: 'active' | 'inactive' | 'terminated';
+  created_at: Date;
+  updated_at: Date;
 }
 
-interface AdminPermissions {
-  manage_books: boolean;
-  manage_members: boolean;
+type StaffRole = 'owner' | 'manager' | 'librarian' | 'volunteer';
+
+interface StaffPermissions {
+  admin_settings: boolean;
   manage_staff: boolean;
-  view_analytics: boolean;
-  manage_collections: boolean;
+  manage_members: boolean;
+  manage_inventory: boolean;
+  process_loans: boolean;
+  view_reports: boolean;
+}
+
+interface EmploymentInfo {
+  employee_id: string | null;
+  hire_date: Date | null;
+  department: string | null;
+  work_schedule: WorkSchedule | null;
+}
+
+interface WorkSchedule {
+  hours_per_week?: number;
+  schedule_notes?: string;
+  shift_preferences?: string[];
 }
 ```
 
 ### Relationships
-- **Belongs to:** `User`, `Library`
+- **Belongs to:** `UserProfile`, `Library`
+- **Has many:** `BorrowingTransaction` (as processor)
 
 ## Author
 
@@ -285,43 +399,54 @@ type ContributorRole =
 ### Relationships
 - **Belongs to:** `GeneralBook`, `BookEdition` (optional), `Author`
 
-## BookInventory
+## BookCopy
 
-**Purpose:** Library-specific book availability and collection organization.
+**Purpose:** Individual physical book instances with unique tracking and location management.
 
 **Key Attributes:**
 - `id`: string (UUID) - Primary identifier
-- `book_edition_id`: string - Reference to BookEdition
 - `library_id`: string - Owning library
-- `availability`: InventoryAvailability - Current status
-- `physical_details`: PhysicalDetails - Library-specific information
+- `book_edition_id`: string - Reference to BookEdition
+- `copy_number`: string - Library-specific copy identifier
+- `barcode`: string | null - Optional barcode for scanning
+- `location`: CopyLocation - Physical location in library
+- `condition_info`: ConditionInfo - Physical condition and maintenance
+- `availability`: CopyAvailability - Current borrowing status
 
 ### TypeScript Interface
 ```typescript
-interface BookInventory {
+interface BookCopy {
   id: string;
-  book_edition_id: string;
   library_id: string;
-  availability: InventoryAvailability;
-  physical_details: PhysicalDetails;
+  book_edition_id: string;
+  copy_number: string; // e.g., "001", "A-001", "Main-Fiction-0123"
+  barcode: string | null;
+  location: CopyLocation;
+  condition_info: ConditionInfo;
+  availability: CopyAvailability;
   created_at: Date;
   updated_at: Date;
 }
 
-interface InventoryAvailability {
-  status: 'available' | 'checked_out' | 'on_hold' | 'lost' | 'damaged' | 'withdrawn';
-  total_copies: number;
-  available_copies: number;
-  current_borrower_id: string | null;
-  due_date: Date | null;
+interface CopyLocation {
+  shelf: string | null;
+  section: string | null; // e.g., "Fiction", "Reference", "Children"
+  call_number: string | null; // Dewey Decimal or custom classification
 }
 
-interface PhysicalDetails {
-  shelf_location: string | null;
-  condition: 'new' | 'good' | 'fair' | 'poor';
+interface ConditionInfo {
+  condition: 'new' | 'excellent' | 'good' | 'fair' | 'poor' | 'damaged';
+  notes: string | null;
   acquisition_date: Date | null;
-  acquisition_cost: number | null;
-  barcode: string | null;
+  acquisition_price: number | null;
+  last_maintenance: Date | null;
+}
+
+interface CopyAvailability {
+  status: 'available' | 'borrowed' | 'reserved' | 'maintenance' | 'lost' | 'withdrawn';
+  current_borrower_id: string | null;
+  due_date: Date | null;
+  hold_queue: string[]; // Array of member IDs with holds
 }
 ```
 
@@ -359,56 +484,94 @@ interface Collection {
 
 ### Relationships
 - **Belongs to:** `Library`
-- **Belongs to many:** `BookInventory` (through `collection_books` junction table)
+- **Belongs to many:** `BookCopy` (through `collection_books` junction table)
 
 ## BorrowingTransaction
 
-**Purpose:** Complete borrowing lifecycle tracking from request through return, supporting both staff-initiated and reader-requested borrowing.
+**Purpose:** Complete borrowing lifecycle tracking supporting staff-processed transactions and member borrowing history.
 
 **Key Attributes:**
 - `id`: string (UUID) - Primary identifier
-- `book_inventory_id`: string - Reference to borrowed book inventory
-- `borrower_id`: string - User who borrowed the book
 - `library_id`: string - Library that owns the book
-- `status`: TransactionStatus - Current transaction state
-- `timeline`: TransactionEvent[] - Complete audit trail
+- `book_copy_id`: string - Reference to specific book copy
+- `member_id`: string - Library member who borrowed the book
+- `staff_id`: string | null - Staff member who processed the transaction
+- `transaction_type`: TransactionType - Type of transaction
+- `status`: TransactionStatus - Current state
+- `fees`: TransactionFees - Financial information
 
 ### TypeScript Interface
 ```typescript
 interface BorrowingTransaction {
   id: string;
-  book_inventory_id: string;
-  borrower_id: string;
   library_id: string;
+  book_copy_id: string;
+  member_id: string;
+  staff_id: string | null; // Staff who processed the transaction
+  transaction_type: TransactionType;
   status: TransactionStatus;
-  requested_at: Date | null;
-  approved_at: Date | null;
-  checked_out_at: Date | null;
+  transaction_date: Date;
   due_date: Date | null;
-  returned_at: Date | null;
-  renewal_count: number;
+  return_date: Date | null;
+  fees: TransactionFees;
   notes: string | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
-type TransactionStatus = 
-  | 'requested'     // Reader requested borrowing
-  | 'approved'      // Staff approved request
-  | 'checked_out'   // Book physically borrowed
-  | 'overdue'       // Past due date
-  | 'returned'      // Successfully returned
-  | 'cancelled'     // Request cancelled
-  | 'lost';         // Book reported lost
+type TransactionType = 
+  | 'checkout'      // Regular book checkout
+  | 'return'        // Book return
+  | 'renewal'       // Loan renewal
+  | 'hold'          // Place book on hold
+  | 'reserve';      // Reserve specific copy
 
-interface TransactionEvent {
-  event_type: TransactionStatus;
-  timestamp: Date;
-  user_id: string;
-  notes: string | null;
+type TransactionStatus = 
+  | 'active'        // Currently checked out
+  | 'returned'      // Successfully returned
+  | 'overdue'       // Past due date
+  | 'lost'          // Book reported lost
+  | 'cancelled';    // Transaction cancelled
+
+interface TransactionFees {
+  total: number;
+  late_fee: number;
+  damage_fee: number;
+  processing_fee: number;
 }
 ```
 
+## TransactionEvent
+
+**Purpose:** Detailed audit trail for borrowing transactions providing complete history tracking.
+
+### TypeScript Interface
+```typescript
+interface TransactionEvent {
+  id: string;
+  transaction_id: string;
+  event_type: TransactionEventType;
+  staff_id: string | null;
+  member_id: string | null;
+  event_data: Record<string, any>; // Additional event-specific data
+  timestamp: Date;
+  notes: string | null;
+}
+
+type TransactionEventType =
+  | 'created'         // Transaction created
+  | 'checkout'        // Book checked out
+  | 'return'          // Book returned
+  | 'renewal'         // Loan renewed
+  | 'overdue_notice'  // Overdue notification sent
+  | 'fee_assessed'    // Fee charged
+  | 'fee_paid'        // Fee payment received
+  | 'lost_declared'   // Book declared lost
+  | 'cancelled';      // Transaction cancelled
+```
+
 ### Relationships
-- **Belongs to:** `BookInventory`, `User` (borrower), `Library`
+- **Belongs to:** `BookCopy`, `LibraryMember`, `Library`, `LibraryStaff` (optional)
 - **Has many:** `TransactionEvent` (audit trail)
 
 ## Review
@@ -440,4 +603,4 @@ interface ReviewMetrics {
 ```
 
 ### Relationships
-- **Belongs to:** `BookEdition`, `GeneralBook`, `User` (reviewer)
+- **Belongs to:** `BookEdition`, `GeneralBook`, `UserProfile` (reviewer)

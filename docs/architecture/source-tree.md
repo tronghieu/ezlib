@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document defines the monorepo structure for the EzLib platform, organizing the book crawler service alongside the Next.js applications in a scalable, maintainable architecture.
+This document defines the multi-application structure for the EzLib platform, organizing standalone monolithic Next.js applications alongside supporting services. Each web application is self-contained with its own dependencies, build process, and deployment pipeline.
 
 ---
 
@@ -10,20 +10,18 @@ This document defines the monorepo structure for the EzLib platform, organizing 
 
 ```
 ezlib/
-├── apps/                           # Frontend applications
-│   ├── reader/                     # Public reader social app (ezlib.com - DEFAULT)
-│   ├── library-management/         # Library admin dashboard (manage.ezlib.com)
-│   └── public-site/               # Marketing/landing pages (optional)
+├── apps/                           # Standalone web applications
+│   ├── reader/                     # Public reader social app (ezlib.com - DEFAULT) [PLANNED - NOT IMPLEMENTED]
+│   ├── library-management/         # Library admin dashboard (manage.ezlib.com) [IMPLEMENTED - NextJS 15+]
+│   └── public-site/               # Marketing/landing pages (optional) [NOT IMPLEMENTED]
 ├── services/                       # Backend services
-│   └── crawler/                   # Python book crawler service
-├── packages/                       # Shared libraries
-│   ├── ui/                        # Shared UI components
-│   ├── types/                     # TypeScript type definitions
-│   └── utils/                     # Shared utility functions
-├── supabase/                       # Database configuration and migrations
+│   └── crawler/                   # Python book crawler service [PARTIALLY IMPLEMENTED]
+├── packages/                       # Shared libraries [MINIMAL - each app is self-contained]
+│   └── types/                     # Shared TypeScript type definitions [IMPLEMENTED]
+├── supabase/                       # Database configuration and migrations [IMPLEMENTED]
 │   ├── config.toml                # Supabase local development config
-│   ├── migrations/                # SQL migration files
-│   ├── seed.sql                   # Sample data
+│   ├── migrations/                # SQL migration files (5 migrations implemented)
+│   ├── seeds/                     # Structured seed data files (snaplet-seed)
 │   └── .gitignore                 # Supabase-specific gitignore
 ├── docs/                          # Project documentation
 │   ├── architecture/              # Architecture documents
@@ -35,25 +33,27 @@ ezlib/
 │   └── templates/                 # Document templates
 ├── .github/                       # GitHub Actions workflows
 │   └── workflows/                 # CI/CD pipelines
-├── tools/                         # Development tools and scripts
-│   ├── scripts/                   # Utility scripts
-│   └── generators/                # Code generators
-├── docker/                        # Docker configurations
-├── turbo.json                     # Turbo monorepo configuration
-├── package.json                   # Root package.json
-├── pnpm-workspace.yaml           # PNPM workspace configuration
+├── scripts/                        # Shared development scripts [IMPLEMENTED]
 └── README.md                      # Project overview
 ```
 
 ---
 
-## Frontend Applications (`apps/`)
+## Standalone Web Applications (`apps/`)
 
-### Reader Social App (`apps/reader/`) - **DEFAULT APP**
+Each application is a complete, self-contained monolithic Next.js application with its own:
+- Dependencies (`package.json`)
+- Build pipeline (`next build`)
+- Deployment configuration
+- Database connection (direct Supabase)
+- UI components (shadcn/ui)
+
+### Reader Social App (`apps/reader/`) - **DEFAULT APP** [PLANNED]
 
 **Purpose**: Public-facing social book discovery platform  
 **Domain**: ezlib.com (main domain - default when users visit the website)  
-**Framework**: Next.js 14 App Router
+**Framework**: Next.js 15.5.2 App Router (monolithic architecture)
+**Status**: Not yet implemented
 
 ```
 apps/reader/
@@ -141,23 +141,24 @@ apps/reader/
 │   ├── pages/
 │   └── lib/
 ├── .env.local.example           # Environment variables template
-├── .eslintrc.json              # ESLint configuration
+├── eslint.config.mjs           # ESLint configuration (ESLint 9+)
 ├── .gitignore
 ├── components.json              # shadcn/ui configuration
 ├── jest.config.js              # Jest configuration
 ├── jest.setup.js               # Jest setup
-├── next.config.js              # Next.js configuration
+├── next.config.ts              # Next.js configuration (TypeScript)
 ├── package.json
-├── postcss.config.js           # PostCSS configuration
+├── postcss.config.mjs          # PostCSS configuration (ES modules)
 ├── tailwind.config.js          # Tailwind configuration
 └── tsconfig.json               # TypeScript configuration
 ```
 
-### Library Management App (`apps/library-management/`)
+### Library Management App (`apps/library-management/`) [IMPLEMENTED]
 
 **Purpose**: Administrative dashboard for library staff  
 **Domain**: manage.ezlib.com (subdomain for library management)  
-**Framework**: Next.js 14 App Router
+**Framework**: Next.js 15.5.2 App Router (monolithic architecture)
+**Status**: Currently implemented and in active development
 
 ```
 apps/library-management/
@@ -363,66 +364,25 @@ class SupabaseClient:
 
 ---
 
-## Shared Packages (`packages/`)
+## Minimal Shared Packages (`packages/`)
 
-### UI Package (`packages/ui/`)
+Given the monolithic approach, shared packages are kept minimal. Each application primarily manages its own dependencies and components.
 
-**Purpose**: Shared React components across frontend apps
+### Types Package (`packages/types/`) [IMPLEMENTED]
 
-```
-packages/ui/
-├── src/
-│   ├── components/              # Reusable components
-│   │   ├── Button/
-│   │   │   ├── Button.tsx
-│   │   │   ├── Button.stories.tsx
-│   │   │   ├── Button.test.tsx
-│   │   │   └── index.ts
-│   │   ├── Card/
-│   │   ├── Modal/
-│   │   └── index.ts            # Export all components
-│   ├── hooks/                  # Shared hooks
-│   │   ├── useDebounce.ts
-│   │   ├── useLocalStorage.ts
-│   │   └── index.ts
-│   ├── utils/                  # UI utilities
-│   │   ├── cn.ts              # Class name utility
-│   │   └── colors.ts          # Color utilities
-│   └── styles/                # Shared styles
-│       ├── globals.css
-│       └── components.css
-├── package.json
-├── tsconfig.json
-└── tailwind.config.js
-```
-
-### Types Package (`packages/types/`)
-
-**Purpose**: Shared TypeScript type definitions
+**Purpose**: Shared TypeScript type definitions (primarily database types)
 
 ```
 packages/types/
 ├── src/
-│   ├── api/                    # API-related types
-│   │   ├── requests.ts
-│   │   ├── responses.ts
-│   │   └── errors.ts
-│   ├── entities/               # Domain entity types
-│   │   ├── user.ts
-│   │   ├── book.ts
-│   │   ├── library.ts
-│   │   ├── author.ts
-│   │   └── transaction.ts
 │   ├── database/               # Database types
-│   │   ├── supabase.ts        # Generated Supabase types
-│   │   └── migrations.ts
-│   ├── utils/                  # Utility types
-│   │   ├── common.ts
-│   │   └── helpers.ts
-│   └── index.ts               # Re-export all types
+│   │   └── supabase.ts        # Generated Supabase types
+│   └── index.ts               # Re-export types
 ├── package.json
 └── tsconfig.json
 ```
+
+**Note**: UI components are managed directly within each application using shadcn/ui rather than shared packages.
 
 ---
 
@@ -454,85 +414,14 @@ supabase/
 
 ---
 
-## Development Tools (`tools/`)
+## Development Approach
 
-```
-tools/
-├── scripts/                    # Development scripts
-│   ├── setup.sh               # Project setup
-│   ├── db-reset.sh            # Reset database
-│   ├── generate-types.sh      # Generate TypeScript types
-│   └── deploy.sh              # Deployment script
-├── generators/                 # Code generators
-│   ├── component/             # React component generator
-│   ├── api-route/             # API route generator
-│   └── page/                  # Next.js page generator
-└── configs/                    # Shared configurations
-    ├── eslint-config-custom/
-    ├── tsconfig/
-    └── tailwind-config/
-```
+**Monolithic Architecture**: Each web application (`apps/reader/`, `apps/library-management/`) is completely self-contained with:
 
----
+- **Independent Dependencies**: Each app has its own `package.json` with no shared dependencies
+- **Individual Build Process**: Each app builds independently using `next build`
+- **Separate Deployments**: Each app deploys to its own Vercel project/subdomain
+- **Direct Database Access**: Each app connects directly to Supabase (shared database with RLS)
+- **Self-Contained UI**: Each app uses shadcn/ui components directly (no shared component library)
 
-## Configuration Files
-
-### Root Configuration
-
-```json
-// turbo.json - Monorepo build configuration
-{
-  "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**", "build/**"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "test": {
-      "dependsOn": ["build"],
-      "inputs": ["src/**/*.tsx", "src/**/*.ts", "test/**/*.ts"]
-    },
-    "lint": {},
-    "type-check": {
-      "dependsOn": ["^build"]
-    }
-  }
-}
-```
-
-```yaml
-# pnpm-workspace.yaml - PNPM workspace configuration
-packages:
-  - 'apps/*'
-  - 'services/*'
-  - 'packages/*'
-  - 'tools/*'
-```
-
-```json
-// package.json - Root package configuration
-{
-  "name": "ezlib",
-  "private": true,
-  "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "type-check": "turbo run type-check",
-    "clean": "turbo run clean"
-  },
-  "devDependencies": {
-    "@turbo/gen": "^1.9.7",
-    "turbo": "^1.9.7",
-    "prettier": "^2.8.8",
-    "typescript": "^5.1.6"
-  }
-}
-```
-
-This source tree structure provides a scalable foundation for the EzLib platform, clearly separating concerns while enabling code sharing and consistent development practices across all applications and services.
+This structure provides a scalable foundation for the EzLib platform with clear separation of concerns. Each application can evolve independently while sharing only the essential database layer through Supabase RLS policies.

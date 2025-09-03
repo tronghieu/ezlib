@@ -28,7 +28,7 @@ sequenceDiagram
 
     Note over R,RA: 2-6s: Decision point
     R->>RA: Tap "Borrow" button
-    RA->>DB: Query inventory across user's libraries (Supabase client)
+    RA->>DB: Query book_copies across user's libraries (Supabase client)
     DB-->>RA: Real-time availability status
     RA-->>R: Show library options with availability
 
@@ -63,7 +63,7 @@ sequenceDiagram
     Note over LS,ExtAPI: Staff adds book → Automatic enrichment
 
     LS->>LA: Add book with ISBN
-    LA->>DB: Create BookEdition + BookInventory (Supabase client)
+    LA->>DB: Create BookEdition + BookCopy (Supabase client)
     LA->>Crawler: POST /crawler/enrich-book
     DB-->>LA: Book added (minimal metadata)
     LA-->>LS: Immediate confirmation
@@ -104,8 +104,8 @@ sequenceDiagram
     U->>RA: Login on reader app
     RA->>Auth: Email/password authentication (Supabase client)
     Auth-->>RA: JWT token + user session
-    RA->>DB: Fetch user profile + roles (Supabase client)
-    DB-->>RA: User data + LibReader + LibAdmin records
+    RA->>DB: Fetch user_profiles + library_members + library_staff (Supabase client)
+    DB-->>RA: User data + membership + staff records
     RA-->>U: Logged in as reader
 
     Note over U,LA: Switch to library management
@@ -113,17 +113,17 @@ sequenceDiagram
     LA->>LA: Check for existing auth token (shared Supabase session)
     LA->>Auth: Validate JWT token (Supabase client)
     Auth-->>LA: Token valid + user ID
-    LA->>DB: Query LibAdmin roles for user (Supabase client)
-    DB-->>LA: Admin permissions for libraries
+    LA->>DB: Query library_staff roles for user (Supabase client)
+    DB-->>LA: Staff permissions for libraries
     
-    alt User has library admin access
+    alt User has library staff access
         LA-->>U: Show library management dashboard
     else User is reader only
         LA-->>U: Show "Request Library Access" page
     end
 
     Note over U,LA: Role-based interface with RLS
-    U->>LA: Perform admin action
+    U->>LA: Perform staff action
     LA->>DB: Action with RLS policy check (Supabase client)
     DB-->>LA: Data returned or access denied based on RLS
     LA->>LA: Execute action or show permission error

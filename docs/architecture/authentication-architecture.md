@@ -52,9 +52,9 @@ sequenceDiagram
     U->>R: Enter OTP code
     R->>S: Verify OTP + create user
     S->>DB: Create auth.users record
-    R->>R: Show profile completion form
-    U->>R: Enter: display_name, gender, language, country
-    R->>DB: Create users profile record
+    R->>R: Show profile completion form (optional bio, location)
+    U->>R: Complete additional profile information
+    R->>DB: Update user_profiles record (automatic creation by trigger)
     R->>R: Complete registration → dashboard
 ```
 
@@ -76,10 +76,10 @@ sequenceDiagram
     U->>L: Enter OTP code
     L->>S: Verify OTP
     S->>L: Return JWT token for manage.ezlib.com
-    L->>DB: Check LibAdmin permissions via RLS
-    alt Has LibAdmin record
+    L->>DB: Check LibraryStaff permissions via RLS
+    alt Has LibraryStaff record
         L->>L: Load library management interface
-    else No LibAdmin record
+    else No LibraryStaff record
         L->>L: Show "Request Library Access" page
     end
 ```
@@ -101,15 +101,67 @@ UPDATE auth.config SET
   email_confirm_required = false -- OTP verification handles this
   password_min_length = null; -- No passwords
 
--- Custom auth hook for profile creation
+-- Automatic user profile creation triggers
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Only create profile for users who complete registration
-  -- (handled by application, not trigger)
-  RETURN NEW;
+    -- Create user profile
+    INSERT INTO user_profiles (
+        id, 
+        email, 
+        display_name, 
+        avatar_url
+    ) VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+        NEW.raw_user_meta_data->>'avatar_url'
+    );
+    
+    -- Create user preferences with defaults
+    INSERT INTO user_preferences (id) VALUES (NEW.id);
+    
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger for automatic profile creation
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW 
+    EXECUTE FUNCTION handle_new_user();
+
+-- Function to sync profile updates from auth.users
+CREATE OR REPLACE FUNCTION public.handle_user_update()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Update user profile if relevant fields changed
+    IF (OLD.email IS DISTINCT FROM NEW.email) OR 
+       (OLD.raw_user_meta_data->>'display_name' IS DISTINCT FROM NEW.raw_user_meta_data->>'display_name') OR
+       (OLD.raw_user_meta_data->>'full_name' IS DISTINCT FROM NEW.raw_user_meta_data->>'full_name') OR
+       (OLD.raw_user_meta_data->>'avatar_url' IS DISTINCT FROM NEW.raw_user_meta_data->>'avatar_url') THEN
+        
+        UPDATE user_profiles SET
+            email = NEW.email,
+            display_name = COALESCE(
+                NEW.raw_user_meta_data->>'display_name', 
+                NEW.raw_user_meta_data->>'full_name', 
+                split_part(NEW.email, '@', 1)
+            ),
+            avatar_url = NEW.raw_user_meta_data->>'avatar_url',
+            updated_at = NOW()
+        WHERE id = NEW.id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger for profile synchronization
+CREATE TRIGGER on_auth_user_updated
+    AFTER UPDATE ON auth.users
+    FOR EACH ROW 
+    EXECUTE FUNCTION handle_user_update();
 ```
 
 ## Authentication Middleware
@@ -141,14 +193,14 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
     
-    // Check LibAdmin permissions
-    const { data: adminCheck } = await supabase
-      .from('lib_admins')
+    // Check LibraryStaff permissions
+    const { data: staffCheck } = await supabase
+      .from('library_staff')
       .select('id')
       .eq('user_id', session.user.id)
       .single();
     
-    if (!adminCheck && !pathname.startsWith('/request-access')) {
+    if (!staffCheck && !pathname.startsWith('/request-access')) {
       return NextResponse.redirect(new URL('/request-access', req.url));
     }
   }
@@ -169,17 +221,17 @@ export const config = {
 // lib/auth/permissions.ts
 export interface UserPermissions {
   isReader: boolean;
-  isLibraryAdmin: boolean;
-  adminLibraries: string[]; // Library IDs where user is admin
-  adminPermissions: Record<string, AdminPermissions>; // Per library
+  isLibraryStaff: boolean;
+  staffLibraries: string[]; // Library IDs where user is staff
+  staffPermissions: Record<string, StaffPermissions>; // Per library
 }
 
 export async function getUserPermissions(userId: string): Promise<UserPermissions> {
   const supabase = createClientComponentClient();
   
-  // Check library admin status
-  const { data: adminRecords } = await supabase
-    .from('lib_admins')
+  // Check library staff status
+  const { data: staffRecords } = await supabase
+    .from('library_staff')
     .select(`
       library_id,
       role,
@@ -187,16 +239,17 @@ export async function getUserPermissions(userId: string): Promise<UserPermission
       libraries!inner(name, status)
     `)
     .eq('user_id', userId)
-    .eq('libraries.status', 'active');
+    .eq('libraries.status', 'active')
+    .eq('status', 'active');
   
   return {
     isReader: true, // All authenticated users are readers
-    isLibraryAdmin: adminRecords.length > 0,
-    adminLibraries: adminRecords.map(r => r.library_id),
-    adminPermissions: adminRecords.reduce((acc, record) => {
+    isLibraryStaff: staffRecords.length > 0,
+    staffLibraries: staffRecords.map(r => r.library_id),
+    staffPermissions: staffRecords.reduce((acc, record) => {
       acc[record.library_id] = record.permissions;
       return acc;
-    }, {} as Record<string, AdminPermissions>)
+    }, {} as Record<string, StaffPermissions>)
   };
 }
 ```

@@ -115,9 +115,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [book_inventory_id]
+              required: [book_copy_id, library_id]
               properties:
-                book_inventory_id: { type: string }
+                book_copy_id: { type: string }
+                library_id: { type: string }
                 preferred_pickup_date: { type: string, format: date }
                 notes: { type: string }
       responses:
@@ -198,9 +199,9 @@ paths:
   # ===================
   # LIBRARY MANAGEMENT  
   # ===================
-  /libraries/{libraryId}/inventory:
+  /libraries/{libraryId}/copies:
     get:
-      summary: Get library book inventory (Staff only)
+      summary: Get library book copies (Staff only)
       tags: [Library Management]
       parameters:
         - name: libraryId
@@ -213,13 +214,17 @@ paths:
         - name: search
           in: query
           schema: { type: string }
-          description: Search by title, author, ISBN
+          description: Search by title, author, ISBN, barcode
+        - name: status
+          in: query
+          schema: { type: string }
+          description: Filter by availability status
       responses:
         '200':
-          description: Library inventory listing
+          description: Library book copies listing
 
     post:
-      summary: Add book to library inventory
+      summary: Add book copies to library
       tags: [Library Management]
       parameters:
         - name: libraryId
@@ -232,13 +237,20 @@ paths:
           application/json:
             schema:
               type: object
+              required: [book_edition_id, copies]
               properties:
-                isbn_13: { type: string }
                 book_edition_id: { type: string }
-                total_copies: { type: integer }
+                copies: 
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      copy_number: { type: string }
+                      barcode: { type: string }
+                      location: { type: object }
       responses:
         '201':
-          description: Book added to inventory
+          description: Book copies added to library
 
   /libraries/{libraryId}/members:
     get:
@@ -270,11 +282,23 @@ paths:
           application/json:
             schema:
               type: object
-              required: [user_email]
+              required: [member_id, personal_info]
               properties:
+                member_id: { type: string }
                 user_email: { type: string, format: email }
-                subscription_end: { type: string, format: date }
-                notes: { type: string }
+                personal_info:
+                  type: object
+                  properties:
+                    first_name: { type: string }
+                    last_name: { type: string }
+                    email: { type: string }
+                    phone: { type: string }
+                membership_info:
+                  type: object
+                  properties:
+                    type: { type: string }
+                    expiry_date: { type: string, format: date }
+                    notes: { type: string }
       responses:
         '201':
           description: Member added successfully
@@ -314,6 +338,47 @@ paths:
       responses:
         '201':
           description: Collection created
+
+  # ===================
+  # USER PREFERENCES API
+  # ===================
+  /user/preferences:
+    get:
+      summary: Get user preferences
+      tags: [User Management]
+      responses:
+        '200':
+          description: User preferences
+          
+    patch:
+      summary: Update user preferences
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notifications:
+                  type: object
+                  properties:
+                    email_enabled: { type: boolean }
+                    push_enabled: { type: boolean }
+                    due_date_reminders: { type: boolean }
+                privacy:
+                  type: object
+                  properties:
+                    profile_visibility: { type: string }
+                    reading_activity: { type: string }
+                interface:
+                  type: object
+                  properties:
+                    preferred_language: { type: string }
+                    theme: { type: string }
+      responses:
+        '200':
+          description: Preferences updated
 
   # ===================
   # PYTHON CRAWLER API
