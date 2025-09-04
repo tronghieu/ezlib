@@ -12,9 +12,9 @@ export default defineConfig({
   select: [
     // We don't alter any extensions tables that might be owned by extensions
     "!*",
+    // Include auth.users table since public tables reference it
+    "auth.users",
     // We want to alter all the tables under public schema
     "public*",
-    // exclude some of the tables under the auth schema
-    "!auth.*",
   ],
 });

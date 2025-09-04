@@ -1,6 +1,6 @@
 {
   "@snaplet/seed": {
-    "config": "seed.config.js"
+    "config": "seed.config.ts"
   },
   "devDependencies": {
     "@snaplet/copycat": "^6.0.0",

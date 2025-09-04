@@ -4,6 +4,27 @@
  */
 import { createSeedClient } from "@snaplet/seed";
 import { faker } from "@snaplet/copycat";
+import { createClient } from "@supabase/supabase-js";
+import * as dotenv from 'dotenv';
+import { join } from 'path';
+
+// Load environment variables
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!serviceRoleKey) {
+  throw new Error("SUPABASE_SERVICE_ROLE_KEY environment variable is required");
+}
+
+const supabase = createClient(supabaseUrl, serviceRoleKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 // Helper function to replace faker.helpers.weighted
 function weighted<T>(options: Array<{ value: T; weight: number }>): T {
@@ -74,7 +95,6 @@ export const seedInventoryAndCollections = async (
             ? faker.helpers.arrayElement(libraryMembers)?.id || null
             : null;
 
-        const totalCopies = faker.number.int({ min: 1, max: 10 });
 
         const result = await seed.book_copies([
           {
@@ -82,8 +102,8 @@ export const seedInventoryAndCollections = async (
             book_edition_id: edition.id,
             copy_number: String(i + 1).padStart(3, "0"),
             barcode: `${library.code}-${faker.string.numeric(10)}`,
-            total_copies: totalCopies,
-            available_copies: totalCopies,
+            total_copies: copyCount,
+            available_copies: copyCount,
             location: {
               section: faker.helpers.arrayElement([
                 "Fiction",

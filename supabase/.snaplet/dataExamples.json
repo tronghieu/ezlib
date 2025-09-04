@@ -443,58 +443,6 @@
     "description": "This column contains the official or standardized title of a book in the general books collection. It is designed to uniquely identify each book and provide a consistent reference across the library system."
   },
   {
-    "input": "auth identities provider_id",
-    "examples": [
-      "google_123",
-      "facebook_456",
-      "twitter_789",
-      "linkedin_101",
-      "github_202",
-      "microsoft_303",
-      "yahoo_404",
-      "apple_505",
-      "instagram_606",
-      "amazon_707",
-      "slack_808",
-      "pinterest_909",
-      "spotify_1010",
-      "netflix_1111",
-      "uber_1212",
-      "airbnb_1313",
-      "zoom_1414",
-      "dropbox_1515",
-      "twitch_1616",
-      "reddit_1717"
-    ],
-    "description": "This column is about storing the unique identifier (ID) of the provider associated with an authentication identity. It likely links to a table or entity that contains more details about the provider, such as their name, contact information, etc."
-  },
-  {
-    "input": "auth identities provider",
-    "examples": [
-      "Google",
-      "Facebook",
-      "Twitter",
-      "LinkedIn",
-      "GitHub",
-      "Microsoft",
-      "Amazon",
-      "Instagram",
-      "Yahoo",
-      "Apple",
-      "Reddit",
-      "Slack",
-      "Dropbox",
-      "Salesforce",
-      "Spotify",
-      "Netflix",
-      "Twitch",
-      "Pinterest",
-      "Discord",
-      "Zoom"
-    ],
-    "description": "This column is about storing the identity provider of the author in the context of user authentication and authorization. It could indicate whether the author has signed in using a specific service or platform, such as Google, Facebook, or a custom authentication system."
-  },
-  {
     "input": "public invitation_responses response_type",
     "examples": [
       "Accepted",
@@ -778,58 +726,6 @@
       "The library's mobile app is convenient for checking due dates and renewing borrowed books on the go."
     ],
     "description": "This column is about storing the content of reviews written by users in the library system."
-  },
-  {
-    "input": "auth sessions user_agent",
-    "examples": [
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/605.1.15",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36 Edg/89.0.774.75",
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1",
-      "Mozilla/5.0 (Linux; Android 11; SM-G991B Build/RP1A.201005.001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.105 Mobile Safari/537.36",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36",
-      "Mozilla/5.0 (iPad; CPU OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1",
-      "Mozilla/5.0 (Linux; Android 10; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.105 Mobile Safari/537.36",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36",
-      "Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.105 Mobile Safari/537.36",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 YaBrowser/21.3.3.355 Yowser/2.5 Safari/537.36",
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1",
-      "Mozilla/5.0 (Linux; Android 11; SM-G781B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/605.1.15",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36"
-    ],
-    "description": "This column is about storing the user agent information associated with authentication sessions in the library system. It likely contains details about the device, browser, and operating system used by the user during the session."
-  },
-  {
-    "input": "auth sessions tag",
-    "examples": [
-      "session_id_1234",
-      "2FA_auth_tag",
-      "library_system_access",
-      "session_id_5678",
-      "biometric_auth_tag",
-      "session_expiry_tag",
-      "session_id_9876",
-      "email_verification_tag",
-      "admin_access_tag",
-      "session_id_3456",
-      "face_recognition_auth_tag",
-      "temporary_access_tag",
-      "session_id_6543",
-      "SMS_verification_tag",
-      "guest_access_tag",
-      "session_id_7890",
-      "password_reset_tag",
-      "self-service_kiosk_access",
-      "session_id_2109",
-      "fingerprint_auth_tag"
-    ],
-    "description": "This column is about tagging sessions for user authentication in the library system. It may include information such as session IDs, tags for different types of authentication, or any other relevant session tagging data."
   },
   {
     "input": "public transaction_events event_type",
