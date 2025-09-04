@@ -268,6 +268,26 @@ Single Next.js project containing both library staff interface and reader-facing
 - ICU message formatting for cultural appropriateness
 - Right-to-left (RTL) language support architecture
 
+---
+
+### Epic 5: Advanced Features & Multi-tenant Administration
+**Owner**: Library Management Team (`apps/library-management/`)
+**Timeline**: Post-MVP Phase 2
+**Success Metrics**: Comprehensive reporting, bulk operations, administrative efficiency
+
+**Core Deliverables:**
+- Standard library reports and analytics dashboard
+- Bulk operations for books and member management
+- Advanced staff management with granular permissions
+- System configuration and policy management
+- Integration framework for external services
+
+**Technical Requirements:**
+- Advanced reporting engine with export capabilities
+- Bulk data processing and validation
+- Role-based access control matrix
+- API integration framework for third-party services
+
 ## Sub-team Planning Guidelines
 
 ### For Sub-team Product Managers:

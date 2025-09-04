@@ -32,7 +32,7 @@ The authentication strategy requires library staff to first register on the main
 
 1. **FR1:** The system shall require users to first register on the main reader platform (ezlib.com) using passwordless email OTP authentication, then provide independent login access to manage.ezlib.com with role-based access control (owner, manager, librarian) across multiple libraries, with permissions enforced through Row Level Security policies and server-side authorization checks
 
-2. **FR2:** The system shall provide ultra-simple book management with basic book lists containing title, author, ISBN, and available/checked-out status, with optional ISBN lookup integration to the crawler service for automatic metadata enrichment
+2. **FR2:** The system shall provide ultra-simple book management with basic book lists containing title, author, ISBN, and availability status showing number of copies (e.g., "3 of 5 available"), with optional ISBN lookup integration to the crawler service for automatic metadata enrichment
 
 3. **FR3:** The system shall maintain real-time book availability status synchronized with the public reader interface (ezlib.com) for seamless borrowing request workflows
 
@@ -59,6 +59,20 @@ The authentication strategy requires library staff to first register on the main
 14. **FR14:** The system shall maintain audit logs for all critical operations (check-outs, returns, member changes, inventory updates) for compliance and operational analysis
 
 15. **FR15:** The system shall support internationalization framework for future multi-language and regional preferences as post-MVP enhancement
+
+16. **FR16:** The system shall allow library staff with appropriate permissions to invite new staff members via email with secure, unique invitation tokens that expire after 7 days
+
+17. **FR17:** The system shall allow library staff to invite new library members via email invitation with validation that recipient's email matches their registered account during acceptance
+
+18. **FR18:** The system shall automatically create appropriate staff or member records upon invitation acceptance and maintain audit trail of all invitation responses (accepted, declined, expired)
+
+19. **FR19:** The system shall prevent duplicate pending invitations for the same email and library while allowing invitations to be cancelled by the inviter or library managers before acceptance
+
+20. **FR20:** The system shall track and display the number of available copies for each book (e.g., "4 of 6 copies available") with automatic updates when books are checked out or returned
+
+21. **FR21:** The system shall allow library staff to manage multiple copies of the same book edition with individual tracking and prevent checkout when no copies are available
+
+22. **FR22:** The system shall support role-based invitations (owner, manager, librarian, volunteer) with configurable permissions for each role level
 
 ### Non-Functional Requirements
 
@@ -158,7 +172,7 @@ The library management application will be developed within the existing EzLib m
 
 **Frontend Technology Stack:**
 
-- **Framework:** Next.js 14+ with App Router for server-side rendering and optimal performance
+- **Framework:** Next.js 15+ with App Router for server-side rendering and optimal performance
 - **Language:** TypeScript 5.0+ with strict mode for type safety and developer productivity
 - **UI Components:** shadcn/ui component library for consistent design system integration
 - **Styling:** Tailwind CSS for rapid development and maintainable styles
@@ -229,7 +243,7 @@ The library management application will be developed within the existing EzLib m
 **Role-Based Access Control:**
 
 - **Default Role**: All users can access reader features (social book discovery) with authenticated role
-- **Library Management Access**: Users gain admin capabilities when added to LibAdmin table for specific libraries
+- **Library Management Access**: Users gain admin capabilities when added to library_staff table for specific libraries
 - **Permission Levels**: Owner, Manager, Librarian roles with granular permissions for each library
 
 **Future Enhancement:** Planned implementation of cross-domain session sharing for seamless user experience between applications.
@@ -245,8 +259,8 @@ The library management application will be developed within the existing EzLib m
 **User Profile Structure:**
 
 - Base user record in `users` table
-- Optional `lib_readers` records for library memberships
-- Optional `lib_admins` records for management access
+- Optional `library_members` records for library memberships
+- Optional `library_staff` records for management access
 - Preference storage for language, region, notification settings
 
 ## Epic List
@@ -254,14 +268,17 @@ The library management application will be developed within the existing EzLib m
 **Epic 1: Foundation & Passwordless Authentication**  
 Establish project infrastructure, passwordless email OTP authentication with cross-domain access strategy, and basic library context management while delivering ultra-simple core functionality validation.
 
-**Epic 2: Ultra-Simple Library Operations**  
-Implement basic book lists, simple member management, and one-click checkout/return operations without due dates or complex tracking - focusing on core operational validation.
+**Epic 2: Ultra-Simple Library Operations with Invitation System**  
+Implement basic book lists with multi-copy tracking, simple member management, invitation workflows for staff and members, and one-click checkout/return operations without due dates or complex tracking - focusing on core operational validation.
 
 **Epic 3: Enhanced Circulation Management**  
 Build comprehensive circulation features including due dates, renewals, holds, and overdue tracking that extend the ultra-simple foundation (post-MVP functionality).
 
-**Epic 4: Advanced Features & Multi-tenant Administration**  
-Complete the system with reporting, bulk operations, internationalization support, and administrative features for comprehensive library management (post-MVP functionality).
+**Epic 4: Internationalization & Localization**  
+Implement multi-language support with automatic location-based language detection, user-configurable country/language preferences, cultural formatting (dates, numbers, regional conventions), and translation management system (post-MVP functionality).
+
+**Epic 5: Advanced Features & Multi-tenant Administration**  
+Complete the system with reporting, bulk operations, advanced administrative features, and system configuration tools for comprehensive library management (post-MVP functionality).
 
 ## Epic 1: Foundation & Passwordless Authentication
 
@@ -313,7 +330,7 @@ so that **I can safely manage library operations through a unified authenticatio
 2. Passwordless email OTP authentication integration using `supabase.auth.signInWithOtp()`
 3. Cross-domain authentication that validates existing user accounts from reader platform
 4. Authentication middleware implemented to protect admin routes and validate cross-domain sessions
-5. `requireAdminAccess()` server-side function validates user permissions per library from LibAdmin table
+5. `requireAdminAccess()` server-side function validates user permissions per library from library_staff table
 6. Role-based permission system established (owner, manager, librarian) with granular permissions
 7. Dynamic library assignment - users can have different roles across multiple libraries
 8. Permission checking hooks (`useAdminPermissions`) implemented for UI state management
@@ -367,9 +384,9 @@ so that **I can quickly see what books we have and their availability status wit
 
 **Acceptance Criteria:**
 
-1. Simple book list displays title, author, ISBN, and available/checked-out status only
+1. Simple book list displays title, author, ISBN, and availability status showing "X of Y copies available"
 2. Basic search functionality across title and author fields with simple text matching
-3. Clear available/checked-out status indicators using color coding (green/red)
+3. Clear availability status indicators showing copy count with color coding (green for available, red for none available)
 4. Simple pagination for book lists (up to 5,000 books)
 5. Basic sorting by title and author only - no complex filtering initially
 6. Real-time status updates when books are checked out or returned
@@ -440,8 +457,8 @@ so that **I can track book borrowing without complex due date management or fine
 **Acceptance Criteria:**
 
 1. One-click checkout: select book, select member, click "Check Out" - no due dates initially
-2. One-click return: scan/select book, click "Check In" - immediate status change to available
-3. Book status instantly updates from "available" to "checked out" and vice versa
+2. One-click return: scan/select book, click "Check In" - immediate status update to increment available copies
+3. Book availability status instantly updates showing remaining copies (e.g., "3 of 5 available" becomes "2 of 5 available")
 4. Member profile shows simple list of currently checked-out books
 5. Real-time sync with reader app so book availability updates instantly on ezlib.com
 6. Basic checkout history for member profile (book title, checkout date, return date)
@@ -467,7 +484,26 @@ so that **I can assist patrons effectively and make informed decisions about len
 8. Member since date and membership renewal requirements
 9. Quick action buttons for common tasks (check out book, send notification, update contact)
 
-### Story 2.6: Global Search and Discovery
+### Story 2.6: Staff and Member Invitation System
+
+As a **library staff member with appropriate permissions**,  
+I want **to invite new staff members and library members via email**,  
+so that **I can efficiently onboard team members and patrons with proper access controls and audit trails**.
+
+**Acceptance Criteria:**
+
+1. Staff invitation interface with role selection (owner, manager, librarian, volunteer) and email input
+2. Member invitation capability for registered library patrons with email verification
+3. Secure invitation token generation with 7-day expiry period
+4. Email delivery of invitation links with library branding and clear instructions
+5. Invitation acceptance flow that validates email match and creates appropriate records
+6. Invitation status tracking (pending, accepted, declined, expired) with timestamps
+7. Ability to cancel pending invitations before acceptance
+8. Prevention of duplicate invitations for same email/library combination
+9. Audit trail of all invitation activities for compliance and security
+10. Role-based permissions automatically applied upon staff invitation acceptance
+
+### Story 2.7: Global Search and Discovery
 
 As a **library staff member**,  
 I want **to search across all library data from a single interface**,  
@@ -597,11 +633,87 @@ so that **I can efficiently manage all circulation activities from a single inte
 8. Customizable dashboard layout based on staff role and library workflows
 9. Real-time synchronization status with public interface and external systems
 
-## Epic 4: Advanced Features & Multi-tenant Administration (Post-MVP)
+## Epic 4: Internationalization & Localization (Post-MVP)
 
-**Epic Goal:** Complete the professional library management system with comprehensive reporting capabilities, bulk operations, internationalization support, advanced administrative features, and system configuration tools that enable library directors to generate compliance reports, analyze operational performance, and configure library-specific policies for diverse library needs and regional requirements.
+**Epic Goal:** Implement comprehensive multi-language support with automatic location-based language detection, user-configurable country and language preferences, culturally appropriate date/time/number formatting, and full translation infrastructure to serve diverse library communities globally while maintaining consistent user experience across all supported languages.
 
-### Story 4.1: Standard Library Reports
+### Story 4.1: Multi-Language Interface Support
+
+As a **library administrator in a diverse community**,  
+I want **the system to display interface content in multiple languages**,  
+so that **staff members can work efficiently in their preferred language**.
+
+**Acceptance Criteria:**
+
+1. Support for initial languages: English, Vietnamese, Chinese, with architecture for additional languages
+2. Complete translation of all UI text, labels, buttons, and system messages
+3. Language switcher component accessible from main navigation
+4. User preference persistence across sessions and devices
+5. Fallback to English for untranslated content with clear indicators
+6. Translation key management system for maintaining consistency
+7. Support for right-to-left (RTL) languages in future releases
+8. Dynamic loading of language packs for optimal performance
+9. Integration with existing user profile language preferences from reader app
+
+### Story 4.2: Location-Based Language Detection
+
+As a **new library staff member**,  
+I want **the system to automatically detect my preferred language based on location**,  
+so that **I see the interface in my likely preferred language from the first interaction**.
+
+**Acceptance Criteria:**
+
+1. IP-based geolocation to determine user's country/region
+2. Automatic language selection based on detected location
+3. Clear notification showing detected language with option to change
+4. Browser language detection as secondary detection method
+5. Cookie/localStorage persistence of language choice
+6. Override capability for users to manually select different language
+7. Language preference synchronization with user account settings
+8. Graceful fallback when detection fails or is blocked
+9. GDPR-compliant location detection with appropriate notices
+
+### Story 4.3: Cultural Formatting and Localization
+
+As a **library staff member**,  
+I want **dates, times, numbers, and currency to display in my region's format**,  
+so that **I can work with familiar formatting conventions**.
+
+**Acceptance Criteria:**
+
+1. Date formatting based on locale (MM/DD/YYYY vs DD/MM/YYYY vs YYYY-MM-DD)
+2. Time format selection (12-hour vs 24-hour) based on regional preferences
+3. Number formatting with appropriate decimal and thousand separators
+4. Currency display for fines and fees in local format
+5. Timezone handling with automatic adjustment for user location
+6. Week start day configuration (Sunday vs Monday) based on locale
+7. Address format templates for different countries
+8. Phone number formatting based on regional standards
+9. Cultural color and icon considerations for different regions
+
+### Story 4.4: Translation Management Infrastructure
+
+As a **library system administrator**,  
+I want **robust translation management capabilities**,  
+so that **we can efficiently maintain and expand language support**.
+
+**Acceptance Criteria:**
+
+1. Centralized translation key repository with version control
+2. Translation workflow for adding new languages
+3. Missing translation detection and reporting
+4. Context-aware translations for ambiguous terms
+5. Pluralization rules for different languages
+6. Variable interpolation in translated strings
+7. Translation memory to maintain consistency
+8. Export/import functionality for professional translation services
+9. A/B testing capability for translation quality improvements
+
+## Epic 5: Advanced Features & Multi-tenant Administration (Post-MVP)
+
+**Epic Goal:** Complete the professional library management system with comprehensive reporting capabilities, bulk operations, advanced administrative features, and system configuration tools that enable library directors to generate compliance reports, analyze operational performance, and configure library-specific policies for diverse library needs.
+
+### Story 5.1: Standard Library Reports
 
 As a **library administrator**,  
 I want **to generate standard operational and compliance reports**,  
@@ -619,7 +731,7 @@ so that **I can monitor library performance, satisfy board reporting requirement
 8. Automated report scheduling with email delivery for regular compliance reporting
 9. Report templates for common library board and funding agency requirements
 
-### Story 4.2: Analytics Dashboard and Insights
+### Story 5.2: Analytics Dashboard and Insights
 
 As a **library director**,  
 I want **to access visual analytics and operational insights**,  
@@ -637,7 +749,7 @@ so that **I can understand library usage patterns, identify improvement opportun
 8. Data export capabilities for further analysis in external business intelligence tools
 9. Automated insights and recommendations based on library performance patterns
 
-### Story 4.3: Bulk Operations and Data Management
+### Story 5.3: Bulk Operations and Data Management
 
 As a **library staff member**,  
 I want **to perform bulk operations on books and members efficiently**,  
@@ -655,7 +767,7 @@ so that **I can manage large-scale updates, imports, and maintenance tasks witho
 8. Data validation and error reporting for all bulk operations with rollback capabilities
 9. Progress tracking and confirmation for all bulk operations affecting multiple records
 
-### Story 4.4: Library Configuration and Policies
+### Story 5.4: Library Configuration and Policies
 
 As a **library administrator**,  
 I want **to configure library-specific policies and operational parameters**,  
@@ -673,7 +785,7 @@ so that **the system enforces our unique library rules, loan periods, and operat
 8. System behavior configuration including grace periods, batch processing schedules, and integration settings
 9. Backup and restore functionality for policy configurations and system settings
 
-### Story 4.5: Staff Management and Permissions
+### Story 5.5: Staff Management and Permissions
 
 As a **library owner**,  
 I want **to manage staff accounts and assign appropriate permissions**,  
@@ -691,7 +803,7 @@ so that **different staff members have access levels appropriate to their roles 
 8. Permission change audit trail tracking who modified access rights and when
 9. Onboarding workflow for new staff including training mode and supervised access
 
-### Story 4.6: System Administration and Maintenance
+### Story 5.6: System Administration and Maintenance
 
 As a **library administrator**,  
 I want **to monitor system health and perform maintenance operations**,  
@@ -709,23 +821,23 @@ so that **the library management system runs reliably and efficiently for daily 
 8. System usage statistics showing peak times, transaction volumes, and resource utilization
 9. Maintenance mode capabilities for system updates and major configuration changes
 
-### Story 4.7: Internationalization and Localization Support
+### Story 5.7: System Integration and External APIs
 
-As a **library administrator in a diverse community**,  
-I want **the system to support multiple languages and regional preferences**,  
-so that **our library staff and community can use the system in their preferred language with culturally appropriate formats**.
+As a **library administrator**,  
+I want **the system to integrate with external services and APIs**,  
+so that **we can leverage third-party tools and services to enhance library operations**.
 
 **Acceptance Criteria:**
 
-1. Multi-language interface support with automatic location-based language detection
-2. User-configurable language preferences with manual override capability
-3. Localized date/time formats based on regional settings and user preferences
-4. Cultural UI adaptations for libraries serving diverse communities
-5. Library-specific customization options for region-appropriate workflows
-6. Support for local compliance features and regulatory requirements
-7. Culturally relevant interface elements and terminology choices
-8. Language switching capability that persists across user sessions
-9. Integration with existing EzLib ecosystem language preferences and user profile settings
+1. Integration framework for connecting to external library services and APIs
+2. ISBN lookup service integration for automated book cataloging
+3. OCLC WorldCat integration for expanded cataloging data
+4. Payment gateway integration for online fine payments
+5. SMS gateway integration for text message notifications
+6. Calendar system integration for event management
+7. Analytics platform integration for advanced reporting
+8. API documentation and testing tools for custom integrations
+9. Webhook support for real-time event notifications to external systems
 
 ## Next Steps
 
