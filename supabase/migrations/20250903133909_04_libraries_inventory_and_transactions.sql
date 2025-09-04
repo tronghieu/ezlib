@@ -116,10 +116,10 @@ CREATE TABLE public.library_staff (
 );
 
 -- Add foreign key constraint to library_members.deleted_by now that library_staff exists
-ALTER TABLE public.library_members ADD CONSTRAINT fk_library_members_deleted_by 
+ALTER TABLE public.library_members ADD CONSTRAINT fk_library_members_deleted_by
     FOREIGN KEY (deleted_by) REFERENCES public.library_staff(id);
 
-ALTER TABLE public.library_staff ADD CONSTRAINT fk_library_staff_deleted_by 
+ALTER TABLE public.library_staff ADD CONSTRAINT fk_library_staff_deleted_by
     FOREIGN KEY (deleted_by) REFERENCES public.library_staff(id);
 
 -- =============================================================================
@@ -133,6 +133,8 @@ CREATE TABLE public.book_copies (
     book_edition_id UUID NOT NULL REFERENCES public.book_editions(id) ON DELETE CASCADE,
     copy_number TEXT NOT NULL, -- Library-specific copy identifier (e.g., "001", "A-001")
     barcode TEXT UNIQUE, -- Optional barcode for scanning
+    total_copies INTEGER NOT NULL DEFAULT 1,
+    available_copies INTEGER NOT NULL DEFAULT 1,
     location JSONB NOT NULL DEFAULT '{
         "shelf": null,
         "section": null,
@@ -161,7 +163,7 @@ CREATE TABLE public.book_copies (
 );
 
 -- Add foreign key constraint for book_copies.deleted_by
-ALTER TABLE public.book_copies ADD CONSTRAINT fk_book_copies_deleted_by 
+ALTER TABLE public.book_copies ADD CONSTRAINT fk_book_copies_deleted_by
     FOREIGN KEY (deleted_by) REFERENCES public.library_staff(id);
 
 -- Collections (library-defined book organization)
@@ -222,7 +224,7 @@ CREATE TABLE public.transaction_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     transaction_id UUID NOT NULL REFERENCES public.borrowing_transactions(id) ON DELETE CASCADE,
     event_type TEXT NOT NULL CHECK (event_type IN (
-        'created', 'checkout', 'return', 'renewal', 'overdue_notice', 
+        'created', 'checkout', 'return', 'renewal', 'overdue_notice',
         'fee_assessed', 'fee_paid', 'lost_declared', 'cancelled'
     )),
     staff_id UUID REFERENCES public.library_staff(id), -- Staff who triggered the event
@@ -284,82 +286,82 @@ ALTER TABLE public.borrowing_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transaction_events ENABLE ROW LEVEL SECURITY;
 
 -- Library access policies
-CREATE POLICY "Public libraries visible to all" ON public.libraries 
+CREATE POLICY "Public libraries visible to all" ON public.libraries
     FOR SELECT USING (status = 'active');
 
-CREATE POLICY "Library staff can modify their libraries" ON public.libraries 
+CREATE POLICY "Library staff can modify their libraries" ON public.libraries
     FOR ALL USING (
         id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid())
     );
 
 -- Library member policies
-CREATE POLICY "Users can view own memberships" ON public.library_members 
+CREATE POLICY "Users can view own memberships" ON public.library_members
     FOR SELECT USING (user_id = auth.uid() AND is_deleted = FALSE);
 
-CREATE POLICY "Library staff can view deleted members" ON public.library_members 
+CREATE POLICY "Library staff can view deleted members" ON public.library_members
     FOR SELECT USING (
         library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
     );
 
-CREATE POLICY "Library staff can manage members" ON public.library_members 
+CREATE POLICY "Library staff can manage members" ON public.library_members
     FOR ALL USING (
         library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
     );
 
 -- Library staff policies
-CREATE POLICY "Staff can view own employment" ON public.library_staff 
+CREATE POLICY "Staff can view own employment" ON public.library_staff
     FOR SELECT USING (user_id = auth.uid());
 
-CREATE POLICY "Managers can view all staff" ON public.library_staff 
+CREATE POLICY "Managers can view all staff" ON public.library_staff
     FOR SELECT USING (
         library_id IN (
-            SELECT library_id FROM public.library_staff 
+            SELECT library_id FROM public.library_staff
             WHERE user_id = auth.uid() AND role IN ('owner', 'manager') AND is_deleted = FALSE
         )
     );
 
-CREATE POLICY "Managers can manage staff" ON public.library_staff 
+CREATE POLICY "Managers can manage staff" ON public.library_staff
     FOR ALL USING (
         library_id IN (
-            SELECT library_id FROM public.library_staff 
+            SELECT library_id FROM public.library_staff
             WHERE user_id = auth.uid() AND role IN ('owner', 'manager') AND is_deleted = FALSE
         )
     );
 
 -- Book copy policies
-CREATE POLICY "Public catalog visible to all" ON public.book_copies 
+CREATE POLICY "Public catalog visible to all" ON public.book_copies
     FOR SELECT USING (
-        library_id IN (SELECT id FROM public.libraries WHERE status = 'active') 
-        AND is_deleted = FALSE 
+        library_id IN (SELECT id FROM public.libraries WHERE status = 'active')
+        AND is_deleted = FALSE
         AND status = 'active'
     );
 
-CREATE POLICY "Library staff can view all inventory" ON public.book_copies 
+CREATE POLICY "Library staff can view all inventory" ON public.book_copies
     FOR SELECT USING (
         library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
     );
 
-CREATE POLICY "Library staff can manage inventory" ON public.book_copies 
+CREATE POLICY "Library staff can manage inventory" ON public.book_copies
     FOR ALL USING (
         library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
     );
 
 -- Borrowing transaction policies
-CREATE POLICY "Members can view own transactions" ON public.borrowing_transactions 
+CREATE POLICY "Members can view own transactions" ON public.borrowing_transactions
     FOR SELECT USING (
         member_id IN (SELECT id FROM public.library_members WHERE user_id = auth.uid())
     );
 
-CREATE POLICY "Library staff can manage transactions" ON public.borrowing_transactions 
+CREATE POLICY "Library staff can manage transactions" ON public.borrowing_transactions
     FOR ALL USING (
         library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid())
     );
 
 -- Transaction events policies
-CREATE POLICY "Library staff can view transaction events" ON public.transaction_events 
+CREATE POLICY "Library staff can view transaction events" ON public.transaction_events
     FOR SELECT USING (
         transaction_id IN (
-            SELECT id FROM public.borrowing_transactions 
+            SELECT id FROM public.borrowing_transactions
             WHERE library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid())
         )
     );
@@ -369,56 +371,56 @@ CREATE POLICY "Library staff can view transaction events" ON public.transaction_
 -- =============================================================================
 
 -- Update timestamp triggers
-CREATE TRIGGER update_libraries_updated_at 
-    BEFORE UPDATE ON public.libraries 
-    FOR EACH ROW 
+CREATE TRIGGER update_libraries_updated_at
+    BEFORE UPDATE ON public.libraries
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TRIGGER update_library_members_updated_at 
-    BEFORE UPDATE ON public.library_members 
-    FOR EACH ROW 
+CREATE TRIGGER update_library_members_updated_at
+    BEFORE UPDATE ON public.library_members
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TRIGGER update_library_staff_updated_at 
-    BEFORE UPDATE ON public.library_staff 
-    FOR EACH ROW 
+CREATE TRIGGER update_library_staff_updated_at
+    BEFORE UPDATE ON public.library_staff
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TRIGGER update_book_copies_updated_at 
-    BEFORE UPDATE ON public.book_copies 
-    FOR EACH ROW 
+CREATE TRIGGER update_book_copies_updated_at
+    BEFORE UPDATE ON public.book_copies
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TRIGGER update_borrowing_transactions_updated_at 
-    BEFORE UPDATE ON public.borrowing_transactions 
-    FOR EACH ROW 
+CREATE TRIGGER update_borrowing_transactions_updated_at
+    BEFORE UPDATE ON public.borrowing_transactions
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TRIGGER update_collections_updated_at 
-    BEFORE UPDATE ON public.collections 
-    FOR EACH ROW 
+CREATE TRIGGER update_collections_updated_at
+    BEFORE UPDATE ON public.collections
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Borrowing transaction availability trigger
-CREATE TRIGGER update_copy_availability 
-    AFTER UPDATE ON public.borrowing_transactions 
-    FOR EACH ROW 
+CREATE TRIGGER update_copy_availability
+    AFTER UPDATE ON public.borrowing_transactions
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_book_availability();
 
 -- Soft delete triggers
-CREATE TRIGGER library_members_soft_delete 
-    BEFORE DELETE ON public.library_members 
-    FOR EACH ROW 
+CREATE TRIGGER library_members_soft_delete
+    BEFORE DELETE ON public.library_members
+    FOR EACH ROW
     EXECUTE FUNCTION public.handle_member_soft_delete();
 
-CREATE TRIGGER library_staff_soft_delete 
-    BEFORE DELETE ON public.library_staff 
-    FOR EACH ROW 
+CREATE TRIGGER library_staff_soft_delete
+    BEFORE DELETE ON public.library_staff
+    FOR EACH ROW
     EXECUTE FUNCTION public.handle_staff_soft_delete();
 
-CREATE TRIGGER book_copies_soft_delete 
-    BEFORE DELETE ON public.book_copies 
-    FOR EACH ROW 
+CREATE TRIGGER book_copies_soft_delete
+    BEFORE DELETE ON public.book_copies
+    FOR EACH ROW
     EXECUTE FUNCTION public.handle_book_copy_soft_delete();
 
 -- =============================================================================

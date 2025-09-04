@@ -22,6 +22,20 @@
 18. **FR18:** The system shall automatically detect and default to the user's geographic location during registration
 19. **FR19:** The system shall allow users to manually change their country/language preferences at any time
 20. **FR20:** The system shall localize date formats, number formats, and cultural conventions based on user's country selection
+21. **FR21:** The system shall allow library staff with appropriate permissions to invite new staff members via email
+22. **FR22:** The system shall support role-based invitations (owner, manager, librarian, volunteer) with configurable permissions
+23. **FR23:** The system shall generate secure, unique invitation tokens that expire after 7 days
+24. **FR24:** The system shall allow library staff to invite new library members via email invitation
+25. **FR25:** The system shall validate that invitation recipients' email matches their registered account during acceptance
+26. **FR26:** The system shall automatically create appropriate staff or member records upon invitation acceptance
+27. **FR27:** The system shall allow invitations to be cancelled by the inviter or library managers before acceptance
+28. **FR28:** The system shall maintain an audit trail of all invitation responses (accepted, declined, expired)
+29. **FR29:** The system shall prevent duplicate pending invitations for the same email and library
+30. **FR30:** The system shall automatically expire invitations that have passed their expiry date
+31. **FR31:** The system shall track and display the number of available copies for each book (e.g., "4 of 6 copies available")
+32. **FR32:** The system shall automatically update available copy counts when books are checked out or returned
+33. **FR33:** The system shall allow library staff to manage multiple copies of the same book edition with individual tracking
+34. **FR34:** The system shall prevent checkout when no copies are available and display appropriate messaging
 
 ## Non Functional
 

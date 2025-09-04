@@ -25,12 +25,64 @@ The minimalist MVP approach prioritizes immediate operational value for librarie
 | 2025-09-03 | 1.3 | Updated terminology and table names to align with database schema (library_staff, book_copies, etc.) | PM John |
 | 2025-09-03 | 2.0 | **MAJOR**: Simplified to master planning level - removed detailed stories, kept epic roadmap and architectural constraints for federated planning model | PM John |
 
+## Requirements
+
+### Functional Requirements
+
+1. **FR1:** The system shall allow library staff to add books to their collection with title, author, and availability status (available/checked out)
+2. **FR2:** The system shall allow library staff to create and manage member profiles with name and contact information
+3. **FR3:** The system shall enable library staff to check out books to members with a single click action
+4. **FR4:** The system shall enable library staff to check in returned books and update availability status
+5. **FR5:** The system shall provide readers with a browsable list of available books at participating libraries
+6. **FR6:** The system shall allow readers to request to borrow available books through the digital interface
+7. **FR7:** The system shall notify library staff of reader borrowing requests for approval/decline
+8. **FR8:** The system shall maintain real-time availability status for all books in the collection
+9. **FR9:** The system shall provide basic member lookup functionality for library staff during checkout
+10. **FR10:** The system shall allow library staff to view simple reports of checked out books and member activity
+11. **FR11:** The system shall provide passwordless email authentication using 6-digit OTP codes
+12. **FR12:** The system shall restrict new user registration to the Reader app only (`ezlib.com`)
+13. **FR13:** The system shall require independent login sessions on Reader and Library Management apps
+14. **FR14:** The system shall automatically grant reader access to all authenticated users
+15. **FR15:** The system shall grant library management access only to users with LibAdmin records
+16. **FR16:** The system shall collect user preferences (display name, gender, language, region) during registration
+17. **FR17:** The system shall display interface content in the user's preferred language based on their country selection
+18. **FR18:** The system shall automatically detect and default to the user's geographic location during registration
+19. **FR19:** The system shall allow users to manually change their country/language preferences at any time
+20. **FR20:** The system shall localize date formats, number formats, and cultural conventions based on user's country selection
+21. **FR21:** The system shall allow library staff with appropriate permissions to invite new staff members via email
+22. **FR22:** The system shall support role-based invitations (owner, manager, librarian, volunteer) with configurable permissions
+23. **FR23:** The system shall generate secure, unique invitation tokens that expire after 7 days
+24. **FR24:** The system shall allow library staff to invite new library members via email invitation
+25. **FR25:** The system shall validate that invitation recipients' email matches their registered account during acceptance
+26. **FR26:** The system shall automatically create appropriate staff or member records upon invitation acceptance
+27. **FR27:** The system shall allow invitations to be cancelled by the inviter or library managers before acceptance
+28. **FR28:** The system shall maintain an audit trail of all invitation responses (accepted, declined, expired)
+29. **FR29:** The system shall prevent duplicate pending invitations for the same email and library
+30. **FR30:** The system shall automatically expire invitations that have passed their expiry date
+31. **FR31:** The system shall track and display the number of available copies for each book (e.g., "4 of 6 copies available")
+32. **FR32:** The system shall automatically update available copy counts when books are checked out or returned
+33. **FR33:** The system shall allow library staff to manage multiple copies of the same book edition with individual tracking
+34. **FR34:** The system shall prevent checkout when no copies are available and display appropriate messaging
+
+### Non-Functional Requirements
+
+1. **NFR1:** The system shall load pages in under 3 seconds on standard broadband connections
+2. **NFR2:** The system shall be accessible via modern web browsers (Chrome 90+, Firefox 85+, Safari 14+, Edge 90+)
+3. **NFR3:** The system shall maintain 99.5% uptime during business hours (9 AM - 9 PM local time)
+4. **NFR4:** The system shall protect library patron data according to library confidentiality standards
+5. **NFR5:** The user interface shall be intuitive enough for volunteers with basic computer literacy to use without extensive training
+6. **NFR6:** The system shall handle up to 5,000 books and 1,000 active members per library without performance degradation
+7. **NFR7:** The system shall work on both desktop and mobile devices with responsive design
+8. **NFR8:** The system shall provide data backup and recovery capabilities to prevent loss of library records
+9. **NFR9:** The system shall support at least English and Spanish languages initially, with architecture for additional languages
+10. **NFR10:** The system shall maintain consistent user experience across all supported languages without compromising functionality
+
 ## System Architecture & Integration Requirements
 
 ### Core Platform Components
 
 1. **Reader App** (`apps/reader/`) - Public book discovery at `ezlib.com`
-2. **Library Management App** (`apps/library-management/`) - Staff operations at `manage.ezlib.com` 
+2. **Library Management App** (`apps/library-management/`) - Staff operations at `manage.ezlib.com`
 3. **Crawler Service** (`services/crawler/`) - Book metadata enrichment
 4. **Shared Database** (`supabase/`) - PostgreSQL with Row Level Security
 
@@ -146,8 +198,8 @@ Single Next.js project containing both library staff interface and reader-facing
 ## Epic Roadmap
 
 ### Epic 1: Foundation & Authentication
-**Owner**: Core Platform Team  
-**Timeline**: MVP Phase 1  
+**Owner**: Core Platform Team
+**Timeline**: MVP Phase 1
 **Success Metrics**: Deployable authentication system, multi-tenant database operational
 
 **Core Deliverables:**
@@ -165,8 +217,8 @@ Single Next.js project containing both library staff interface and reader-facing
 ---
 
 ### Epic 2: Library Operations
-**Owner**: BMad Sub-team (`apps/library-management/`)  
-**Timeline**: MVP Phase 1  
+**Owner**: BMad Sub-team (`apps/library-management/`)
+**Timeline**: MVP Phase 1
 **Success Metrics**: Library staff can replace manual/spreadsheet systems, 90% daily usage
 
 **Core Deliverables:**
@@ -183,8 +235,8 @@ Single Next.js project containing both library staff interface and reader-facing
 ---
 
 ### Epic 3: Reader Discovery & Borrowing
-**Owner**: Reader Experience Team (`apps/reader/`)  
-**Timeline**: MVP Phase 2  
+**Owner**: Reader Experience Team (`apps/reader/`)
+**Timeline**: MVP Phase 2
 **Success Metrics**: Reader engagement with digital library browsing, successful borrowing workflows
 
 **Core Deliverables:**
@@ -201,8 +253,8 @@ Single Next.js project containing both library staff interface and reader-facing
 ---
 
 ### Epic 4: Internationalization & Localization
-**Owner**: Platform Team  
-**Timeline**: Post-MVP  
+**Owner**: Platform Team
+**Timeline**: Post-MVP
 **Success Metrics**: Multi-language support, cultural localization for global deployment
 
 **Core Deliverables:**
@@ -222,7 +274,7 @@ Single Next.js project containing both library staff interface and reader-facing
 
 **What You Own:**
 - Detailed story breakdown with acceptance criteria
-- Sprint planning and resource allocation  
+- Sprint planning and resource allocation
 - Domain-specific UX and business rules
 - Quality execution and testing strategy
 - Risk management and timeline delivery
@@ -257,7 +309,7 @@ stories:
 - Borrowing requests: Reader App → Library Management
 - User authentication state: Cross-domain coordination
 
-**Database Schema Coordination:**  
+**Database Schema Coordination:**
 - Core tables: Managed by Platform Team via migrations
 - Application-specific tables: Managed by respective sub-teams
 - RLS policies: Reviewed by Platform Team for security
@@ -266,23 +318,23 @@ stories:
 
 ### For Sub-team Product Managers
 
-**BMad Team (Library Management)**:  
-✅ **Status**: Already executing successfully with detailed PRD in `apps/library-management/docs/prd.md`  
+**BMad Team (Library Management)**:
+✅ **Status**: Already executing successfully with detailed PRD in `apps/library-management/docs/prd.md`
 **Action**: Continue current approach - your detailed planning demonstrates best practice for federated model
 
-**Reader Experience Team**:  
-**Action**: Create detailed PRD for Epic 3 using BMad's approach as template  
-**Focus**: Public book discovery, borrowing requests, user authentication flows  
+**Reader Experience Team**:
+**Action**: Create detailed PRD for Epic 3 using BMad's approach as template
+**Focus**: Public book discovery, borrowing requests, user authentication flows
 **Key Constraint**: Must integrate seamlessly with BMad's library management workflows
 
-**Platform Team**:  
-**Action**: Define detailed authentication and database migration strategy  
+**Platform Team**:
+**Action**: Define detailed authentication and database migration strategy
 **Focus**: Cross-domain session management, RLS policy templates, integration testing framework
 
 ### Integration Coordination
 
-**Immediate Priority**: Establish integration testing framework to validate real-time sync between apps  
-**Monthly Sync**: Epic-level progress reviews with dependency coordination  
+**Immediate Priority**: Establish integration testing framework to validate real-time sync between apps
+**Monthly Sync**: Epic-level progress reviews with dependency coordination
 **Quality Gates**: Each epic must pass integration tests with dependent components before release
 
 ### Architecture Specialist Prompts
@@ -293,5 +345,5 @@ stories:
 
 ---
 
-*Master PRD v2.0 - Federated Planning Model*  
+*Master PRD v2.0 - Federated Planning Model*
 *Sub-team detailed planning: See respective app directories for implementation PRDs*
