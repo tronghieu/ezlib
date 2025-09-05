@@ -28,16 +28,16 @@ type BorrowingTransaction =
 
 export interface BookWithDetails {
   id: string;
+  copyNumber: string; // Library-specific identifier
   title: string;
   author: string;
   publisher: string;
   publicationYear: number;
   isbn: string;
+  coverImageUrl?: string; // Book cover URL
   status: "available" | "checked_out";
-  availability: {
-    status: string;
-    count: number;
-  };
+  availableCopies: number; // Available copies count
+  totalCopies: number; // Total copies count
   book_copy: BookCopy;
   book_edition: BookEdition;
   general_book: GeneralBook;
@@ -101,17 +101,22 @@ export function useBooks(options: UseBooksOptions = {}) {
           condition_info,
           copy_number,
           created_at,
+          available_copies,
+          total_copies,
           book_editions!inner (
             id,
-            isbn_10,
             isbn_13,
             language,
+            title,
             edition_metadata,
-            general_books!inner (
-              id,
-              canonical_title,
-              first_publication_year,
-              subjects
+            book_contributors!left (
+              role,
+              sort_order,
+              authors!inner (
+                id,
+                name,
+                canonical_name
+              )
             )
           ),
           borrowing_transactions!left (
@@ -139,47 +144,50 @@ export function useBooks(options: UseBooksOptions = {}) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const books: BookWithDetails[] = (data || []).map((copy: any) => {
         const bookEdition = copy.book_editions;
-        const generalBook = bookEdition?.general_books;
 
-        // Get author from general book subjects or use fallback
-        const author = generalBook?.subjects?.[0] || "Unknown Author";
+        // Get authors from edition contributors only
+        const editionContributors = bookEdition?.book_contributors || [];
+        const authors = editionContributors
+          .filter(contributor => contributor.role === "author" || contributor.role === "co_author")
+          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+          .map(contributor => contributor.authors?.name || contributor.authors?.canonical_name)
+          .filter(Boolean);
+        
+        const author = authors.length > 0 ? authors.join(", ") : "Unknown Author";
 
         // Parse availability JSON
         const availability = copy.availability as { status: string } | null;
 
-        // Determine availability status
-        const hasActiveCheckout = copy.borrowing_transactions?.some(
-          (transaction: BorrowingTransaction) => !transaction.return_date
-        );
-
-        const status: "available" | "checked_out" = hasActiveCheckout
-          ? "checked_out"
-          : availability?.status === "checked_out"
-            ? "checked_out"
-            : "available";
+        // Determine availability status based on available_copies
+        const status: "available" | "checked_out" = 
+          copy.available_copies > 0 ? "available" : "checked_out";
 
         // Extract publication info from edition metadata
         const editionMetadata = bookEdition?.edition_metadata as {
           publisher?: string;
+          publication_date?: string;
+          cover_image_url?: string;
         } | null;
         const publisher = editionMetadata?.publisher || "Unknown Publisher";
-        const publicationYear = generalBook?.first_publication_year || 0;
+        const publicationYear = editionMetadata?.publication_date ? 
+          new Date(editionMetadata.publication_date).getFullYear() : 0;
+        const coverImageUrl = editionMetadata?.cover_image_url;
 
-        // Prefer ISBN-13, fallback to ISBN-10
-        const isbn = bookEdition?.isbn_13 || bookEdition?.isbn_10 || "";
+        // Use ISBN-13 from database schema
+        const isbn = bookEdition?.isbn_13 || "";
 
         return {
           id: copy.id,
-          title: generalBook?.canonical_title || "Unknown Title",
+          copyNumber: copy.copy_number || "—",
+          title: bookEdition?.title || "Unknown Title",
           author,
           publisher,
           publicationYear,
           isbn,
+          coverImageUrl,
           status,
-          availability: {
-            status: status,
-            count: status === "available" ? 1 : 0,
-          },
+          availableCopies: copy.available_copies || 0,
+          totalCopies: copy.total_copies || 0,
           book_copy: copy as unknown as BookCopy,
           book_edition: bookEdition as unknown as BookEdition,
           general_book: generalBook as unknown as GeneralBook,
@@ -297,17 +305,22 @@ export function useBookSearch({ query, enabled = true }: UseBookSearchOptions) {
           condition_info,
           copy_number,
           created_at,
+          available_copies,
+          total_copies,
           book_editions!inner (
             id,
-            isbn_10,
             isbn_13,
             language,
+            title,
             edition_metadata,
-            general_books!inner (
-              id,
-              canonical_title,
-              first_publication_year,
-              subjects
+            book_contributors!left (
+              role,
+              sort_order,
+              authors!inner (
+                id,
+                name,
+                canonical_name
+              )
             )
           ),
           borrowing_transactions!left (
@@ -321,51 +334,55 @@ export function useBookSearch({ query, enabled = true }: UseBookSearchOptions) {
       if (error) throw error;
 
       // Transform search results similar to the main books hook
-       
-      const transformedBooks: BookWithDetails[] = (data || []).map(
-        (copy: Database["public"]["Tables"]["book_copies"]["Row"] & {
-          book_editions: Database["public"]["Tables"]["book_editions"]["Row"] & {
-            general_books: Database["public"]["Tables"]["general_books"]["Row"];
-          };
-          authors: Database["public"]["Tables"]["authors"]["Row"];
-        }) => {
-          const bookEdition = copy.book_editions;
-          const generalBook = bookEdition?.general_books;
 
-          const author = generalBook?.subjects?.[0] || "Unknown Author";
+      const transformedBooks: BookWithDetails[] = (data || []).map(
+        (
+          copy: Database["public"]["Tables"]["book_copies"]["Row"] & {
+            book_editions: Database["public"]["Tables"]["book_editions"]["Row"];
+          }
+        ) => {
+          const bookEdition = copy.book_editions;
+
+          // Get authors from edition contributors only
+          const editionContributors = bookEdition?.book_contributors || [];
+          const authors = editionContributors
+            .filter(contributor => contributor.role === "author" || contributor.role === "co_author")
+            .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map(contributor => contributor.authors?.name || contributor.authors?.canonical_name)
+            .filter(Boolean);
+          
+          const author = authors.length > 0 ? authors.join(", ") : "Unknown Author";
 
           // Parse availability JSON
           const availability = copy.availability as { status: string } | null;
 
-          const hasActiveCheckout = copy.borrowing_transactions?.some(
-            (transaction: BorrowingTransaction) => !transaction.return_date
-          );
-
-          const status: "available" | "checked_out" = hasActiveCheckout
-            ? "checked_out"
-            : availability?.status === "checked_out"
-              ? "checked_out"
-              : "available";
+          // Determine availability status based on available_copies
+          const status: "available" | "checked_out" = 
+            copy.available_copies > 0 ? "available" : "checked_out";
 
           const editionMetadata = bookEdition?.edition_metadata as {
             publisher?: string;
+            publication_date?: string;
+            cover_image_url?: string;
           } | null;
           const publisher = editionMetadata?.publisher || "Unknown Publisher";
-          const publicationYear = generalBook?.first_publication_year || 0;
-          const isbn = bookEdition?.isbn_13 || bookEdition?.isbn_10 || "";
+          const publicationYear = editionMetadata?.publication_date ? 
+          new Date(editionMetadata.publication_date).getFullYear() : 0;
+          const coverImageUrl = editionMetadata?.cover_image_url;
+          const isbn = bookEdition?.isbn_13 || "";
 
           return {
             id: copy.id,
-            title: generalBook?.canonical_title || "Unknown Title",
+            copyNumber: copy.copy_number || "—",
+            title: bookEdition?.title || "Unknown Title",
             author,
             publisher,
             publicationYear,
             isbn,
+            coverImageUrl,
             status,
-            availability: {
-              status: status,
-              count: status === "available" ? 1 : 0,
-            },
+            availableCopies: copy.available_copies || 0,
+            totalCopies: copy.total_copies || 0,
             book_copy: copy as unknown as BookCopy,
             book_edition: bookEdition as unknown as BookEdition,
             general_book: generalBook as unknown as GeneralBook,

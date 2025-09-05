@@ -48,7 +48,7 @@ so that **I can safely manage library operations through a unified authenticatio
 2. Passwordless email OTP authentication integration using `supabase.auth.signInWithOtp()`
 3. Cross-domain authentication that validates existing user accounts from reader platform
 4. Authentication middleware implemented to protect admin routes and validate cross-domain sessions
-5. `requireAdminAccess()` server-side function validates user permissions per library from LibAdmin table
+5. `requireAdminAccess()` server-side function validates user permissions per library from library_staff table
 6. Role-based permission system established (owner, manager, librarian) with granular permissions
 7. Dynamic library assignment - users can have different roles across multiple libraries
 8. Permission checking hooks (`useAdminPermissions`) implemented for UI state management

@@ -49,14 +49,14 @@ const mockLibrary = {
 describe("LibraryDashboardSidebar", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseSidebar.mockReturnValue({ 
+    mockUseSidebar.mockReturnValue({
       state: "expanded",
-      open: true, 
+      open: true,
       setOpen: jest.fn(),
       openMobile: false,
       setOpenMobile: jest.fn(),
       isMobile: false,
-      toggleSidebar: jest.fn()
+      toggleSidebar: jest.fn(),
     });
     mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
     mockUseLibraryContext.mockReturnValue({
@@ -234,14 +234,14 @@ describe("LibraryDashboardSidebar", () => {
     });
 
     it("should handle collapsed sidebar state", () => {
-      mockUseSidebar.mockReturnValue({ 
+      mockUseSidebar.mockReturnValue({
         state: "collapsed",
-        open: false, 
+        open: false,
         setOpen: jest.fn(),
         openMobile: false,
         setOpenMobile: jest.fn(),
         isMobile: false,
-        toggleSidebar: jest.fn()
+        toggleSidebar: jest.fn(),
       });
 
       render(<LibraryDashboardSidebar />);

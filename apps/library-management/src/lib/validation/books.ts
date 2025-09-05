@@ -8,7 +8,7 @@ import { validateISBN } from "./isbn";
 
 /**
  * Add Book Form Validation Schema
- * Based on AC requirements: title (required), author (required), 
+ * Based on AC requirements: title (required), author (required),
  * publisher (optional), publication year (optional), ISBN (optional)
  */
 export const addBookSchema = z.object({

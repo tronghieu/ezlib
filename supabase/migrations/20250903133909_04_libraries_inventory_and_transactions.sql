@@ -440,3 +440,125 @@ COMMENT ON COLUMN public.library_members.member_id IS 'Library-specific member i
 COMMENT ON COLUMN public.library_staff.permissions IS 'Role-based permissions for library operations';
 COMMENT ON COLUMN public.book_copies.availability IS 'Current availability status and borrower information';
 COMMENT ON COLUMN public.borrowing_transactions.fees IS 'Associated fees for late returns, damages, etc.';
+
+-- =============================================================================
+-- FIX INFINITE RECURSION IN LIBRARY STAFF RLS POLICIES
+-- =============================================================================
+-- Purpose: Fix circular dependency in RLS policies that causes infinite recursion
+-- Issue: library_staff policies reference library_staff table causing recursion
+-- Solution: Create permission functions and update policies to avoid self-reference
+
+-- Drop the recursive policies that cause infinite loops
+DROP POLICY IF EXISTS "Library staff can modify their libraries" ON public.libraries;
+DROP POLICY IF EXISTS "Managers can view all staff" ON public.library_staff;
+DROP POLICY IF EXISTS "Managers can manage staff" ON public.library_staff;
+
+-- Function to get library role for a user (avoiding RLS recursion)
+-- This bypasses RLS by using SECURITY DEFINER and direct queries
+CREATE OR REPLACE FUNCTION public.get_library_role(
+    target_library_id UUID,
+    target_user_id UUID DEFAULT auth.uid()
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    user_role TEXT;
+BEGIN
+    -- Return null if no user provided
+    IF target_user_id IS NULL THEN
+        RETURN NULL;
+    END IF;
+    
+    -- Get user's role in the specified library (bypasses RLS)
+    SELECT role INTO user_role
+    FROM library_staff
+    WHERE user_id = target_user_id 
+        AND library_id = target_library_id 
+        AND is_deleted = FALSE 
+        AND status = 'active';
+    
+    RETURN user_role;
+END;
+$$;
+
+-- Function to check if user has permission for a library
+CREATE OR REPLACE FUNCTION public.user_has_library_access(
+    target_library_id UUID,
+    target_user_id UUID DEFAULT auth.uid()
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    user_role TEXT;
+BEGIN
+    -- Return false if no user provided
+    IF target_user_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Get user's role in the library
+    user_role := public.get_library_role(target_library_id, target_user_id);
+    
+    -- Return true if user has any active role in the library
+    RETURN user_role IS NOT NULL;
+END;
+$$;
+
+-- Function to check if user can manage staff in a library
+CREATE OR REPLACE FUNCTION public.user_can_manage_staff(
+    target_library_id UUID,
+    target_user_id UUID DEFAULT auth.uid()
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    user_role TEXT;
+BEGIN
+    -- Return false if no user provided
+    IF target_user_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Get user's role in the library
+    user_role := public.get_library_role(target_library_id, target_user_id);
+    
+    -- Return true if user is owner or manager
+    RETURN user_role IN ('owner', 'manager');
+END;
+$$;
+
+-- CREATE NEW NON-RECURSIVE POLICIES
+-- Library access policies (using permission functions)
+CREATE POLICY "Library staff can modify their libraries" ON public.libraries
+    FOR ALL USING (
+        public.user_has_library_access(id)
+    );
+
+-- Library staff policies (using permission functions to avoid recursion)
+CREATE POLICY "Managers can view all staff" ON public.library_staff
+    FOR SELECT USING (
+        public.user_can_manage_staff(library_id) OR user_id = auth.uid()
+    );
+
+CREATE POLICY "Managers can manage staff" ON public.library_staff
+    FOR ALL USING (
+        public.user_can_manage_staff(library_id)
+    );
+
+-- Grant execute permissions to authenticated users
+GRANT EXECUTE ON FUNCTION public.get_library_role(UUID, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.user_has_library_access(UUID, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.user_can_manage_staff(UUID, UUID) TO authenticated;
+
+COMMENT ON FUNCTION public.get_library_role(UUID, UUID) IS 'Get user role in a specific library, bypassing RLS to prevent recursion';
+COMMENT ON FUNCTION public.user_has_library_access(UUID, UUID) IS 'Check if user has any access to a library';
+COMMENT ON FUNCTION public.user_can_manage_staff(UUID, UUID) IS 'Check if user can manage staff in a library (owner/manager roles)';

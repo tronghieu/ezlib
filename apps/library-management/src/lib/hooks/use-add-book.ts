@@ -6,7 +6,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { createBook } from "@/lib/api/books";
-import type { BookCreationData, BookCreationResult } from "@/lib/validation/books";
+import type {
+  BookCreationData,
+  BookCreationResult,
+} from "@/lib/validation/books";
 
 interface UseAddBookOptions {
   onSuccess?: (result: BookCreationResult) => void;
@@ -18,7 +21,7 @@ export function useAddBook(options?: UseAddBookOptions) {
 
   return useMutation({
     mutationFn: (data: BookCreationData) => createBook(data),
-    
+
     onSuccess: (result: BookCreationResult) => {
       // Show success toast
       toast.success("Book added successfully!", {
@@ -48,7 +51,7 @@ export function useAddBook(options?: UseAddBookOptions) {
 
     onError: (error: Error) => {
       console.error("Book creation failed:", error);
-      
+
       // Show error toast with specific message
       toast.error("Failed to add book", {
         description: error.message || "Please try again or contact support",
@@ -61,12 +64,14 @@ export function useAddBook(options?: UseAddBookOptions) {
     // Retry configuration for network errors
     retry: (failureCount, error) => {
       // Don't retry validation errors or duplicate detection
-      if (error.message.includes("duplicate") || 
-          error.message.includes("required") ||
-          error.message.includes("invalid")) {
+      if (
+        error.message.includes("duplicate") ||
+        error.message.includes("required") ||
+        error.message.includes("invalid")
+      ) {
         return false;
       }
-      
+
       // Retry network errors up to 2 times
       return failureCount < 2;
     },

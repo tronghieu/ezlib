@@ -20,7 +20,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, BookPlus, AlertCircle, Search, CheckCircle } from "lucide-react";
+import {
+  Loader2,
+  BookPlus,
+  AlertCircle,
+  Search,
+  CheckCircle,
+} from "lucide-react";
 
 interface AddBookFormProps {
   onCancel?: () => void;
@@ -49,12 +55,12 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
   });
 
   const { mutate: addBook, isPending, error } = useAddBook();
-  
+
   // ISBN lookup state
   const [isLookingUp, setIsLookingUp] = React.useState(false);
   const [lookupSuccess, setLookupSuccess] = React.useState(false);
   const [lookupMessage, setLookupMessage] = React.useState<string>("");
-  
+
   // Watch ISBN field for lookup trigger
   const currentIsbn = watch("isbn");
 
@@ -71,7 +77,7 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
 
     try {
       const metadata = await enrichFromISBN(currentIsbn);
-      
+
       if (metadata) {
         // Fill form fields with enriched data (only if they're empty)
         if (metadata.title && !watch("title")) {
@@ -86,15 +92,19 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
         if (metadata.publication_year && !watch("publication_year")) {
           setValue("publication_year", metadata.publication_year);
         }
-        
+
         setLookupSuccess(true);
         setLookupMessage("Book information found and filled automatically!");
       } else {
-        setLookupMessage("No additional information found for this ISBN. You can continue entering details manually.");
+        setLookupMessage(
+          "No additional information found for this ISBN. You can continue entering details manually."
+        );
       }
     } catch (error) {
       console.warn("ISBN lookup failed:", error);
-      setLookupMessage("ISBN lookup service unavailable. You can continue entering details manually.");
+      setLookupMessage(
+        "ISBN lookup service unavailable. You can continue entering details manually."
+      );
     } finally {
       setIsLookingUp(false);
     }
@@ -110,7 +120,7 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
       ...data,
       library_id: currentLibrary.id,
     });
-    
+
     // Reset form for "Add Another Book" workflow - will happen in success handler
     reset();
   };
@@ -126,7 +136,7 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6"> {/* eslint-disable-line @typescript-eslint/no-explicit-any */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Error Alert */}
           {error && (
             <Alert variant="destructive">
@@ -134,7 +144,6 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
               <AlertDescription>{error.message}</AlertDescription>
             </Alert>
           )}
-
           {/* Required Fields Section */}
           <div className="space-y-4">
             <div className="text-sm font-medium text-muted-foreground">
@@ -173,12 +182,13 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
                   aria-invalid={errors.author ? "true" : "false"}
                 />
                 {errors.author && (
-                  <p className="text-sm text-red-600">{errors.author.message}</p>
+                  <p className="text-sm text-red-600">
+                    {errors.author.message}
+                  </p>
                 )}
               </div>
             </div>
           </div>
-
           {/* Optional Fields Section */}
           <div className="space-y-4">
             <div className="text-sm font-medium text-muted-foreground">
@@ -249,30 +259,34 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
                     )}
                   </Button>
                 </div>
-                
+
                 {errors.isbn && (
                   <p className="text-sm text-red-600">{errors.isbn.message}</p>
                 )}
-                
+
                 {/* ISBN Lookup Messages */}
                 {lookupMessage && (
-                  <div className={`flex items-start gap-2 text-xs p-2 rounded-md ${
-                    lookupSuccess 
-                      ? "bg-green-50 text-green-700 border border-green-200" 
-                      : "bg-blue-50 text-blue-700 border border-blue-200"
-                  }`}>
-                    {lookupSuccess && <CheckCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />}
+                  <div
+                    className={`flex items-start gap-2 text-xs p-2 rounded-md ${
+                      lookupSuccess
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-blue-50 text-blue-700 border border-blue-200"
+                    }`}
+                  >
+                    {lookupSuccess && (
+                      <CheckCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    )}
                     <span>{lookupMessage}</span>
                   </div>
                 )}
-                
+
                 <p className="text-xs text-muted-foreground">
-                  ISBN is optional. Click the search button to automatically fill book details if available.
+                  ISBN is optional. Click the search button to automatically
+                  fill book details if available.
                 </p>
               </div>
             </div>
           </div>
-
           {/* Form Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
             <Button
@@ -296,12 +310,11 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
               </Button>
             )}
           </div>
-
           {/* Success State Instructions */}
           <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
-            <strong>Note:</strong> After adding a book, you&apos;ll see a success
-            notification with an option to &quot;Add Another Book&quot; or
-            return to the books list.
+            <strong>Note:</strong> After adding a book, you&apos;ll see a
+            success notification with an option to &quot;Add Another Book&quot;
+            or return to the books list.
           </div>
         </form>
       </CardContent>

@@ -2,9 +2,13 @@
 
 ## Project Status
 
-✅ **Implemented**: Stories 1.1-1.5 (Next.js setup, Supabase integration, auth, library context, dashboard)
-🚧 **Current**: Story 2.x (inventory, members, circulation)
-📁 **Working Dir**: `/apps/library-management`
+**Implemented**: Epic 1
+**Current**: Epic 2
+**Working Dir**: `./`
+
+## Principles:
+- Never read or load resource outside of working directory, except user mentioned
+- Always ask for edits when writing outside of working directory
 
 ## Quick Commands
 

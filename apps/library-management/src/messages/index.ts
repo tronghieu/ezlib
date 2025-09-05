@@ -13,7 +13,7 @@ export type Locale = keyof typeof messages;
 export type TranslationKey = keyof Messages;
 
 // Utility function to get all translation keys (for validation)
- 
+
 export function getAllTranslationKeys(
   messages: Record<string, unknown>,
   prefix = ""

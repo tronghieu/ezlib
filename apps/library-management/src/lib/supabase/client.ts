@@ -4,7 +4,7 @@ import type { Database } from "@/lib/database.types";
 /**
  * Supabase client configuration for client-side operations
  * Used in React components and client-side code
- * 
+ *
  * @description Creates a Supabase client with TypeScript type safety
  * @see https://supabase.com/docs/guides/auth/server-side/nextjs
  */
@@ -14,7 +14,8 @@ let _supabase: ReturnType<typeof createBrowserClient<Database>> | null = null;
 export const supabase = () => {
   if (!_supabase) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+    const supabasePublishableKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
     if (!supabaseUrl || !supabasePublishableKey) {
       throw new Error(
@@ -22,7 +23,10 @@ export const supabase = () => {
       );
     }
 
-    _supabase = createBrowserClient<Database>(supabaseUrl, supabasePublishableKey);
+    _supabase = createBrowserClient<Database>(
+      supabaseUrl,
+      supabasePublishableKey
+    );
   }
   return _supabase;
 };
@@ -47,16 +51,16 @@ export const tables = {
    * Book management tables (current schema)
    */
   generalBooks: () => supabase().from("general_books"),
-  bookEditions: () => supabase().from("book_editions"), 
+  bookEditions: () => supabase().from("book_editions"),
   bookContributors: () => supabase().from("book_contributors"),
-  
+
   /**
    * Author and social tables
    */
   authors: () => supabase().from("authors"),
   authorFollows: () => supabase().from("author_follows"),
   socialFollows: () => supabase().from("social_follows"),
-  
+
   /**
    * Review tables
    */
@@ -81,7 +85,10 @@ export async function checkConnection(): Promise<boolean> {
  * @returns Current user session or null
  */
 export async function getCurrentSession() {
-  const { data: { session }, error } = await supabase().auth.getSession();
+  const {
+    data: { session },
+    error,
+  } = await supabase().auth.getSession();
   if (error) {
     console.error("Error getting session:", error);
     return null;
@@ -94,7 +101,10 @@ export async function getCurrentSession() {
  * @returns Current user or null
  */
 export async function getCurrentUser() {
-  const { data: { user }, error } = await supabase().auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase().auth.getUser();
   if (error) {
     console.error("Error getting user:", error);
     return null;

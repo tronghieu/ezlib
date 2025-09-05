@@ -10,9 +10,9 @@ so that **I can quickly see what books we have and their availability status wit
 
 **Acceptance Criteria:**
 
-1. Simple book list displays title, author, publisher, publication years, ISBN, and available/checked-out status only
+1. Simple book list displays title, author, ISBN, and availability status showing "X of Y copies available"
 2. Basic search functionality across title and author fields with simple text matching
-3. Clear available/checked-out status indicators using color coding (green/red)
+3. Clear availability status indicators showing copy count with color coding (green for available, red for none available)
 4. Simple pagination for book lists (up to 5,000 books)
 5. Basic sorting by title and author only - no complex filtering initially
 6. Real-time status updates when books are checked out or returned
@@ -28,8 +28,8 @@ so that **I can quickly build our book inventory without complex cataloging work
 
 **Acceptance Criteria:**
 
-1. Simple add book form with only required fields: title, author, publisher, publication year, ISBN (optional)
-2. Optional ISBN lookup integration with crawler service for metadata enrichment if crawler service is available
+1. Simple add book form with only required fields: title, author, ISBN (optional)
+2. Optional ISBN lookup integration with crawler service for metadata enrichment
 3. Manual entry fallback for books without ISBNs - title and author minimum required
 4. Duplicate detection prevents adding books with same title/author combination
 5. All new books automatically set to "available" status
@@ -83,8 +83,8 @@ so that **I can track book borrowing without complex due date management or fine
 **Acceptance Criteria:**
 
 1. One-click checkout: select book, select member, click "Check Out" - no due dates initially
-2. One-click return: scan/select book, click "Check In" - immediate status change to available
-3. Book status instantly updates from "available" to "checked out" and vice versa
+2. One-click return: scan/select book, click "Check In" - immediate status update to increment available copies
+3. Book availability status instantly updates showing remaining copies (e.g., "3 of 5 available" becomes "2 of 5 available")
 4. Member profile shows simple list of currently checked-out books
 5. Real-time sync with reader app so book availability updates instantly on ezlib.com
 6. Basic checkout history for member profile (book title, checkout date, return date)
@@ -109,6 +109,25 @@ so that **I can assist patrons effectively and make informed decisions about len
 7. Contact information with last verification date and preferred communication method
 8. Member since date and membership renewal requirements
 9. Quick action buttons for common tasks (check out book, send notification, update contact)
+
+## Story 2.6: Staff and Member Invitation System
+
+As a **library staff member with appropriate permissions**,  
+I want **to invite new staff members and library members via email**,  
+so that **I can efficiently onboard team members and patrons with proper access controls and audit trails**.
+
+**Acceptance Criteria:**
+
+1. Staff invitation interface with role selection (owner, manager, librarian, volunteer) and email input
+2. Member invitation capability for registered library patrons with email verification
+3. Secure invitation token generation with 7-day expiry period
+4. Email delivery of invitation links with library branding and clear instructions
+5. Invitation acceptance flow that validates email match and creates appropriate records
+6. Invitation status tracking (pending, accepted, declined, expired) with timestamps
+7. Ability to cancel pending invitations before acceptance
+8. Prevention of duplicate invitations for same email/library combination
+9. Audit trail of all invitation activities for compliance and security
+10. Role-based permissions automatically applied upon staff invitation acceptance
 
 ## Story 2.7: Global Search and Discovery
 

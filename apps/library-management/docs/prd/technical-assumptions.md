@@ -28,7 +28,7 @@ The library management application will be developed within the existing EzLib m
 
 **Frontend Technology Stack:**
 
-- **Framework:** Next.js 14+ with App Router for server-side rendering and optimal performance
+- **Framework:** Next.js 15+ with App Router for server-side rendering and optimal performance
 - **Language:** TypeScript 5.0+ with strict mode for type safety and developer productivity
 - **UI Components:** shadcn/ui component library for consistent design system integration
 - **Styling:** Tailwind CSS for rapid development and maintainable styles

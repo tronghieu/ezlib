@@ -101,7 +101,9 @@ function createTestWrapper(library: LibraryWithAccess | null) {
   };
 
   const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-    <LibraryContext.Provider value={mockLibraryValue}>{children}</LibraryContext.Provider>
+    <LibraryContext.Provider value={mockLibraryValue}>
+      {children}
+    </LibraryContext.Provider>
   );
 
   return TestWrapper;

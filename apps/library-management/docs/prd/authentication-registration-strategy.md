@@ -22,7 +22,7 @@
 **Role-Based Access Control:**
 
 - **Default Role**: All users can access reader features (social book discovery) with authenticated role
-- **Library Management Access**: Users gain admin capabilities when added to LibAdmin table for specific libraries
+- **Library Management Access**: Users gain admin capabilities when added to library_staff table for specific libraries
 - **Permission Levels**: Owner, Manager, Librarian roles with granular permissions for each library
 
 **Future Enhancement:** Planned implementation of cross-domain session sharing for seamless user experience between applications.
@@ -38,6 +38,6 @@
 **User Profile Structure:**
 
 - Base user record in `users` table
-- Optional `lib_readers` records for library memberships
-- Optional `lib_admins` records for management access
+- Optional `library_members` records for library memberships
+- Optional `library_staff` records for management access
 - Preference storage for language, region, notification settings

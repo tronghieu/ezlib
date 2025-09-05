@@ -4,7 +4,7 @@
 
 1. **FR1:** The system shall require users to first register on the main reader platform (ezlib.com) using passwordless email OTP authentication, then provide independent login access to manage.ezlib.com with role-based access control (owner, manager, librarian) across multiple libraries, with permissions enforced through Row Level Security policies and server-side authorization checks
 
-2. **FR2:** The system shall provide ultra-simple book management with basic book lists containing title, author, ISBN, and available/checked-out status, with optional ISBN lookup integration to the crawler service for automatic metadata enrichment
+2. **FR2:** The system shall provide ultra-simple book management with basic book lists containing title, author, ISBN, and availability status showing number of copies (e.g., "3 of 5 available"), with optional ISBN lookup integration to the crawler service for automatic metadata enrichment
 
 3. **FR3:** The system shall maintain real-time book availability status synchronized with the public reader interface (ezlib.com) for seamless borrowing request workflows
 
@@ -31,6 +31,20 @@
 14. **FR14:** The system shall maintain audit logs for all critical operations (check-outs, returns, member changes, inventory updates) for compliance and operational analysis
 
 15. **FR15:** The system shall support internationalization framework for future multi-language and regional preferences as post-MVP enhancement
+
+16. **FR16:** The system shall allow library staff with appropriate permissions to invite new staff members via email with secure, unique invitation tokens that expire after 7 days
+
+17. **FR17:** The system shall allow library staff to invite new library members via email invitation with validation that recipient's email matches their registered account during acceptance
+
+18. **FR18:** The system shall automatically create appropriate staff or member records upon invitation acceptance and maintain audit trail of all invitation responses (accepted, declined, expired)
+
+19. **FR19:** The system shall prevent duplicate pending invitations for the same email and library while allowing invitations to be cancelled by the inviter or library managers before acceptance
+
+20. **FR20:** The system shall track and display the number of available copies for each book (e.g., "4 of 6 copies available") with automatic updates when books are checked out or returned
+
+21. **FR21:** The system shall allow library staff to manage multiple copies of the same book edition with individual tracking and prevent checkout when no copies are available
+
+22. **FR22:** The system shall support role-based invitations (owner, manager, librarian, volunteer) with configurable permissions for each role level
 
 ## Non-Functional Requirements
 

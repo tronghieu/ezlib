@@ -34,22 +34,23 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  ImageIcon,
 } from "lucide-react";
 import { useBooks, useBookSearch } from "@/lib/hooks/use-books";
 import { cn } from "@/lib/utils";
 
 export interface Book {
   id: string;
+  copyNumber: string; // Library-specific identifier
   title: string;
   author: string;
   publisher: string;
   publicationYear: number;
   isbn: string;
+  coverImageUrl?: string; // Book cover URL
   status: "available" | "checked_out";
-  availability: {
-    status: string;
-    count: number;
-  };
+  availableCopies: number; // Available copies count
+  totalCopies: number; // Total copies count
 }
 
 interface BooksTableProps {
@@ -185,6 +186,8 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-16">Cover</TableHead>
+              <TableHead className="w-20">No</TableHead>
               <TableHead>
                 <Button
                   variant="ghost"
@@ -195,6 +198,7 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
                   {renderSortIcon("title")}
                 </Button>
               </TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>
                 <Button
                   variant="ghost"
@@ -206,9 +210,7 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
                 </Button>
               </TableHead>
               <TableHead>Publisher</TableHead>
-              <TableHead>Year</TableHead>
-              <TableHead>ISBN</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="w-16">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -216,7 +218,7 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
               // Loading skeleton rows
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 6 }).map((_, j) => (
+                  {Array.from({ length: 7 }).map((_, j) => (
                     <TableCell key={j}>
                       <div className="h-4 bg-muted animate-pulse rounded w-full" />
                     </TableCell>
@@ -225,7 +227,7 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
               ))
             ) : paginatedDisplayBooks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   {searchQuery.length > 0 ? (
                     <div>
                       <p className="text-muted-foreground">
@@ -254,18 +256,78 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
             ) : (
               paginatedDisplayBooks.map((book) => (
                 <TableRow key={book.id} className="hover:bg-muted/50">
-                  <TableCell className="font-medium">{book.title}</TableCell>
-                  <TableCell>{book.author}</TableCell>
-                  <TableCell>{book.publisher || "—"}</TableCell>
-                  <TableCell>{book.publicationYear || "—"}</TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {book.isbn || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge
-                      status={book.status}
-                      count={book.availability?.count}
+                  {/* Cover Column */}
+                  <TableCell className="w-16 p-2">
+                    <BookCoverThumbnail
+                      src={book.coverImageUrl}
+                      alt={book.title}
                     />
+                  </TableCell>
+
+                  {/* No Column (Library-specific identifier) */}
+                  <TableCell className="w-20 font-mono text-sm">
+                    {book.copyNumber}
+                  </TableCell>
+
+                  {/* Title Column with ISBN above */}
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="font-medium hover:underline cursor-pointer">
+                        {book.title}
+                      </div>
+                      {book.isbn && (
+                        <div className="text-xs text-muted-foreground font-mono">
+                          ISBN: {book.isbn}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+
+                  {/* Status Column with available/total copies */}
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">
+                        {book.availableCopies}/{book.totalCopies}
+                      </span>
+                      <div
+                        className={cn(
+                          "w-2 h-2 rounded-full",
+                          book.status === "available"
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                        )}
+                      />
+                    </div>
+                  </TableCell>
+
+                  {/* Author Column */}
+                  <TableCell>{book.author}</TableCell>
+
+                  {/* Publisher Column with publication year above */}
+                  <TableCell>
+                    <div className="space-y-1">
+                      {book.publicationYear && (
+                        <div className="text-xs text-muted-foreground">
+                          {book.publicationYear}
+                        </div>
+                      )}
+                      <div className="text-sm">{book.publisher || "—"}</div>
+                    </div>
+                  </TableCell>
+
+                  {/* Actions Column */}
+                  <TableCell className="w-16">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        // TODO: Navigate to book details page
+                        console.log("Navigate to book details:", book.id);
+                      }}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -349,25 +411,31 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
   );
 }
 
-interface StatusBadgeProps {
-  status: "available" | "checked_out";
-  count?: number;
+interface BookCoverThumbnailProps {
+  src?: string;
+  alt: string;
 }
 
-function StatusBadge({ status, count }: StatusBadgeProps): React.JSX.Element {
-  const isAvailable = status === "available";
-
+function BookCoverThumbnail({
+  src,
+  alt,
+}: BookCoverThumbnailProps): React.JSX.Element {
   return (
-    <Badge
-      variant={isAvailable ? "default" : "destructive"}
-      className={cn(
-        isAvailable
-          ? "bg-green-50 text-green-600 hover:bg-green-50"
-          : "bg-red-50 text-red-600 hover:bg-red-50"
+    <div className="w-10 h-12 rounded border bg-muted flex items-center justify-center overflow-hidden">
+      {src ? (
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            // Replace with placeholder icon if image fails to load
+            const target = e.target as HTMLImageElement;
+            target.style.display = "none";
+          }}
+        />
+      ) : (
+        <ImageIcon className="h-5 w-5 text-muted-foreground" />
       )}
-    >
-      {isAvailable ? "Available" : "Checked Out"}
-      {count !== undefined && count > 0 && ` (${count})`}
-    </Badge>
+    </div>
   );
 }

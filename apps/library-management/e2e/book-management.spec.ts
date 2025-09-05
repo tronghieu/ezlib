@@ -77,7 +77,9 @@ test.describe("Book Management", () => {
       await page.waitForTimeout(400);
 
       // Should show search results
-      await expect(page.locator("table tbody tr")).toHaveCountGreaterThan(0);
+      const rows = page.locator("table tbody tr");
+      const count = await rows.count();
+      expect(count).toBeGreaterThan(0);
 
       // Search results should contain the query
       const bookTitles = page.locator("table tbody td:first-child");

@@ -14,6 +14,6 @@ export default async function AddBookPage({
   params,
 }: AddBookPageProps): Promise<React.JSX.Element> {
   const { "library-code": libraryCode } = await params;
-  
+
   return <AddBookPageClient libraryCode={libraryCode} />;
 }
