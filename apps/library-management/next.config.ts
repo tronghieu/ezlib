@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
 
   // Image optimization
   images: {
-    domains: [],
+    domains: ["loremflickr.com", "picsum.photos"],
     formats: ["image/avif", "image/webp"],
   },
 

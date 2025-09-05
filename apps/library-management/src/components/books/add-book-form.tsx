@@ -13,7 +13,7 @@ import { useAddBook } from "@/lib/hooks/use-add-book";
 import { addBookSchema, type AddBookFormData } from "@/lib/validation/books";
 
 // Explicit form data type to resolve Zod inference issues
-type FormData = AddBookFormData;
+type BookFormData = AddBookFormData;
 import { enrichFromISBN } from "@/lib/validation/isbn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,8 +42,7 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
     setError,
     setValue,
     watch,
-  } = useForm<FormData>({
-    // @ts-expect-error: Zod coerce type inference issue with React Hook Form
+  } = useForm({
     resolver: zodResolver(addBookSchema),
     defaultValues: {
       title: "",
@@ -110,7 +109,7 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
     }
   };
 
-  const onSubmit = async (data: FormData): Promise<void> => {
+  const onSubmit = async (data: BookFormData) => {
     if (!currentLibrary) {
       setError("root", { message: "No library selected" });
       return;
@@ -136,7 +135,10 @@ export function AddBookForm({ onCancel }: AddBookFormProps): React.JSX.Element {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form 
+          onSubmit={handleSubmit(onSubmit)} 
+          className="space-y-6"
+        >
           {/* Error Alert */}
           {error && (
             <Alert variant="destructive">

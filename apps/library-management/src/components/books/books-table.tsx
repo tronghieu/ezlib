@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useMemo } from "react";
+import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -16,7 +17,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -306,12 +306,13 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
                   {/* Publisher Column with publication year above */}
                   <TableCell>
                     <div className="space-y-1">
+                      <div className="text-sm">{book.publisher || "—"}</div>
+
                       {book.publicationYear && (
                         <div className="text-xs text-muted-foreground">
                           {book.publicationYear}
                         </div>
                       )}
-                      <div className="text-sm">{book.publisher || "—"}</div>
                     </div>
                   </TableCell>
 
@@ -423,9 +424,11 @@ function BookCoverThumbnail({
   return (
     <div className="w-10 h-12 rounded border bg-muted flex items-center justify-center overflow-hidden">
       {src ? (
-        <img
+        <Image
           src={src}
           alt={alt}
+          width={40}
+          height={48}
           className="w-full h-full object-cover"
           onError={(e) => {
             // Replace with placeholder icon if image fails to load

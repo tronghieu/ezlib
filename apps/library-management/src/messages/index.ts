@@ -24,7 +24,7 @@ export function getAllTranslationKeys(
     const fullKey = prefix ? `${prefix}.${key}` : key;
 
     if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-      keys.push(...getAllTranslationKeys(value, fullKey));
+      keys.push(...getAllTranslationKeys(value as Record<string, unknown>, fullKey));
     } else {
       keys.push(fullKey);
     }
