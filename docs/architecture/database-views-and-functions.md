@@ -82,92 +82,57 @@ CREATE TRIGGER update_[table]_updated_at
 
 ## Library Access Control
 
-### `get_library_role(target_library_id, target_user_id)`
 
-**Purpose**: Returns a user's role in a specific library without triggering RLS recursion.
+### `get_user_role(library_id_param, target_user_id)`
+
+**Purpose**: Simple role checker for library-specific access control.
 
 **Returns**: TEXT (role name or NULL)
 
 **Parameters**:
-- `target_library_id`: UUID of the library
-- `target_user_id`: UUID of the user (defaults to auth.uid())
-
-**Usage Example**:
-```sql
--- Check current user's role
-SELECT get_library_role('library-uuid-here');
-
--- Check specific user's role
-SELECT get_library_role('library-uuid', 'user-uuid');
-```
-
-**Possible Return Values**:
-- `'owner'`: Library owner with full permissions
-- `'manager'`: Can manage most library operations
-- `'librarian'`: Standard staff member
-- `'volunteer'`: Limited permissions
-- `NULL`: No role in library
-
-### `user_has_library_access(target_library_id, target_user_id)`
-
-**Purpose**: Boolean check if user has any active role in a library.
-
-**Returns**: BOOLEAN
-
-**Usage Example**:
-```sql
--- Used in RLS policies
-CREATE POLICY "Staff can view library data"
-ON public.book_copies
-FOR SELECT USING (
-    user_has_library_access(library_id)
-);
-```
-
-### `user_can_manage_staff(target_library_id, target_user_id)`
-
-**Purpose**: Checks if user can manage staff (owner or manager only).
-
-**Returns**: BOOLEAN
-
-**Usage**: Primarily for RLS policies on staff management operations.
-
-### `user_has_permission(permission_name, library_id_param, target_user_id)`
-
-**Purpose**: Universal permission checker for multi-tenant system with optional library scoping.
-
-**Returns**: BOOLEAN
-
-**Parameters**:
-- `permission_name`: TEXT - The permission to check (e.g., 'manage_inventory', 'manage_catalog')
-- `library_id_param`: UUID - Optional library ID for library-specific checks (NULL for global)
-- `target_user_id`: UUID - User to check permissions for (defaults to auth.uid())
+- `library_id_param`: UUID - Library ID to check role for
+- `target_user_id`: UUID - User to check role for (defaults to auth.uid())
 
 **Usage Examples**:
 ```sql
--- Library-specific permission check
-SELECT user_has_permission('manage_inventory', 'library-uuid');
+-- Check current user's role in a library
+SELECT get_user_role('library-uuid');
 
--- Global permission check (any library)
-SELECT user_has_permission('manage_catalog');
+-- Check specific user's role
+SELECT get_user_role('library-uuid', 'user-uuid');
 
--- Check specific user's permission
-SELECT user_has_permission('process_loans', 'library-uuid', 'user-uuid');
+-- Use in RLS policies
+CREATE POLICY "Staff can manage inventory" ON book_copies
+FOR ALL USING (get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 ```
 
-**Multi-Tenant Behavior**:
-- **Library-scoped**: When `library_id_param` provided, checks permission in that specific library
-- **Global**: When `library_id_param` is NULL, checks if user has permission in ANY library
-- **Service role**: Always returns TRUE for system operations
+**Possible Return Values**:
+- `'owner'`: Full library control including settings and staff management
+- `'manager'`: All operations except library settings and staff management  
+- `'librarian'`: Daily operations including catalog, inventory, members, circulation
+- `'volunteer'`: Circulation operations only
+- `NULL`: No active role in the library
 
-**Supported Permissions**:
-- `manage_members`: Add, edit, delete library members
-- `manage_inventory`: Add, edit, delete book copies  
-- `process_loans`: Create and manage borrowing transactions
-- `manage_staff`: Add, edit, remove library staff
-- `admin_settings`: Modify library settings and configuration
-- `manage_catalog`: Edit global book content and metadata & collections
-- `view_reports`: Access library analytics and reports
+### `user_has_catalog_access(target_user_id)`
+
+**Purpose**: Check if user can manage global catalog content.
+
+**Returns**: BOOLEAN  
+
+**Parameters**:
+- `target_user_id`: UUID - User to check (defaults to auth.uid())
+
+**Usage Examples**:
+```sql
+-- Check if current user can manage catalog
+SELECT user_has_catalog_access();
+
+-- Use in RLS policies for global content
+CREATE POLICY "Staff can edit authors" ON authors
+FOR ALL USING (user_has_catalog_access());
+```
+
+**Access Logic**: Returns true if user has owner, manager, or librarian role in ANY library
 
 ### `get_user_library_ids(target_user_id)`
 
@@ -450,25 +415,24 @@ WHERE library_id = 'library-uuid';
 
 ## Multi-Tenant RLS Policy Patterns
 
-EzLib implements a sophisticated multi-tenant security model with two distinct data scopes:
+EzLib implements a **simplified role-based** multi-tenant security model with two distinct data scopes:
 
 ### **Scope 1: Global Shared Data**
 Tables: `authors`, `general_books`, `book_editions`, `book_contributors`
 
-**Security Model**: If user has `manage_catalog` permission in ANY library, they can manage global catalog.
+**Security Model**: Staff with owner/manager/librarian role from ANY library can manage global catalog.
 
 **Pattern**:
 ```sql
 -- Global catalog management
-CREATE POLICY "Catalog managers can modify" ON global_table
-FOR ALL USING (user_has_permission('manage_catalog'));
--- Note: No library_id parameter = checks ANY library
+CREATE POLICY "Catalog staff can modify" ON global_table
+FOR ALL USING (user_has_catalog_access());
 ```
 
 ### **Scope 2: Library-Scoped Data** 
 Tables: `book_copies`, `collections`, `collection_books`, `library_members`, `library_staff`
 
-**Security Model**: Users can only access data for libraries where they have active staff membership AND specific permissions.
+**Security Model**: Users can only access data for libraries where they have active staff membership with appropriate role.
 
 **Patterns**:
 ```sql
@@ -476,9 +440,17 @@ Tables: `book_copies`, `collections`, `collection_books`, `library_members`, `li
 CREATE POLICY "Staff can view" ON library_scoped_table
 FOR SELECT USING (library_id = ANY(get_user_library_ids()));
 
--- Modify access: Must have specific permission in that exact library
-CREATE POLICY "Permission holders can modify" ON library_scoped_table
-FOR ALL USING (user_has_permission('specific_permission', library_id));
+-- Role-based modify access: Direct role checks
+CREATE POLICY "Staff can modify" ON library_scoped_table
+FOR ALL USING (get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
+
+-- Owner-only access for sensitive operations
+CREATE POLICY "Owners can manage" ON library_staff
+FOR ALL USING (get_user_role(library_id) = 'owner');
+
+-- All roles including volunteer for circulation
+CREATE POLICY "All staff can circulate" ON borrowing_transactions
+FOR ALL USING (get_user_role(library_id) IN ('owner', 'manager', 'librarian', 'volunteer'));
 ```
 
 ### **Policy Pattern Examples**
@@ -496,9 +468,9 @@ FOR SELECT USING (
 CREATE POLICY "Staff inventory view" ON book_copies
 FOR SELECT USING (library_id = ANY(get_user_library_ids()));
 
--- Only inventory managers can modify
-CREATE POLICY "Inventory modification" ON book_copies
-FOR ALL USING (user_has_permission('manage_inventory', library_id));
+-- Owner/manager/librarian can modify inventory
+CREATE POLICY "Library staff can modify inventory" ON book_copies
+FOR ALL USING (get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 ```
 
 **Collections (Library-Specific)**:
@@ -511,18 +483,33 @@ FOR SELECT USING (is_public = true);
 CREATE POLICY "Staff collections" ON collections
 FOR SELECT USING (library_id = ANY(get_user_library_ids()));
 
--- Only catalog managers can manage collections in their library
-CREATE POLICY "Collection management" ON collections
-FOR ALL USING (user_has_permission('manage_catalog', library_id));
+-- Owner/manager/librarian can manage collections
+CREATE POLICY "Library staff can manage collections" ON collections
+FOR ALL USING (get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
+```
+
+**Circulation (All Staff Including Volunteers)**:
+```sql
+-- All staff can manage circulation
+CREATE POLICY "Staff can manage circulation" ON borrowing_transactions
+FOR ALL USING (get_user_role(library_id) IN ('owner', 'manager', 'librarian', 'volunteer'));
+```
+
+**Staff Management (Owner Only)**:
+```sql
+-- Only owners can manage staff
+CREATE POLICY "Owners can manage staff" ON library_staff
+FOR ALL USING (get_user_role(library_id) = 'owner');
 ```
 
 ### **Security Benefits**
 
 1. **Multi-Tenant Isolation**: Staff from Library A cannot access Library B data
-2. **Permission Granularity**: Different permissions for different operations
-3. **Global vs Local**: Appropriate scope for shared vs library-specific data
-4. **Performance**: Optimized functions avoid N+1 queries in policies
-5. **Maintainability**: Centralized permission logic in reusable functions
+2. **Simple Role Hierarchy**: Clear owner > manager > librarian > volunteer structure
+3. **Global vs Local**: Appropriate scope for shared vs library-specific data  
+4. **Performance**: Simple role checks avoid complex permission matrix queries
+5. **Maintainability**: Easy to understand and modify role-based policies
+6. **Small Library Friendly**: Perfect for small/medium libraries without complex permission needs
 
 ## Migration Strategy
 
@@ -621,12 +608,14 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT ...;
 
 ## Future Enhancements
 
-### Recently Added (2024)
+### Recently Added (2025)
 
-1. ✅ **Universal Permission Function**: `user_has_permission()` for multi-tenant access control
-2. ✅ **Library ID Helper**: `get_user_library_ids()` for optimized RLS policies
-3. ✅ **Multi-Tenant RLS**: Comprehensive security model with global vs library-scoped data
-4. ✅ **Global Catalog Security**: RLS policies for shared book content tables
+1. ✅ **Simplified Role-Based Access**: Replaced complex permission system with simple owner/manager/librarian/volunteer roles
+2. ✅ **Role Helper Functions**: `get_user_role()` and `user_has_catalog_access()` for direct role checks
+3. ✅ **Library ID Helper**: `get_user_library_ids()` for optimized RLS policies
+4. ✅ **Multi-Tenant RLS**: Comprehensive security model with global vs library-scoped data
+5. ✅ **Global Catalog Security**: RLS policies for shared book content tables
+6. ✅ **Code Cleanup**: Removed unused complex functions (`get_library_role`, `user_has_library_access`, `user_can_manage_staff`)
 
 ### Planned Additions
 

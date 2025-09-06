@@ -37,9 +37,11 @@ export const seedUsers = async () => {
   // Define user types and distribution
   const userTypes = [
     { role: 'system_admin', count: 2 },
-    { role: 'library_admin', count: 4 },
-    { role: 'librarian', count: 6 },
-    { role: 'reader', count: 8 }
+    { role: 'library_owner', count: 5 },
+    { role: 'library_manager', count: 8 },
+    { role: 'librarian', count: 12 },
+    { role: 'volunteer', count: 15 },
+    { role: 'reader', count: 15 }
   ];
 
   let userCounter = 0;

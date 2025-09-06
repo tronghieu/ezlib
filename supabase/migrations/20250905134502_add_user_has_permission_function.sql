@@ -1,19 +1,49 @@
 -- =============================================================================
--- EzLib Migration: Add Universal Permission Function
+-- EzLib Migration: Simple Role-Based Access Function
 -- =============================================================================
--- Purpose: Create reusable permission checking function for multi-tenant system
--- Benefits: Single function for all permission checks, library-scoped or global
+-- Purpose: Single function for role-based access control
+-- Benefits: Direct role checks in RLS policies, simple and clear
 -- Migration: 20250905134502_add_user_has_permission_function.sql
 -- =============================================================================
 
 -- =============================================================================
--- UNIVERSAL PERMISSION FUNCTION
+-- SINGLE ROLE CHECK FUNCTION
 -- =============================================================================
 
--- Function to check if user has specific permission in library or globally
-CREATE OR REPLACE FUNCTION public.user_has_permission(
-    permission_name TEXT,
-    library_id_param UUID DEFAULT NULL,
+-- Function to get user's role in a specific library
+-- Returns the role string or NULL if no access
+CREATE OR REPLACE FUNCTION public.get_user_role(
+    library_id_param UUID,
+    target_user_id UUID DEFAULT auth.uid()
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    user_role TEXT;
+BEGIN
+    -- Return null if no user provided
+    IF target_user_id IS NULL THEN
+        RETURN NULL;
+    END IF;
+    
+    -- Get user's role in the specified library (bypasses RLS)
+    SELECT role INTO user_role
+    FROM library_staff
+    WHERE user_id = target_user_id 
+        AND library_id = library_id_param 
+        AND is_deleted = FALSE 
+        AND status = 'active';
+    
+    RETURN user_role;
+END;
+$$;
+
+-- Helper function to check if user has catalog management access (any library)
+-- Returns true if user has owner, manager, or librarian role in ANY library
+CREATE OR REPLACE FUNCTION public.user_has_catalog_access(
     target_user_id UUID DEFAULT auth.uid()
 )
 RETURNS BOOLEAN
@@ -27,84 +57,68 @@ BEGIN
         RETURN FALSE;
     END IF;
     
-    -- Service role has all permissions (for system operations)
+    -- Service role has all permissions
     IF auth.role() = 'service_role' THEN
         RETURN TRUE;
     END IF;
     
-    -- Check permission based on scope
-    IF library_id_param IS NOT NULL THEN
-        -- Library-specific permission check
-        RETURN EXISTS (
-            SELECT 1 
-            FROM library_staff
-            WHERE user_id = target_user_id
-            AND library_id = library_id_param
-            AND is_deleted = FALSE
-            AND status = 'active'
-            AND (permissions->>permission_name)::boolean = true
-        );
-    ELSE
-        -- Global permission check - user has permission in ANY library
-        RETURN EXISTS (
-            SELECT 1 
-            FROM library_staff
-            WHERE user_id = target_user_id
-            AND is_deleted = FALSE
-            AND status = 'active'
-            AND (permissions->>permission_name)::boolean = true
-        );
-    END IF;
+    -- Check if user has catalog management role in any library
+    RETURN EXISTS (
+        SELECT 1 
+        FROM library_staff
+        WHERE user_id = target_user_id
+        AND is_deleted = FALSE
+        AND status = 'active'
+        AND role IN ('owner', 'manager', 'librarian')
+    );
 END;
 $$;
 
-COMMENT ON FUNCTION public.user_has_permission(TEXT, UUID, UUID) IS 
-'Universal permission checker: library-specific when library_id provided, global when NULL. Supports all permission types: manage_members, manage_inventory, process_loans, manage_staff, admin_settings, manage_catalog, view_reports';
+-- =============================================================================
+-- GRANT PERMISSIONS
+-- =============================================================================
+
+GRANT EXECUTE ON FUNCTION public.get_user_role(UUID, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.user_has_catalog_access(UUID) TO authenticated;
+
+-- =============================================================================
+-- FUNCTION DOCUMENTATION
+-- =============================================================================
+
+COMMENT ON FUNCTION public.get_user_role(UUID, UUID) IS 
+'Returns user role in specific library: owner, manager, librarian, volunteer, or NULL';
+
+COMMENT ON FUNCTION public.user_has_catalog_access(UUID) IS 
+'Returns true if user can manage global catalog (has owner/manager/librarian role in any library)';
 
 -- =============================================================================
 -- USAGE EXAMPLES (in comments for reference)
 -- =============================================================================
 
 /*
--- Library-specific permission checks (for most operations)
-SELECT user_has_permission('manage_inventory', 'library-uuid-here'); -- current user
-SELECT user_has_permission('process_loans', 'library-uuid', 'user-uuid'); -- specific user
+-- Get user's role in a library
+SELECT get_user_role('library-uuid'); -- returns 'owner', 'manager', 'librarian', 'volunteer', or NULL
 
--- Global permission checks (for catalog management, cross-library operations)
-SELECT user_has_permission('manage_catalog'); -- any library
-SELECT user_has_permission('view_reports'); -- system-wide reports
+-- Check catalog access
+SELECT user_has_catalog_access(); -- returns true/false
 
 -- Usage in RLS policies:
 
--- Library-scoped policy
+-- Library-scoped policy for inventory (owner, manager, librarian only)
 CREATE POLICY "Staff can manage inventory" ON book_copies
-FOR ALL USING (user_has_permission('manage_inventory', library_id));
+FOR ALL USING (get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
--- Global catalog policy  
+-- Global catalog policy
 CREATE POLICY "Catalog managers can edit authors" ON authors
-FOR ALL USING (user_has_permission('manage_catalog'));
+FOR ALL USING (user_has_catalog_access());
 
--- Mixed policy (library access + specific permission)
-CREATE POLICY "Members can view transactions" ON borrowing_transactions
-FOR SELECT USING (
-    member_id IN (SELECT id FROM library_members WHERE user_id = auth.uid())
-    OR user_has_permission('process_loans', library_id)
-);
-*/
+-- Circulation policy (all roles including volunteer)
+CREATE POLICY "Staff can manage circulation" ON borrowing_transactions
+FOR ALL USING (get_user_role(library_id) IN ('owner', 'manager', 'librarian', 'volunteer'));
 
--- =============================================================================
--- PERMISSION TYPES SUPPORTED
--- =============================================================================
-
-/*
-Supported permission_name values:
-- 'manage_members': Add, edit, delete (soft delete) library members
-- 'manage_inventory': Add, edit, delete (soft delete) book copies  
-- 'process_loans': Create and manage borrowing transactions
-- 'manage_staff': Add, edit, remove library staff
-- 'admin_settings': Modify library settings and configuration
-- 'manage_catalog': Edit global book content and metadata & collections
-- 'view_reports': Access library analytics and reports
+-- Owner-only policy for staff management
+CREATE POLICY "Owners can manage staff" ON library_staff
+FOR ALL USING (get_user_role(library_id) = 'owner');
 */
 
 -- =============================================================================
@@ -138,52 +152,52 @@ CREATE POLICY "Anyone can read book contributors" ON public.book_contributors
     FOR SELECT USING (true);
 
 -- =============================================================================
--- RESTRICTED WRITE ACCESS POLICIES
+-- SIMPLIFIED ROLE-BASED WRITE ACCESS POLICIES
 -- =============================================================================
 
--- Authors table - only catalog managers can modify
-CREATE POLICY "Catalog managers can insert authors" ON public.authors
-    FOR INSERT WITH CHECK (public.user_has_permission('manage_catalog'));
+-- Authors table - only catalog staff (owner, manager, librarian from any library) can modify
+CREATE POLICY "Catalog staff can insert authors" ON public.authors
+    FOR INSERT WITH CHECK (public.user_has_catalog_access());
 
-CREATE POLICY "Catalog managers can update authors" ON public.authors
-    FOR UPDATE USING (public.user_has_permission('manage_catalog'))
-    WITH CHECK (public.user_has_permission('manage_catalog'));
+CREATE POLICY "Catalog staff can update authors" ON public.authors
+    FOR UPDATE USING (public.user_has_catalog_access())
+    WITH CHECK (public.user_has_catalog_access());
 
-CREATE POLICY "Catalog managers can delete authors" ON public.authors
-    FOR DELETE USING (public.user_has_permission('manage_catalog'));
+CREATE POLICY "Catalog staff can delete authors" ON public.authors
+    FOR DELETE USING (public.user_has_catalog_access());
 
--- General books table - only catalog managers can modify
-CREATE POLICY "Catalog managers can insert general books" ON public.general_books
-    FOR INSERT WITH CHECK (public.user_has_permission('manage_catalog'));
+-- General books table - only catalog staff can modify
+CREATE POLICY "Catalog staff can insert general books" ON public.general_books
+    FOR INSERT WITH CHECK (public.user_has_catalog_access());
 
-CREATE POLICY "Catalog managers can update general books" ON public.general_books
-    FOR UPDATE USING (public.user_has_permission('manage_catalog'))
-    WITH CHECK (public.user_has_permission('manage_catalog'));
+CREATE POLICY "Catalog staff can update general books" ON public.general_books
+    FOR UPDATE USING (public.user_has_catalog_access())
+    WITH CHECK (public.user_has_catalog_access());
 
-CREATE POLICY "Catalog managers can delete general books" ON public.general_books
-    FOR DELETE USING (public.user_has_permission('manage_catalog'));
+CREATE POLICY "Catalog staff can delete general books" ON public.general_books
+    FOR DELETE USING (public.user_has_catalog_access());
 
--- Book editions table - only catalog managers can modify
-CREATE POLICY "Catalog managers can insert book editions" ON public.book_editions
-    FOR INSERT WITH CHECK (public.user_has_permission('manage_catalog'));
+-- Book editions table - only catalog staff can modify
+CREATE POLICY "Catalog staff can insert book editions" ON public.book_editions
+    FOR INSERT WITH CHECK (public.user_has_catalog_access());
 
-CREATE POLICY "Catalog managers can update book editions" ON public.book_editions
-    FOR UPDATE USING (public.user_has_permission('manage_catalog'))
-    WITH CHECK (public.user_has_permission('manage_catalog'));
+CREATE POLICY "Catalog staff can update book editions" ON public.book_editions
+    FOR UPDATE USING (public.user_has_catalog_access())
+    WITH CHECK (public.user_has_catalog_access());
 
-CREATE POLICY "Catalog managers can delete book editions" ON public.book_editions
-    FOR DELETE USING (public.user_has_permission('manage_catalog'));
+CREATE POLICY "Catalog staff can delete book editions" ON public.book_editions
+    FOR DELETE USING (public.user_has_catalog_access());
 
--- Book contributors table - only catalog managers can modify
-CREATE POLICY "Catalog managers can insert book contributors" ON public.book_contributors
-    FOR INSERT WITH CHECK (public.user_has_permission('manage_catalog'));
+-- Book contributors table - only catalog staff can modify
+CREATE POLICY "Catalog staff can insert book contributors" ON public.book_contributors
+    FOR INSERT WITH CHECK (public.user_has_catalog_access());
 
-CREATE POLICY "Catalog managers can update book contributors" ON public.book_contributors
-    FOR UPDATE USING (public.user_has_permission('manage_catalog'))
-    WITH CHECK (public.user_has_permission('manage_catalog'));
+CREATE POLICY "Catalog staff can update book contributors" ON public.book_contributors
+    FOR UPDATE USING (public.user_has_catalog_access())
+    WITH CHECK (public.user_has_catalog_access());
 
-CREATE POLICY "Catalog managers can delete book contributors" ON public.book_contributors
-    FOR DELETE USING (public.user_has_permission('manage_catalog'));
+CREATE POLICY "Catalog staff can delete book contributors" ON public.book_contributors
+    FOR DELETE USING (public.user_has_catalog_access());
 
 -- =============================================================================
 -- COMMENTS FOR SECURITY DOCUMENTATION
@@ -192,23 +206,23 @@ CREATE POLICY "Catalog managers can delete book contributors" ON public.book_con
 COMMENT ON POLICY "Anyone can read authors" ON public.authors IS 
 'Public read access for catalog browsing - no authentication required';
 
-COMMENT ON POLICY "Catalog managers can insert authors" ON public.authors IS 
-'Only users with manage_catalog permission in any library can add authors';
+COMMENT ON POLICY "Catalog staff can insert authors" ON public.authors IS 
+'Only staff with owner/manager/librarian role from any library can add authors';
 
 COMMENT ON POLICY "Anyone can read general books" ON public.general_books IS 
 'Public read access for catalog browsing - no authentication required';
 
-COMMENT ON POLICY "Catalog managers can insert general books" ON public.general_books IS 
-'Only users with manage_catalog permission in any library can add general books';
+COMMENT ON POLICY "Catalog staff can insert general books" ON public.general_books IS 
+'Only staff with owner/manager/librarian role from any library can add general books';
 
 COMMENT ON POLICY "Anyone can read book editions" ON public.book_editions IS 
 'Public read access for catalog browsing - no authentication required';
 
-COMMENT ON POLICY "Catalog managers can insert book editions" ON public.book_editions IS 
-'Only users with manage_catalog permission in any library can add book editions';
+COMMENT ON POLICY "Catalog staff can insert book editions" ON public.book_editions IS 
+'Only staff with owner/manager/librarian role from any library can add book editions';
 
 COMMENT ON POLICY "Anyone can read book contributors" ON public.book_contributors IS 
 'Public read access for catalog browsing - no authentication required';
 
-COMMENT ON POLICY "Catalog managers can insert book contributors" ON public.book_contributors IS 
-'Only users with manage_catalog permission in any library can add book contributors';
+COMMENT ON POLICY "Catalog staff can insert book contributors" ON public.book_contributors IS 
+'Only staff with owner/manager/librarian role from any library can add book contributors';

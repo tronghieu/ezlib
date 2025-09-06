@@ -7,6 +7,94 @@
 -- =============================================================================
 
 -- =============================================================================
+-- ROLE-BASED ACCESS FUNCTIONS (needed for RLS policies below)
+-- =============================================================================
+
+-- Function to get user's role in a specific library
+-- Returns the role string or NULL if no access
+CREATE OR REPLACE FUNCTION public.get_user_role(
+    library_id_param UUID,
+    target_user_id UUID DEFAULT auth.uid()
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    user_role TEXT;
+BEGIN
+    -- Return null if no user provided
+    IF target_user_id IS NULL THEN
+        RETURN NULL;
+    END IF;
+    
+    -- Get user's role in the specified library (bypasses RLS)
+    SELECT role INTO user_role
+    FROM library_staff
+    WHERE user_id = target_user_id 
+        AND library_id = library_id_param 
+        AND is_deleted = FALSE 
+        AND status = 'active';
+    
+    RETURN user_role;
+END;
+$$;
+
+-- Helper function to check if user has catalog management access (any library)
+-- Returns true if user has owner, manager, or librarian role in ANY library
+CREATE OR REPLACE FUNCTION public.user_has_catalog_access(
+    target_user_id UUID DEFAULT auth.uid()
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    -- Return false if no user provided
+    IF target_user_id IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Check if user has catalog access role in ANY library
+    RETURN EXISTS (
+        SELECT 1 FROM library_staff
+        WHERE user_id = target_user_id 
+            AND role IN ('owner', 'manager', 'librarian')
+            AND is_deleted = FALSE 
+            AND status = 'active'
+    );
+END;
+$$;
+
+-- Function to get all library IDs where user is active staff
+CREATE OR REPLACE FUNCTION public.get_user_library_ids(
+    target_user_id UUID DEFAULT auth.uid()
+)
+RETURNS UUID[]
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    -- Return empty array if no user provided
+    IF target_user_id IS NULL THEN
+        RETURN ARRAY[]::UUID[];
+    END IF;
+
+    -- Return array of library IDs where user is active staff
+    RETURN ARRAY(
+        SELECT library_id
+        FROM library_staff
+        WHERE user_id = target_user_id
+        AND is_deleted = false
+        AND status = 'active'
+    );
+END;
+$$;
+
+-- =============================================================================
 -- LIBRARY ORGANIZATION TABLES
 -- =============================================================================
 
@@ -92,14 +180,6 @@ CREATE TABLE public.library_staff (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     library_id UUID NOT NULL REFERENCES public.libraries(id) ON DELETE CASCADE,
     role TEXT NOT NULL DEFAULT 'librarian' CHECK (role IN ('owner', 'manager', 'librarian', 'volunteer')),
-    permissions JSONB NOT NULL DEFAULT '{
-        "admin_settings": false,
-        "manage_staff": false,
-        "manage_members": true,
-        "manage_inventory": true,
-        "process_loans": true,
-        "view_reports": true
-    }'::jsonb,
     employment_info JSONB NOT NULL DEFAULT '{
         "employee_id": null,
         "hire_date": null,
@@ -346,7 +426,7 @@ CREATE POLICY "Library staff can manage inventory" ON public.book_copies
         library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
     );
 
--- Borrowing transaction policies
+-- Borrowing transaction policies - simplified role-based
 CREATE POLICY "Members can view own transactions" ON public.borrowing_transactions
     FOR SELECT USING (
         member_id IN (SELECT id FROM public.library_members WHERE user_id = auth.uid())
@@ -354,7 +434,7 @@ CREATE POLICY "Members can view own transactions" ON public.borrowing_transactio
 
 CREATE POLICY "Library staff can manage transactions" ON public.borrowing_transactions
     FOR ALL USING (
-        library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid())
+        public.get_user_role(library_id) IN ('owner', 'manager', 'librarian', 'volunteer')
     );
 
 -- Transaction events policies
@@ -437,7 +517,7 @@ COMMENT ON TABLE public.transaction_events IS 'Audit trail for all borrowing tra
 
 COMMENT ON COLUMN public.libraries.code IS 'Unique library code for subdomain routing (e.g., lib1.ezlib.com)';
 COMMENT ON COLUMN public.library_members.member_id IS 'Library-specific member identifier (e.g., card number)';
-COMMENT ON COLUMN public.library_staff.permissions IS 'Role-based permissions for library operations';
+COMMENT ON COLUMN public.library_staff.role IS 'Role-based access: owner (full control), manager (operations), librarian (daily ops), volunteer (circulation only)';
 COMMENT ON COLUMN public.book_copies.availability IS 'Current availability status and borrower information';
 COMMENT ON COLUMN public.borrowing_transactions.fees IS 'Associated fees for late returns, damages, etc.';
 
@@ -453,112 +533,22 @@ DROP POLICY IF EXISTS "Library staff can modify their libraries" ON public.libra
 DROP POLICY IF EXISTS "Managers can view all staff" ON public.library_staff;
 DROP POLICY IF EXISTS "Managers can manage staff" ON public.library_staff;
 
--- Function to get library role for a user (avoiding RLS recursion)
--- This bypasses RLS by using SECURITY DEFINER and direct queries
-CREATE OR REPLACE FUNCTION public.get_library_role(
-    target_library_id UUID,
-    target_user_id UUID DEFAULT auth.uid()
-)
-RETURNS TEXT
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-    user_role TEXT;
-BEGIN
-    -- Return null if no user provided
-    IF target_user_id IS NULL THEN
-        RETURN NULL;
-    END IF;
-    
-    -- Get user's role in the specified library (bypasses RLS)
-    SELECT role INTO user_role
-    FROM library_staff
-    WHERE user_id = target_user_id 
-        AND library_id = target_library_id 
-        AND is_deleted = FALSE 
-        AND status = 'active';
-    
-    RETURN user_role;
-END;
-$$;
-
--- Function to check if user has permission for a library
-CREATE OR REPLACE FUNCTION public.user_has_library_access(
-    target_library_id UUID,
-    target_user_id UUID DEFAULT auth.uid()
-)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-    user_role TEXT;
-BEGIN
-    -- Return false if no user provided
-    IF target_user_id IS NULL THEN
-        RETURN FALSE;
-    END IF;
-    
-    -- Get user's role in the library
-    user_role := public.get_library_role(target_library_id, target_user_id);
-    
-    -- Return true if user has any active role in the library
-    RETURN user_role IS NOT NULL;
-END;
-$$;
-
--- Function to check if user can manage staff in a library
-CREATE OR REPLACE FUNCTION public.user_can_manage_staff(
-    target_library_id UUID,
-    target_user_id UUID DEFAULT auth.uid()
-)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-    user_role TEXT;
-BEGIN
-    -- Return false if no user provided
-    IF target_user_id IS NULL THEN
-        RETURN FALSE;
-    END IF;
-    
-    -- Get user's role in the library
-    user_role := public.get_library_role(target_library_id, target_user_id);
-    
-    -- Return true if user is owner or manager
-    RETURN user_role IN ('owner', 'manager');
-END;
-$$;
 
 -- CREATE NEW NON-RECURSIVE POLICIES
 -- Library access policies (using permission functions)
-CREATE POLICY "Library staff can modify their libraries" ON public.libraries
+CREATE POLICY "Library owners can modify their libraries" ON public.libraries
     FOR ALL USING (
-        public.user_has_library_access(id)
+        public.get_user_role(id) = 'owner'
     );
 
--- Library staff policies (using permission functions to avoid recursion)
-CREATE POLICY "Managers can view all staff" ON public.library_staff
+-- Library staff policies (simplified role-based)
+CREATE POLICY "Staff can view own record and owners can view all" ON public.library_staff
     FOR SELECT USING (
-        public.user_can_manage_staff(library_id) OR user_id = auth.uid()
+        user_id = auth.uid() OR public.get_user_role(library_id) = 'owner'
     );
 
-CREATE POLICY "Managers can manage staff" ON public.library_staff
+CREATE POLICY "Owners can manage staff" ON public.library_staff
     FOR ALL USING (
-        public.user_can_manage_staff(library_id)
+        public.get_user_role(library_id) = 'owner'
     );
 
--- Grant execute permissions to authenticated users
-GRANT EXECUTE ON FUNCTION public.get_library_role(UUID, UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.user_has_library_access(UUID, UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.user_can_manage_staff(UUID, UUID) TO authenticated;
-
-COMMENT ON FUNCTION public.get_library_role(UUID, UUID) IS 'Get user role in a specific library, bypassing RLS to prevent recursion';
-COMMENT ON FUNCTION public.user_has_library_access(UUID, UUID) IS 'Check if user has any access to a library';
-COMMENT ON FUNCTION public.user_can_manage_staff(UUID, UUID) IS 'Check if user can manage staff in a library (owner/manager roles)';

@@ -4431,20 +4431,6 @@
           "maxLength": null
         },
         {
-          "id": "public.library_staff.permissions",
-          "name": "permissions",
-          "columnName": "permissions",
-          "type": "jsonb",
-          "isRequired": true,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": true,
-          "isId": false,
-          "maxLength": null
-        },
-        {
           "id": "public.library_staff.employment_info",
           "name": "employment_info",
           "columnName": "employment_info",

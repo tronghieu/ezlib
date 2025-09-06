@@ -63,7 +63,7 @@ DROP POLICY IF EXISTS "Library staff can view collection books" ON public.collec
 -- CORRECTED LIBRARY-SCOPED POLICIES
 -- =============================================================================
 
--- Book copies - SCOPE 2: Library-specific with manage_inventory permission
+-- Book copies - Library-specific with role-based access
 CREATE POLICY "Staff can view library inventory" ON public.book_copies
     FOR SELECT USING (
         -- Public catalog access (active libraries, active books only)
@@ -75,17 +75,17 @@ CREATE POLICY "Staff can view library inventory" ON public.book_copies
         (library_id = ANY(public.get_user_library_ids()))
     );
 
-CREATE POLICY "Inventory managers can modify book copies" ON public.book_copies
-    FOR INSERT WITH CHECK (public.user_has_permission('manage_inventory', library_id));
+CREATE POLICY "Library staff can modify book copies" ON public.book_copies
+    FOR INSERT WITH CHECK (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
-CREATE POLICY "Inventory managers can update book copies" ON public.book_copies
-    FOR UPDATE USING (public.user_has_permission('manage_inventory', library_id))
-    WITH CHECK (public.user_has_permission('manage_inventory', library_id));
+CREATE POLICY "Library staff can update book copies" ON public.book_copies
+    FOR UPDATE USING (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'))
+    WITH CHECK (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
-CREATE POLICY "Inventory managers can delete book copies" ON public.book_copies
-    FOR DELETE USING (public.user_has_permission('manage_inventory', library_id));
+CREATE POLICY "Library staff can delete book copies" ON public.book_copies
+    FOR DELETE USING (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
--- Library members - SCOPE 2: Library-specific with manage_members permission
+-- Library members - Library-specific with role-based access
 CREATE POLICY "Users can view own library memberships" ON public.library_members
     FOR SELECT USING (user_id = auth.uid() AND is_deleted = false);
 
@@ -94,18 +94,18 @@ CREATE POLICY "Staff can view library members" ON public.library_members
         library_id = ANY(public.get_user_library_ids())
     );
 
-CREATE POLICY "Member managers can add library members" ON public.library_members
-    FOR INSERT WITH CHECK (public.user_has_permission('manage_members', library_id));
+CREATE POLICY "Library staff can add library members" ON public.library_members
+    FOR INSERT WITH CHECK (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
-CREATE POLICY "Member managers can update library members" ON public.library_members
-    FOR UPDATE USING (public.user_has_permission('manage_members', library_id))
-    WITH CHECK (public.user_has_permission('manage_members', library_id));
+CREATE POLICY "Library staff can update library members" ON public.library_members
+    FOR UPDATE USING (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'))
+    WITH CHECK (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
 -- Note: DELETE is handled by soft delete triggers, but policy still needed
-CREATE POLICY "Member managers can delete library members" ON public.library_members
-    FOR DELETE USING (public.user_has_permission('manage_members', library_id));
+CREATE POLICY "Library staff can delete library members" ON public.library_members
+    FOR DELETE USING (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
--- Collections - SCOPE 2: Library-specific with manage_catalog permission
+-- Collections - Library-specific with role-based access
 CREATE POLICY "Public can view public collections" ON public.collections
     FOR SELECT USING (is_public = true);
 
@@ -114,17 +114,17 @@ CREATE POLICY "Staff can view library collections" ON public.collections
         library_id = ANY(public.get_user_library_ids())
     );
 
-CREATE POLICY "Catalog managers can manage collections" ON public.collections
-    FOR INSERT WITH CHECK (public.user_has_permission('manage_catalog', library_id));
+CREATE POLICY "Library staff can manage collections" ON public.collections
+    FOR INSERT WITH CHECK (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
-CREATE POLICY "Catalog managers can update collections" ON public.collections
-    FOR UPDATE USING (public.user_has_permission('manage_catalog', library_id))
-    WITH CHECK (public.user_has_permission('manage_catalog', library_id));
+CREATE POLICY "Library staff can update collections" ON public.collections
+    FOR UPDATE USING (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'))
+    WITH CHECK (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
-CREATE POLICY "Catalog managers can delete collections" ON public.collections
-    FOR DELETE USING (public.user_has_permission('manage_catalog', library_id));
+CREATE POLICY "Library staff can delete collections" ON public.collections
+    FOR DELETE USING (public.get_user_role(library_id) IN ('owner', 'manager', 'librarian'));
 
--- Collection books - SCOPE 2: Library-specific, inherits from collections
+-- Collection books - Library-specific, inherits from collections
 CREATE POLICY "Public can view public collection books" ON public.collection_books
     FOR SELECT USING (
         collection_id IN (
@@ -141,33 +141,33 @@ CREATE POLICY "Staff can view library collection books" ON public.collection_boo
         )
     );
 
-CREATE POLICY "Catalog managers can manage collection books" ON public.collection_books
+CREATE POLICY "Library staff can manage collection books" ON public.collection_books
     FOR INSERT WITH CHECK (
         collection_id IN (
-            SELECT id FROM public.collections
-            WHERE public.user_has_permission('manage_catalog', library_id)
+            SELECT id FROM public.collections c
+            WHERE public.get_user_role(c.library_id) IN ('owner', 'manager', 'librarian')
         )
     );
 
-CREATE POLICY "Catalog managers can update collection books" ON public.collection_books
+CREATE POLICY "Library staff can update collection books" ON public.collection_books
     FOR UPDATE USING (
         collection_id IN (
-            SELECT id FROM public.collections
-            WHERE public.user_has_permission('manage_catalog', library_id)
+            SELECT id FROM public.collections c
+            WHERE public.get_user_role(c.library_id) IN ('owner', 'manager', 'librarian')
         )
     )
     WITH CHECK (
         collection_id IN (
-            SELECT id FROM public.collections
-            WHERE public.user_has_permission('manage_catalog', library_id)
+            SELECT id FROM public.collections c
+            WHERE public.get_user_role(c.library_id) IN ('owner', 'manager', 'librarian')
         )
     );
 
-CREATE POLICY "Catalog managers can delete collection books" ON public.collection_books
+CREATE POLICY "Library staff can delete collection books" ON public.collection_books
     FOR DELETE USING (
         collection_id IN (
-            SELECT id FROM public.collections
-            WHERE public.user_has_permission('manage_catalog', library_id)
+            SELECT id FROM public.collections c
+            WHERE public.get_user_role(c.library_id) IN ('owner', 'manager', 'librarian')
         )
     );
 
@@ -178,11 +178,11 @@ CREATE POLICY "Catalog managers can delete collection books" ON public.collectio
 COMMENT ON POLICY "Staff can view library inventory" ON public.book_copies IS
 'Multi-tenant: Public catalog access + staff can view all inventory in their libraries only';
 
-COMMENT ON POLICY "Inventory managers can modify book copies" ON public.book_copies IS
-'Library-scoped: Only staff with manage_inventory permission in the specific library can modify';
+COMMENT ON POLICY "Library staff can modify book copies" ON public.book_copies IS
+'Library-scoped: Only staff with owner/manager/librarian roles in the specific library can modify';
 
-COMMENT ON POLICY "Member managers can add library members" ON public.library_members IS
-'Library-scoped: Only staff with manage_members permission in the specific library can add';
+COMMENT ON POLICY "Library staff can add library members" ON public.library_members IS
+'Library-scoped: Only staff with owner/manager/librarian roles in the specific library can add';
 
-COMMENT ON POLICY "Catalog managers can manage collections" ON public.collections IS
-'Library-scoped: Only staff with manage_catalog permission in the specific library can manage collections';
+COMMENT ON POLICY "Library staff can manage collections" ON public.collections IS
+'Library-scoped: Only staff with owner/manager/librarian roles in the specific library can manage collections';

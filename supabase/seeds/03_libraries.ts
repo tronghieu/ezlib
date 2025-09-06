@@ -128,31 +128,31 @@ export const seedLibraryManagement = async (createdUsers: any[]) => {
   
   console.log(`✓ Created ${createdLibraries.length} libraries`);
 
-  // Create library staff
+  // Create library staff with diverse roles
   console.log("👨‍💼 Creating library staff...");
   
+  const owners = createdUsers.filter(u => u.role === 'library_owner');
+  const managers = createdUsers.filter(u => u.role === 'library_manager');
   const librarians = createdUsers.filter(u => u.role === 'librarian');
-  const admins = createdUsers.filter(u => u.role === 'library_admin');
+  const volunteers = createdUsers.filter(u => u.role === 'volunteer');
   
-  // Distribute staff across libraries
+  // Combine all potential staff users
+  const allStaffUsers = [...owners, ...managers, ...librarians, ...volunteers];
+  
+  // Distribute staff across libraries with proportional role distribution
   for (let i = 0; i < createdLibraries.length; i++) {
     const library = createdLibraries[i];
     
-    // Assign 1 admin per library (cycling through available admins)
-    if (admins.length > 0) {
-      const admin = admins[i % admins.length];
+    // Each library gets 4-6 staff members with diverse roles
+    const staffCount = faker.number.int({ min: 4, max: 6 });
+    
+    // Assign owner first
+    if (owners.length > 0) {
+      const owner = owners[i % owners.length];
       const result = await seed.library_staff([{
-        user_id: admin.id,
+        user_id: owner.id,
         library_id: library.id,
-        role: 'manager',
-        permissions: {
-          manage_inventory: true,
-          manage_members: true,
-          process_loans: true,
-          view_reports: true,
-          manage_staff: true,
-          admin_settings: true,
-        },
+        role: 'owner',
         employment_info: {
           employee_id: `EMP${faker.string.numeric(6)}`,
           department: 'Administration',
@@ -163,30 +163,55 @@ export const seedLibraryManagement = async (createdUsers: any[]) => {
       }]);
       createdLibraryStaff.push(result.library_staff[0]);
     }
-    
-    // Assign 2-3 librarians per library
-    const librarianCount = faker.number.int({ min: 2, max: 3 });
-    for (let j = 0; j < librarianCount && j < librarians.length; j++) {
-      const librarian = librarians[(i * 3 + j) % librarians.length];
-      const role = faker.helpers.arrayElement(['librarian', 'librarian', 'volunteer']);
+
+    // Then assign other staff with proportional distribution
+    const remainingStaffCount = staffCount - 1;
+    for (let j = 0; j < remainingStaffCount; j++) {
+      const role = weighted([
+        { value: 'volunteer', weight: 8 },
+        { value: 'librarian', weight: 4 },
+        { value: 'manager', weight: 2 },
+      ]);
+      
+      let user;
+      if (role === 'manager' && managers.length > 0) {
+        user = managers[j % managers.length];
+      } else if (role === 'librarian' && librarians.length > 0) {
+        user = librarians[j % librarians.length];
+      } else if (volunteers.length > 0) {
+        user = volunteers[j % volunteers.length];
+      } else {
+        continue; // Skip if no users available for this role
+      }
+      
+      // Department based on role
+      let department;
+      switch (role) {
+        case 'manager':
+          department = faker.helpers.arrayElement(['Operations', 'Administration', 'Collections']);
+          break;
+        case 'librarian':
+          department = faker.helpers.arrayElement(['Circulation', 'Reference', 'Youth Services', 'Technical Services']);
+          break;
+        case 'volunteer':
+          department = faker.helpers.arrayElement(['Circulation', 'Youth Services', 'Events']);
+          break;
+      }
+      
+      // Work schedule based on role
+      const workSchedule = role === 'volunteer' 
+        ? faker.helpers.arrayElement(['Part-time', 'Volunteer'])
+        : faker.helpers.arrayElement(['Full-time', 'Part-time']);
       
       const result = await seed.library_staff([{
-        user_id: librarian.id,
+        user_id: user.id,
         library_id: library.id,
         role: role,
-        permissions: {
-          manage_inventory: true,
-          manage_members: role !== 'volunteer',
-          process_loans: true,
-          view_reports: role === 'librarian',
-          manage_staff: false,
-          admin_settings: false,
-        },
         employment_info: {
           employee_id: `EMP${faker.string.numeric(6)}`,
-          department: faker.helpers.arrayElement(['Circulation', 'Reference', 'Youth Services', 'Technical Services']),
+          department: department,
           hire_date: faker.date.past({ years: 3 }).toISOString(),
-          work_schedule: faker.helpers.arrayElement(['Full-time', 'Part-time']),
+          work_schedule: workSchedule,
         },
         status: weighted([
           { value: 'active', weight: 9 },
