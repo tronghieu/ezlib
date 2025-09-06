@@ -14,8 +14,8 @@ jest.mock("@/lib/supabase/client", () => ({
 const mockSupabase = supabase as jest.MockedFunction<typeof supabase>;
 
 // Helper function to create mock query chains
-const createMockChain = (finalResult: unknown) => {
-  const eqChain = {
+const createMockChain = (finalResult: unknown): Record<string, unknown> => {
+  const eqChain: Record<string, unknown> = {
     eq: jest.fn(() => eqChain),
     like: jest.fn(() => eqChain),
     ilike: jest.fn(() => ({
@@ -65,24 +65,22 @@ describe("Books API", () => {
           error: null,
         }, // 2. Author lookup/creation
         {
-          data: { id: "general-book-id", canonical_title: "test book" },
-          error: null,
-        }, // 3. General book creation
-        {
           data: {
             id: "edition-id",
             title: "Test Book",
             isbn_13: "9781234567890",
           },
           error: null,
-        }, // 4. Edition creation
+        }, // 3. Edition creation
+        { data: null, error: null }, // 4. Book contributor creation (no return data expected)
         { data: { code: "TEST" }, error: null }, // 5. Library lookup for copy number
         { data: null, error: null }, // 6. Last copy number query (no existing copies)
         {
           data: {
             id: "copy-id",
+            library_id: "test-library-id",
             copy_number: "TEST001",
-            availability_status: "available",
+            availability: { status: "available", since: new Date().toISOString() },
           },
           error: null,
         }, // 7. Copy creation
@@ -98,12 +96,11 @@ describe("Books API", () => {
       };
 
       mockSupabase.mockReturnValue(
-        mockFromReturn as ReturnType<typeof supabase>
+        mockFromReturn as unknown as ReturnType<typeof supabase>
       );
 
       const result = await createBook(mockBookData);
 
-      expect(result).toHaveProperty("generalBook.id");
       expect(result).toHaveProperty("edition.id");
       expect(result).toHaveProperty("author.id");
       expect(result).toHaveProperty("copy.id");
@@ -117,9 +114,18 @@ describe("Books API", () => {
           {
             id: "existing-copy-id",
             copy_number: "LIB001",
-            availability_status: "available",
-            book_edition: { title: "Test Book" },
-            author: { name: "Test Author" },
+            availability: { status: "available" },
+            book_editions: { 
+              title: "Test Book",
+              book_contributors: [
+                {
+                  authors: {
+                    name: "Test Author",
+                    canonical_name: "test author"
+                  }
+                }
+              ]
+            },
           },
         ],
         error: null,
@@ -130,7 +136,7 @@ describe("Books API", () => {
       };
 
       mockSupabase.mockReturnValue(
-        mockFromReturn as ReturnType<typeof supabase>
+        mockFromReturn as unknown as ReturnType<typeof supabase>
       );
 
       const result = await checkDuplicateBooks(
@@ -157,10 +163,6 @@ describe("Books API", () => {
           error: null,
         },
         {
-          data: { id: "general-book-id", canonical_title: "test book" },
-          error: null,
-        },
-        {
           data: {
             id: "edition-id",
             title: "Test Book",
@@ -168,14 +170,15 @@ describe("Books API", () => {
           },
           error: null,
         },
+        { data: null, error: null }, // Book contributor creation
         { data: { code: "TEST" }, error: null }, // Library lookup
         { data: null, error: null }, // Last copy query
         {
           data: {
             id: "copy-id",
+            library_id: "test-library-id",
             copy_number: "TEST001",
-            availability_status: "available",
-            availability_since: new Date().toISOString(),
+            availability: { status: "available", since: new Date().toISOString() },
           },
           error: null,
         },
@@ -191,7 +194,7 @@ describe("Books API", () => {
       };
 
       mockSupabase.mockReturnValue(
-        mockFromReturn as ReturnType<typeof supabase>
+        mockFromReturn as unknown as ReturnType<typeof supabase>
       );
 
       const result = await createBook(mockBookData);
@@ -201,7 +204,7 @@ describe("Books API", () => {
     });
 
     it("2.2-INT-014: should handle transaction rollback on failure", async () => {
-      // Mock successful duplicate check and author lookup, then fail on general book creation
+      // Mock successful duplicate check and author lookup, then fail on edition creation
       const callResults = [
         { data: [], error: null }, // 1. Duplicate check - success
         {
@@ -212,7 +215,7 @@ describe("Books API", () => {
           },
           error: null,
         }, // 2. Author lookup - success
-        { data: null, error: { message: "Constraint violation" } }, // 3. General book creation - FAIL
+        { data: null, error: { message: "Constraint violation" } }, // 3. Edition creation - FAIL
       ];
 
       let callCount = 0;
@@ -228,7 +231,7 @@ describe("Books API", () => {
       };
 
       mockSupabase.mockReturnValue(
-        mockFromReturn as ReturnType<typeof supabase>
+        mockFromReturn as unknown as ReturnType<typeof supabase>
       );
 
       await expect(createBook(mockBookData)).rejects.toThrow();
@@ -244,7 +247,7 @@ describe("Books API", () => {
       };
 
       mockSupabase.mockReturnValue(
-        mockFromReturn as ReturnType<typeof supabase>
+        mockFromReturn as unknown as ReturnType<typeof supabase>
       );
 
       const startTime = Date.now();
@@ -267,7 +270,7 @@ describe("Books API", () => {
       };
 
       mockSupabase.mockReturnValue(
-        mockFromReturn as ReturnType<typeof supabase>
+        mockFromReturn as unknown as ReturnType<typeof supabase>
       );
 
       const result = await checkDuplicateBooks(

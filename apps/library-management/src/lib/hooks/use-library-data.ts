@@ -46,7 +46,7 @@ export function useLibraryBooks() {
     [currentLibrary?.id]
   );
 
-  // Fetch all book copies for current library
+  // Fetch all book copies for current library using optimized view
   const {
     data: books,
     isLoading,
@@ -57,27 +57,12 @@ export function useLibraryBooks() {
       const library = ensureLibrarySelected();
 
       const { data, error } = await supabase
-        .from("book_copies")
-        .select(
-          `
-          *,
-          book_editions (
-            id,
-            title,
-            subtitle,
-            isbn_10,
-            isbn_13,
-            language,
-            general_books (
-              id,
-              canonical_title,
-              subjects
-            )
-          )
-        `
-        )
+        .from("book_display_view")
+        .select("*")
         .eq("library_id", library.id)
-        .order("created_at", { ascending: false });
+        .eq("is_deleted", false)
+        .eq("status", "active")
+        .order("title", { ascending: true });
 
       if (error) throw error;
       return data || [];
@@ -404,30 +389,37 @@ export function useLibraryStats() {
     queryFn: async () => {
       const library = ensureLibrarySelected();
 
-      // Fetch various stats in parallel
-      const [booksResult, membersResult, transactionsResult] =
-        await Promise.all([
-          supabase
-            .from("book_copies")
-            .select("id")
-            .eq("library_id", library.id),
+      // Use optimized view for pre-computed stats
+      const { data, error } = await supabase
+        .from("library_book_summary_view")
+        .select("*")
+        .eq("library_id", library.id)
+        .single();
 
-          supabase
-            .from("library_members")
-            .select("id")
-            .eq("library_id", library.id)
-            .eq("status", "active"),
+      if (error) throw error;
 
-          supabase
-            .from("borrowing_transactions")
-            .select("id")
-            .eq("library_id", library.id)
-            .eq("transaction_type", "checkout")
-            .is("return_date", null),
-        ]);
+      // Get additional stats not covered by book summary view
+      const [membersResult, transactionsResult] = await Promise.all([
+        supabase
+          .from("library_members")
+          .select("id")
+          .eq("library_id", library.id)
+          .eq("status", "active"),
+
+        supabase
+          .from("borrowing_transactions")
+          .select("id")
+          .eq("library_id", library.id)
+          .eq("transaction_type", "checkout")
+          .is("return_date", null),
+      ]);
 
       return {
-        totalBooks: booksResult.data?.length || 0,
+        totalBooks: data?.total_copies || 0,
+        uniqueTitles: data?.unique_titles || 0,
+        availableBooks: data?.available_copies || 0,
+        borrowedBooks: data?.borrowed_copies || 0,
+        recentAdditions: data?.recent_additions || 0,
         activeMembers: membersResult.data?.length || 0,
         currentCheckouts: transactionsResult.data?.length || 0,
       };
@@ -436,7 +428,15 @@ export function useLibraryStats() {
   });
 
   return {
-    stats: stats || { totalBooks: 0, activeMembers: 0, currentCheckouts: 0 },
+    stats: stats || { 
+      totalBooks: 0, 
+      uniqueTitles: 0,
+      availableBooks: 0,
+      borrowedBooks: 0,
+      recentAdditions: 0,
+      activeMembers: 0, 
+      currentCheckouts: 0 
+    },
     isLoading,
     error,
   };

@@ -28,15 +28,17 @@ jest.mock("@supabase/ssr", () => ({
 }));
 
 // Mock SessionManager
+const mockSessionManager = {
+  getSessionData: jest.fn(),
+  setCurrentLibrary: jest.fn(),
+  setUserPreferences: jest.fn(),
+  logout: jest.fn(),
+  addEventListener: jest.fn(),
+  refreshSession: jest.fn(),
+};
+
 jest.mock("../session", () => ({
-  getSessionManager: jest.fn(() => ({
-    getSessionData: jest.fn(),
-    setCurrentLibrary: jest.fn(),
-    setUserPreferences: jest.fn(),
-    logout: jest.fn(),
-    addEventListener: jest.fn(),
-    refreshSession: jest.fn(),
-  })),
+  getSessionManager: jest.fn(() => mockSessionManager),
 }));
 
 // Test components
@@ -70,13 +72,8 @@ const LibraryAccessTestComponent = withLibraryAccess(() => (
 ));
 
 describe("AuthContext Tests", () => {
-  let mockSessionManager: ReturnType<typeof getSessionManager>;
-
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Get the mocked session manager
-    mockSessionManager = getSessionManager();
 
     // Default successful session mock
     mockSupabaseAuth.getSession.mockResolvedValue({

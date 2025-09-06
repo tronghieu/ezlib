@@ -155,7 +155,7 @@ describe("Auth Callback Route", () => {
         }
       );
 
-      const response = await POST(request);
+      const response = await POST();
 
       expect(response.status).toBe(405);
       const body = await response.json();

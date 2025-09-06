@@ -2,13 +2,13 @@
 
 /**
  * Add Book Page Client Component
- * Ultra-simple add book form with minimal required information
+ * Progressive book addition workflow with search-first approach
  */
 
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useLibraryContext } from "@/lib/contexts/library-context";
-import { AddBookForm } from "@/components/books/add-book-form";
+import { AddBookWorkflow } from "@/components/books/add-book-workflow";
 import { Button } from "@/components/ui/button";
 import { Book, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -48,35 +48,26 @@ export function AddBookPageClient({
     );
   }
 
+  const handleComplete = (): void => {
+    router.push(`/${currentLibrary.code}/books`);
+  };
+
   const handleCancel = (): void => {
     router.push(`/${currentLibrary.code}/books`);
   };
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link
-          href={`/${currentLibrary.code}/books`}
-          className="hover:text-foreground transition-colors flex items-center gap-1"
-        >
-          <Book className="h-4 w-4" />
-          Books
-        </Link>
-        <span>/</span>
-        <span className="text-foreground">Add New Book</span>
-      </nav>
-
       {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Book className="h-8 w-8" />
             Add New Book
           </h1>
-          <p className="text-muted-foreground">
-            Add a new book to {currentLibrary.name}&apos;s inventory with
-            minimal required information
+          <p className="text-muted-foreground text-sm">
+            Search for existing books or add a new book to {currentLibrary.name}
+            &apos;s inventory
           </p>
         </div>
 
@@ -89,12 +80,8 @@ export function AddBookPageClient({
         </Button>
       </div>
 
-      {/* Add Book Form */}
-      <div className="max-w-2xl">
-        <div className="bg-card border rounded-lg p-6">
-          <AddBookForm onCancel={handleCancel} />
-        </div>
-      </div>
+      {/* Progressive Book Addition Workflow */}
+      <AddBookWorkflow onComplete={handleComplete} onCancel={handleCancel} />
     </div>
   );
 }

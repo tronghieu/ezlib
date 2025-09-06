@@ -56,10 +56,6 @@ export interface BookCreationData extends AddBookFormData {
  * Returned from successful book creation API
  */
 export interface BookCreationResult {
-  generalBook: {
-    id: string;
-    canonical_title: string;
-  };
   edition: {
     id: string;
     title: string;

@@ -175,7 +175,6 @@ async function fetchUserLibraries(
       `
       id,
       role,
-      permissions,
       status,
       libraries (
         id,
@@ -209,7 +208,7 @@ async function fetchUserLibraries(
     .map((item) => ({
       ...item.libraries!,
       user_role: item.role,
-      user_permissions: item.permissions,
+      user_permissions: {}, // Set to empty object since we're using role-based access now
       staff_id: item.id,
       staff_status: item.status,
     }));

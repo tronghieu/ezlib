@@ -274,7 +274,7 @@ describe("AddBookForm", () => {
         reset: jest.fn(),
         submittedAt: Date.now(),
         context: undefined,
-      } as UseMutationResult<
+      } as unknown as UseMutationResult<
         BookCreationResult,
         Error,
         BookCreationData,
@@ -307,7 +307,7 @@ describe("AddBookForm", () => {
         reset: jest.fn(),
         submittedAt: Date.now(),
         context: undefined,
-      } as UseMutationResult<
+      } as unknown as UseMutationResult<
         BookCreationResult,
         Error,
         BookCreationData,

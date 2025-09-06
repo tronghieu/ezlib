@@ -4,7 +4,7 @@
 
 **Implemented**: Epic 1
 **Current**: Epic 2
-**Working Dir**: `./`
+**Working Dir**: `apps/library-management`
 
 ## Principles:
 - Never read or load resource outside of working directory, except user mentioned
@@ -48,47 +48,23 @@ supabase status            # View service URLs
 - All operations scoped to selected library
 - RLS enforces data isolation
 
-### Database Types
+## Database
 
-```bash
-# Regenerate after schema changes (from ../../supabase)
-supabase gen types typescript --local > ../apps/library-management/lib/database.types.ts
-```
+### Documentation
+- [Database Design](docs/architecture/database-design.md)
+- [Data Access Rules](docs/architecture/data-access-rules.md)
+- [Database Views & Functions](docs/architecture/database-views-and-functions.md)
 
-### Supabase Migration-First Development
+### Supabase
 
 Database (from ../../supabase)
 When working with Supabase databases, **ALWAYS** use migrations for ANY schema changes:
 
 ### Core Rules
 
-1. **NEVER modify the database directly** - No manual CREATE TABLE, ALTER TABLE, etc.
-2. **ALWAYS create a migration file** for schema changes:
-
-```bash
-supabase migration new descriptive_name_here
-```
-
-3. **Migration naming convention**:
-
-- `create_[table]_table` - New tables
-- `add_[column]_to_[table]` - New columns
-- `update_[table]_[change]` - Modifications
-- `create_[name]_index` - Indexes
-- `add_[table]_rls` - RLS policies
-
-4. **After EVERY migration**:
-
-```bash
-supabase db reset                          # Apply locally
-supabase gen types typescript --local > ../apps/library-management/lib/database.types.ts  # Update types
-```
-
-5. **Include in EVERY migration**:
-
-- Enable RLS on new tables
-- Add proper indexes
-- Consider adding triggers for updated_at
+1. **NEVER modify the database directly** - No manual CREATE TABLE, ALTER TABLE, etc
+2. **Because shared Supabase with other projects, activities that change database schema, Supabase configuration are not performed within the scope of this project.**
+3. **NEVER join `general_books` when fetching `book_*` data except user mentioned**
 
 ### UAT Testing
 

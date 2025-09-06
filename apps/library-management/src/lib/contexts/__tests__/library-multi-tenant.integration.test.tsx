@@ -1,3 +1,4 @@
+import { MockLibraryProvider, MockAuthProvider } from "@/lib/test-utils";
 /**
  * Integration Tests for Multi-Tenant Data Isolation
  * Validates critical security boundaries between libraries
@@ -12,7 +13,7 @@ import {
   useLibraryMembers,
   useLibraryTransactions,
 } from "@/lib/hooks/use-library-data";
-import { AuthProvider } from "@/lib/auth/context";
+
 import { createClient } from "@/lib/supabase/client";
 import type { LibraryWithAccess } from "@/lib/types";
 
@@ -181,9 +182,9 @@ function createWrapper({
 
   const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider value={mockAuthValue}>
-        <LibraryProvider value={mockLibraryValue}>{children}</LibraryProvider>
-      </AuthProvider>
+      <MockAuthProvider value={mockAuthValue}>
+        <MockLibraryProvider value={mockLibraryValue}>{children}</MockLibraryProvider>
+      </MockAuthProvider>
     </QueryClientProvider>
   );
 
@@ -394,7 +395,7 @@ describe("Multi-Tenant Data Isolation", () => {
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
         <QueryClientProvider client={queryClient}>
-          <AuthProvider
+          <MockAuthProvider
             value={{
               user: mockUser1,
               isLoading: false,
@@ -404,7 +405,7 @@ describe("Multi-Tenant Data Isolation", () => {
               refreshSession: jest.fn(),
             }}
           >
-            <LibraryProvider
+            <MockLibraryProvider
               value={{
                 currentLibrary: library1,
                 availableLibraries: [library1, library2],
@@ -417,8 +418,8 @@ describe("Multi-Tenant Data Isolation", () => {
               }}
             >
               {children}
-            </LibraryProvider>
-          </AuthProvider>
+            </MockLibraryProvider>
+          </MockAuthProvider>
         </QueryClientProvider>
       );
 
@@ -645,7 +646,7 @@ describe("Multi-Tenant Data Isolation", () => {
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
         <QueryClientProvider client={queryClient}>
-          <AuthProvider
+          <MockAuthProvider
             value={{
               user: mockUser1,
               isLoading: false,
@@ -655,7 +656,7 @@ describe("Multi-Tenant Data Isolation", () => {
               refreshSession: jest.fn(),
             }}
           >
-            <LibraryProvider
+            <MockLibraryProvider
               value={{
                 currentLibrary: library1,
                 availableLibraries: [library1],
@@ -668,8 +669,8 @@ describe("Multi-Tenant Data Isolation", () => {
               }}
             >
               {children}
-            </LibraryProvider>
-          </AuthProvider>
+            </MockLibraryProvider>
+          </MockAuthProvider>
         </QueryClientProvider>
       );
 

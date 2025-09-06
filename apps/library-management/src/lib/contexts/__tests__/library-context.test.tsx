@@ -1,3 +1,4 @@
+import { MockLibraryProvider, MockAuthProvider } from "@/lib/test-utils";
 /**
  * Tests for Library Context Provider
  * Validates multi-tenant state management and library selection
@@ -12,7 +13,7 @@ import {
   useLibraryContext,
   withLibraryAccess,
 } from "../library-context";
-import { AuthProvider } from "@/lib/auth/context";
+
 import { createClient } from "@/lib/supabase/client";
 import type { LibraryWithAccess } from "@/lib/types";
 
@@ -130,9 +131,9 @@ function renderWithProviders(
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <AuthProvider value={mockAuthValue}>
-        <LibraryProvider>{ui}</LibraryProvider>
-      </AuthProvider>
+      <MockAuthProvider value={mockAuthValue}>
+        <MockLibraryProvider>{ui}</MockLibraryProvider>
+      </MockAuthProvider>
     </QueryClientProvider>
   );
 }
@@ -666,7 +667,7 @@ describe("LibraryContext", () => {
       // Override the context to show loading
       const LoadingWrapper = () => {
         return (
-          <LibraryProvider
+          <MockLibraryProvider
             value={{
               currentLibrary: null,
               availableLibraries: [],
@@ -679,7 +680,7 @@ describe("LibraryContext", () => {
             }}
           >
             <Protected />
-          </LibraryProvider>
+          </MockLibraryProvider>
         );
       };
 
@@ -697,7 +698,7 @@ describe("LibraryContext", () => {
       // Override the context to show error
       const ErrorWrapper = () => {
         return (
-          <LibraryProvider
+          <MockLibraryProvider
             value={{
               currentLibrary: null,
               availableLibraries: [],
@@ -710,7 +711,7 @@ describe("LibraryContext", () => {
             }}
           >
             <Protected />
-          </LibraryProvider>
+          </MockLibraryProvider>
         );
       };
 

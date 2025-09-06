@@ -28,15 +28,17 @@ so that **I can quickly build our book inventory without complex cataloging work
 
 **Acceptance Criteria:**
 
-1. Simple add book form with only required fields: title, author, ISBN (optional)
-2. Optional ISBN lookup integration with crawler service for metadata enrichment
-3. Manual entry fallback for books without ISBNs - title and author minimum required
-4. Duplicate detection prevents adding books with same title/author combination
-5. All new books automatically set to "available" status
-6. Simple success notification with option to "Add Another Book"
-7. Basic form validation ensures title and author are provided
-8. Added books immediately appear in book list with available status
-9. No complex cataloging fields (genre, publisher, etc.) in initial version
+1. Book search combobox allows searching existing book editions by title with real-time results
+2. If book edition exists, user can select it and skip to step 4 (add copies)
+3. If book edition not found, "+ Add book edition" button expands inline edition form
+4. Edition form includes author search combobox with real-time author suggestions
+5. If author exists, user selects from list; if not found, "+ Add author" opens modal
+6. Author modal allows creating new author with name and optional biography
+7. After selecting/creating author, user completes edition details (title, year, publisher, ISBN)
+8. Final step: user creates book copies with library-specific details (copy numbers, total copies, shelf location)
+9. All new books automatically set to "available" status with immediate list visibility
+10. Progressive form validation ensures required fields at each step
+11. Success notification with option to "Add Another Book" resets to step 1
 
 ## Story 2.3: Book Details and Management
 

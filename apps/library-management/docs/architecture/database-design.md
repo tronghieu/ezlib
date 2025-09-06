@@ -17,13 +17,10 @@ EzLib uses a multi-tenant PostgreSQL database with Row Level Security (RLS) for 
 **Purpose**: Handle authentication, profiles, and library access control
 
 #### `auth.users` (Supabase Managed)
-
 Core authentication table with email, password hashing, and metadata.
 
 #### `user_profiles`
-
 Public user information visible to other users and libraries.
-
 - `id` - References auth.users(id)
 - `email` - User's email address
 - `display_name` - Public display name
@@ -35,9 +32,7 @@ Public user information visible to other users and libraries.
 - `created_at`, `updated_at` - Standard timestamps
 
 #### `user_preferences`
-
 Private user settings and preferences.
-
 - `id` - References auth.users(id)
 - `notifications` - JSONB: email_enabled, sms_enabled, push_enabled, due_date_reminders, new_book_alerts, social_activity
 - `privacy` - JSONB: profile_visibility (public/private), reading_activity visibility, review_visibility, location_sharing
@@ -51,9 +46,7 @@ Private user settings and preferences.
 **Purpose**: Multi-tenant structure for independent library operations
 
 #### `libraries`
-
 Core library entities representing individual library organizations.
-
 - `id` - Primary key UUID
 - `name` - Library display name
 - `code` - Unique subdomain identifier (e.g., "downtown" for downtown.ezlib.com)
@@ -65,9 +58,7 @@ Core library entities representing individual library organizations.
 - `created_at`, `updated_at` - Standard timestamps
 
 #### `library_members`
-
 Membership records linking users to libraries. Can exist independently of user accounts for walk-in patrons.
-
 - `id` - Primary key UUID
 - `user_id` - Optional reference to auth.users(id), NULL for non-digital members
 - `library_id` - References libraries(id)
@@ -81,19 +72,22 @@ Membership records linking users to libraries. Can exist independently of user a
 - **Constraint**: UNIQUE(library_id, member_id)
 
 #### `library_staff`
-
-Staff and administrative roles within libraries with granular permissions.
-
+Staff and administrative roles within libraries with simple role-based hierarchy.
 - `id` - Primary key UUID
 - `user_id` - References auth.users(id)
 - `library_id` - References libraries(id)
-- `role` - Enum: owner, manager, librarian, volunteer (hierarchical permissions)
-- `permissions` - JSONB: admin_settings, manage_staff, manage_members, manage_inventory, process_loans, view_reports (granular overrides)
+- `role` - Enum: owner, manager, librarian, volunteer (clear hierarchical permissions)
 - `employment_info` - JSONB: employee_id, hire_date, department, work_schedule
 - `status` - Enum: active, inactive, terminated
 - `is_deleted`, `deleted_at`, `deleted_by` - Soft delete fields
 - `created_at`, `updated_at` - Standard timestamps
 - **Constraint**: UNIQUE(user_id, library_id) - One role per user per library
+
+**Role Hierarchy**:
+- **Owner**: Full library control including settings, staff management, and all operations
+- **Manager**: All operations except library settings modification and staff management
+- **Librarian**: Daily operations including catalog management, inventory, members, and circulation
+- **Volunteer**: Circulation operations only (checkout/return books)
 
 **Key Design**: `library_id` is the primary tenant boundary for all RLS policies
 
@@ -102,9 +96,7 @@ Staff and administrative roles within libraries with granular permissions.
 **Purpose**: Three-tier hierarchy supporting multiple copies and editions
 
 #### `general_books`
-
 Universal book concepts representing literary works across all editions.
-
 - `id` - Primary key UUID
 - `canonical_title` - Normalized title for deduplication (e.g., "1984")
 - `first_publication_year` - Year of original publication
@@ -113,9 +105,7 @@ Universal book concepts representing literary works across all editions.
 - `created_at`, `updated_at` - Standard timestamps
 
 #### `book_editions`
-
 Specific publications of a general book (different publishers, translations, formats).
-
 - `id` - Primary key UUID
 - `general_book_id` - References general_books(id)
 - `isbn_13` - 13-digit ISBN (optional for rare/old books)
@@ -128,9 +118,7 @@ Specific publications of a general book (different publishers, translations, for
 - `created_at`, `updated_at` - Standard timestamps
 
 #### `book_copies`
-
 Individual physical book instances owned by specific libraries.
-
 - `id` - Primary key UUID
 - `library_id` - References libraries(id)
 - `book_edition_id` - References book_editions(id)
@@ -147,9 +135,7 @@ Individual physical book instances owned by specific libraries.
 - **Constraint**: UNIQUE(library_id, book_edition_id, copy_number)
 
 #### `library_book_edition_counts`
-
 Per-library availability counts for efficient "X of Y available" display.
-
 - `id` - Primary key UUID
 - `library_id` - References libraries(id)
 - `book_edition_id` - References book_editions(id)
@@ -160,9 +146,7 @@ Per-library availability counts for efficient "X of Y available" display.
 - **Maintenance**: Auto-updated via database triggers
 
 #### `authors`
-
 Author profiles with metadata enrichment and social features.
-
 - `id` - Primary key UUID
 - `name` - Author's display name
 - `canonical_name` - Normalized name for deduplication and search
@@ -172,9 +156,7 @@ Author profiles with metadata enrichment and social features.
 - `created_at`, `updated_at` - Standard timestamps
 
 #### `book_contributors`
-
 Many-to-many relationship linking books to authors/translators/editors with role specification.
-
 - `id` - Primary key UUID
 - `general_book_id` - References general_books(id)
 - `book_edition_id` - Optional reference to book_editions(id) for edition-specific contributors
@@ -185,9 +167,7 @@ Many-to-many relationship linking books to authors/translators/editors with role
 - `created_at` - Standard timestamp
 
 #### `collections`
-
 Library-curated book groupings for organization and discovery.
-
 - `id` - Primary key UUID
 - `library_id` - References libraries(id)
 - `name` - Collection display name
@@ -198,9 +178,7 @@ Library-curated book groupings for organization and discovery.
 - `created_at`, `updated_at` - Standard timestamps
 
 #### `collection_books`
-
 Many-to-many junction linking collections to book copies.
-
 - `id` - Primary key UUID
 - `collection_id` - References collections(id)
 - `book_copy_id` - References book_copies(id)
@@ -212,9 +190,7 @@ Many-to-many junction linking collections to book copies.
 **Purpose**: Complete borrowing lifecycle with audit trail
 
 #### `borrowing_transactions`
-
 Core checkout/return records tracking the complete borrowing lifecycle.
-
 - `id` - Primary key UUID
 - `library_id` - References libraries(id)
 - `book_copy_id` - References book_copies(id)
@@ -230,9 +206,7 @@ Core checkout/return records tracking the complete borrowing lifecycle.
 - `created_at`, `updated_at` - Standard timestamps
 
 #### `transaction_events`
-
 Immutable audit log of all transaction state changes for compliance and debugging.
-
 - `id` - Primary key UUID
 - `transaction_id` - References borrowing_transactions(id)
 - `event_type` - Enum: created, checkout, return, renewal, overdue_notice, fee_assessed, fee_paid, lost_declared, cancelled
@@ -251,15 +225,12 @@ Immutable audit log of all transaction state changes for compliance and debuggin
 **Purpose**: Secure invitation-based access control
 
 #### `invitations`
-
 Token-based invitation system for securely adding staff and members to libraries.
-
 - `id` - Primary key UUID
 - `library_id` - References libraries(id)
 - `inviter_id` - References library_staff(id) who created the invitation
 - `email` - Email address of the person being invited
 - `role` - Enum: owner, manager, librarian, volunteer (for staff invitations)
-- `permissions` - JSONB: Granular permission overrides for the invited role
 - `invitation_type` - Enum: library_staff, library_member
 - `status` - Enum: pending, accepted, declined, expired, cancelled
 - `token` - Secure base64url-encoded random token for accessing the invitation
@@ -270,9 +241,7 @@ Token-based invitation system for securely adding staff and members to libraries
 - **Constraint**: UNIQUE(library_id, email, invitation_type) - Prevents duplicate pending invitations
 
 #### `invitation_responses`
-
 Audit trail of all invitation outcomes for security and compliance.
-
 - `id` - Primary key UUID
 - `invitation_id` - References invitations(id)
 - `responder_user_id` - Optional reference to auth.users(id) if user was registered
@@ -285,7 +254,6 @@ Audit trail of all invitation outcomes for security and compliance.
 - `created_library_member_id` - References library_members(id) if member record was created
 
 **Security Features**:
-
 - Email validation ensures invitee email matches their registered account
 - Automatic expiration prevents stale invitations
 - Prevents duplicate memberships
@@ -296,9 +264,7 @@ Audit trail of all invitation outcomes for security and compliance.
 **Purpose**: Reader engagement and community building (post-MVP)
 
 #### `reviews`
-
 User-generated book reviews with ratings and social engagement metrics.
-
 - `id` - Primary key UUID
 - `book_edition_id` - References book_editions(id)
 - `general_book_id` - References general_books(id) (denormalized for efficient querying)
@@ -312,9 +278,7 @@ User-generated book reviews with ratings and social engagement metrics.
 - **Constraint**: UNIQUE(book_edition_id, reviewer_id) - One review per edition per user
 
 #### `author_follows`
-
 User subscriptions to authors for notifications about new books and updates.
-
 - `id` - Primary key UUID
 - `user_id` - References auth.users(id)
 - `author_id` - References authors(id)
@@ -323,9 +287,7 @@ User subscriptions to authors for notifications about new books and updates.
 - **Constraint**: UNIQUE(user_id, author_id)
 
 #### `social_follows`
-
 User-to-user following relationships for social discovery.
-
 - `id` - Primary key UUID
 - `follower_id` - References auth.users(id) (user doing the following)
 - `following_id` - References auth.users(id) (user being followed)
@@ -337,18 +299,15 @@ User-to-user following relationships for social discovery.
 ## Multi-Copy Book Management
 
 ### Problem Solved
-
 Libraries need to track multiple copies of the same book (e.g., "6 copies of Gone with the Wind, 2 borrowed, 4 available").
 
 ### Solution Architecture
-
 1. **Individual Tracking**: Each physical book is a `book_copies` record
 2. **Aggregate Counts**: `library_book_edition_counts` stores computed totals per library
 3. **Automatic Maintenance**: Database triggers update counts when availability changes
 4. **Performance**: No need for real-time COUNT queries in application code
 
 ### Example Data Flow
-
 - Library adds 6 copies of "Gone with the Wind" → 6 `book_copies` records created
 - Triggers update `library_book_edition_counts`: `total_copies = 6, available_copies = 6`
 - 2 books checked out → availability status changes → triggers update counts to `available_copies = 4`
@@ -357,38 +316,34 @@ Libraries need to track multiple copies of the same book (e.g., "6 copies of Gon
 ## Row Level Security (RLS) Strategy
 
 ### Tenant Isolation
-
 All sensitive tables use `library_id` for data isolation:
-
 - Library staff can only see their library's data
 - Public data (book catalog) visible to all for discovery
 - User data accessible only to the owning user
 
 ### Permission Hierarchy
-
 - **Public**: Read active library catalogs
 - **Users**: Manage own profiles and view own transactions
 - **Library Members**: View own borrowing history
-- **Library Staff**: Full access to library operations
-- **Library Managers**: Staff management capabilities
+- **Volunteers**: Circulation operations (checkout/return books)
+- **Librarians**: Daily operations including catalog, inventory, members, circulation
+- **Managers**: All operations except library settings and staff management
+- **Owners**: Complete library control including settings and staff management
 
 ## Performance Optimizations
 
 ### Strategic Denormalization
-
 - Book availability counts cached at edition level
 - Library stats (total books/members) cached in library record
 - Author/book social metrics denormalized for fast display
 
 ### Key Indexes
-
 - **Multi-column**: `(library_id, book_edition_id)` for copy lookups
 - **Partial**: Only index active, non-deleted records
 - **GIN**: JSONB fields for complex queries on metadata
 - **Functional**: Search-optimized indexes on canonical names
 
 ### Real-time Updates
-
 - Supabase subscriptions for live availability updates
 - Trigger-maintained counts eliminate expensive aggregation queries
 - Event sourcing via transaction_events for complete audit without performance impact
@@ -396,22 +351,18 @@ All sensitive tables use `library_id` for data isolation:
 ## Data Integrity
 
 ### Soft Deletes
-
 Critical records (members, staff, books) are soft-deleted to:
-
 - Maintain referential integrity in transaction history
 - Enable audit trails and restoration
 - Prevent accidental data loss
 
 ### Audit Trail
-
 - All user actions logged via `transaction_events`
 - Invitation system maintains complete response history
 - Timestamp triggers on all mutable tables
 - Staff attribution for all administrative actions
 
 ### Validation
-
 - Database-level constraints on enum fields
 - Foreign key relationships enforce data consistency
 - RLS policies prevent unauthorized access
@@ -420,13 +371,11 @@ Critical records (members, staff, books) are soft-deleted to:
 ## Scalability Considerations
 
 ### Current Scale Targets (NFR6)
-
 - 5,000 books per library
 - 1,000 active members per library
 - 10+ concurrent staff users per library
 
 ### Growth Path
-
 - Partitioning strategy ready for library_id sharding
 - Read replicas for public book discovery
 - Materialized views for complex reporting

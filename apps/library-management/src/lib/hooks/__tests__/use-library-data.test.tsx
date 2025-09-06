@@ -13,8 +13,7 @@ import {
   useLibraryTransactions,
   useLibraryStats,
 } from "../use-library-data";
-import { LibraryProvider } from "@/lib/contexts/library-context";
-import { AuthProvider } from "@/lib/auth/context";
+import { MockLibraryProvider, MockAuthProvider } from "@/lib/test-utils";
 import { createClient } from "@/lib/supabase/client";
 import type { LibraryWithAccess } from "@/lib/types";
 
@@ -196,9 +195,9 @@ function createWrapper({
 
   const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider value={mockAuthValue}>
-        <LibraryProvider value={mockLibraryValue}>{children}</LibraryProvider>
-      </AuthProvider>
+      <MockAuthProvider value={mockAuthValue}>
+        <MockLibraryProvider value={mockLibraryValue}>{children}</MockLibraryProvider>
+      </MockAuthProvider>
     </QueryClientProvider>
   );
 
@@ -517,7 +516,7 @@ describe("useLibraryData", () => {
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
         <QueryClientProvider client={queryClient}>
-          <AuthProvider
+          <MockAuthProvider
             value={{
               user: mockUser,
               isLoading: false,
@@ -527,7 +526,7 @@ describe("useLibraryData", () => {
               refreshSession: jest.fn(),
             }}
           >
-            <LibraryProvider
+            <MockLibraryProvider
               value={{
                 currentLibrary: mockLibrary,
                 availableLibraries: [mockLibrary],
@@ -540,8 +539,8 @@ describe("useLibraryData", () => {
               }}
             >
               {children}
-            </LibraryProvider>
-          </AuthProvider>
+            </MockLibraryProvider>
+          </MockAuthProvider>
         </QueryClientProvider>
       );
 
@@ -715,7 +714,7 @@ describe("useLibraryData", () => {
       const queryClient = new QueryClient();
       const wrapper = ({ children }: { children: React.ReactNode }) => (
         <QueryClientProvider client={queryClient}>
-          <AuthProvider
+          <MockAuthProvider
             value={{
               user: mockUser,
               isLoading: false,
@@ -725,7 +724,7 @@ describe("useLibraryData", () => {
               refreshSession: jest.fn(),
             }}
           >
-            <LibraryProvider
+            <MockLibraryProvider
               value={{
                 currentLibrary: mockLibrary,
                 availableLibraries: [mockLibrary],
@@ -738,8 +737,8 @@ describe("useLibraryData", () => {
               }}
             >
               {children}
-            </LibraryProvider>
-          </AuthProvider>
+            </MockLibraryProvider>
+          </MockAuthProvider>
         </QueryClientProvider>
       );
 

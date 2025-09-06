@@ -265,7 +265,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
         NEXT_PUBLIC_SITE_URL: "http://localhost:3001",
         NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321",
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "test-key",
-        NODE_ENV: "test",
+        NODE_ENV: "test" as const,
       };
 
       const originalEnv = process.env;

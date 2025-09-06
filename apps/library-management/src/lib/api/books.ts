@@ -19,7 +19,7 @@ export async function checkDuplicateBooks(
   author: string,
   libraryId: string
 ): Promise<DuplicateDetectionResult> {
-  // Query book copies with joined data to check for duplicates
+  // Query book copies with joined data to check for duplicates (without general_books)
   const { data, error } = await supabase()
     .from("book_copies")
     .select(
@@ -29,13 +29,10 @@ export async function checkDuplicateBooks(
       availability,
       book_editions!inner (
         title,
-        general_books!inner (
-          canonical_title,
-          book_contributors!inner (
-            authors!inner (
-              name,
-              canonical_name
-            )
+        book_contributors!inner (
+          authors!inner (
+            name,
+            canonical_name
           )
         )
       )
@@ -58,17 +55,12 @@ export async function checkDuplicateBooks(
 
   const duplicates = data.filter((copy) => {
     const bookTitle = copy.book_editions?.title?.toLowerCase() || "";
-    const bookCanonicalTitle =
-      copy.book_editions?.general_books?.canonical_title?.toLowerCase() || "";
-    const contributors =
-      copy.book_editions?.general_books?.book_contributors || [];
+    const contributors = copy.book_editions?.book_contributors || [];
 
-    // Check if title matches (exact or canonical)
+    // Check if title matches
     const titleMatch =
       bookTitle.includes(normalizedTitle) ||
-      normalizedTitle.includes(bookTitle) ||
-      bookCanonicalTitle.includes(normalizedTitle) ||
-      normalizedTitle.includes(bookCanonicalTitle);
+      normalizedTitle.includes(bookTitle);
 
     // Check if any author matches
     const authorMatch = contributors.some(
@@ -96,8 +88,7 @@ export async function checkDuplicateBooks(
 
   // Format existing books for display
   const existingBooks = duplicates.map((copy) => {
-    const contributors =
-      copy.book_editions?.general_books?.book_contributors || [];
+    const contributors = copy.book_editions?.book_contributors || [];
     const firstAuthor = contributors[0]?.authors?.name || "Unknown Author";
     const availability = copy.availability as {
       status?: string;
@@ -234,8 +225,8 @@ async function generateCopyNumber(libraryId: string): Promise<string> {
 }
 
 /**
- * Create a new book with the three-table pattern
- * AC: Three-table creation (general_books → book_editions → book_copies)
+ * Create a new book with simplified pattern (no general_books)
+ * AC: Direct book_editions → book_copies creation
  * AC: Automatic "available" status
  * AC: Library-scoped operations with RLS
  */
@@ -243,7 +234,33 @@ export async function createBook(
   bookData: BookCreationData
 ): Promise<BookCreationResult> {
   try {
-    // Step 1: Check for duplicates first
+    // Step 1: Check library permissions
+    const { data: libraryRole, error: permissionError } = await supabase()
+      .rpc("get_user_role", { 
+        library_id_param: bookData.library_id 
+      });
+
+    if (permissionError) {
+      throw new Error(`Permission check failed: ${permissionError.message}`);
+    }
+
+    if (!libraryRole || !["owner", "manager", "librarian"].includes(libraryRole)) {
+      throw new Error("Insufficient permissions. Owner, manager, or librarian role required.");
+    }
+
+    // Step 2: Check catalog access for creating authors/editions
+    const { data: hasCatalogAccess, error: catalogError } = await supabase()
+      .rpc("user_has_catalog_access");
+
+    if (catalogError) {
+      throw new Error(`Catalog access check failed: ${catalogError.message}`);
+    }
+
+    if (!hasCatalogAccess) {
+      throw new Error("Insufficient permissions. Catalog access required to create books.");
+    }
+
+    // Step 3: Check for duplicates
     const duplicateCheck = await checkDuplicateBooks(
       bookData.title,
       bookData.author,
@@ -256,54 +273,13 @@ export async function createBook(
       );
     }
 
-    // Step 2: Find or create author
+    // Step 4: Find or create author
     const author = await upsertAuthor(bookData.author);
 
-    // Step 3: Create or find general book
-    const canonicalTitle = bookData.title.trim().toLowerCase();
-
-    let generalBook;
-    const { data: existingGeneralBook, error: findGeneralError } =
-      await supabase()
-        .from("general_books")
-        .select("id, canonical_title")
-        .eq("canonical_title", canonicalTitle)
-        .single();
-
-    if (findGeneralError && findGeneralError.code !== "PGRST116") {
-      throw new Error(
-        `General book lookup failed: ${findGeneralError.message}`
-      );
-    }
-
-    if (existingGeneralBook) {
-      generalBook = existingGeneralBook;
-    } else {
-      const { data: newGeneralBook, error: createGeneralError } =
-        await supabase()
-          .from("general_books")
-          .insert({
-            canonical_title: canonicalTitle,
-            first_publication_year: bookData.publication_year || null,
-          })
-          .select("id, canonical_title")
-          .single();
-
-      if (createGeneralError) {
-        throw new Error(
-          `General book creation failed: ${createGeneralError.message}`
-        );
-      }
-
-      generalBook = newGeneralBook;
-    }
-
-    // Step 4: Create book edition
+    // Step 5: Create book edition directly (no general_book)
     const editionData = {
-      general_book_id: generalBook.id,
       title: bookData.title.trim(),
       language: "en", // Default language
-      isbn_10: null as string | null,
       isbn_13: null as string | null,
       edition_metadata: {
         publisher: bookData.publisher?.trim() || null,
@@ -315,7 +291,7 @@ export async function createBook(
     if (bookData.isbn && bookData.isbn.trim()) {
       const cleanIsbn = bookData.isbn.replace(/[-\s]/g, "");
       if (cleanIsbn.length === 10) {
-        editionData.isbn_10 = cleanIsbn;
+        // ISBN-10 not supported in current schema
       } else if (cleanIsbn.length === 13) {
         editionData.isbn_13 = cleanIsbn;
       }
@@ -324,24 +300,23 @@ export async function createBook(
     const { data: edition, error: editionError } = await supabase()
       .from("book_editions")
       .insert(editionData)
-      .select("id, title, isbn_10, isbn_13")
+      .select("id, title, isbn_13")
       .single();
 
     if (editionError) {
       throw new Error(`Book edition creation failed: ${editionError.message}`);
     }
 
-    // Step 5: Create book contributor relationship
+    // Step 6: Create book contributor relationship (edition-only)
     await supabase().from("book_contributors").insert({
       author_id: author.id,
-      general_book_id: generalBook.id,
       book_edition_id: edition.id,
       role: "author",
       sort_order: 1,
       credit_text: author.name,
     });
 
-    // Step 6: Create book copy with automatic "available" status
+    // Step 7: Create book copy with automatic "available" status
     const copyNumber = await generateCopyNumber(bookData.library_id);
     const now = new Date().toISOString();
 
@@ -380,14 +355,9 @@ export async function createBook(
       since?: string;
     };
     return {
-      generalBook: {
-        id: generalBook.id,
-        canonical_title: generalBook.canonical_title,
-      },
       edition: {
         id: edition.id,
         title: edition.title,
-        isbn_10: edition.isbn_10 || undefined,
         isbn_13: edition.isbn_13 || undefined,
       },
       author: {

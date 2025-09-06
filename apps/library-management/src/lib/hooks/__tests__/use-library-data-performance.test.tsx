@@ -11,8 +11,7 @@ import {
   useLibraryBooks,
   useLibraryTransactions,
 } from "../use-library-data";
-import { LibraryProvider } from "@/lib/contexts/library-context";
-import { AuthProvider } from "@/lib/auth/context";
+import { MockLibraryProvider, MockAuthProvider } from "@/lib/test-utils";
 import { createClient } from "@/lib/supabase/client";
 import type { LibraryWithAccess } from "@/lib/types";
 
@@ -145,9 +144,9 @@ function createPerformanceWrapper() {
 
   const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider value={mockAuthValue}>
-        <LibraryProvider value={mockLibraryValue}>{children}</LibraryProvider>
-      </AuthProvider>
+      <MockAuthProvider value={mockAuthValue}>
+        <MockLibraryProvider value={mockLibraryValue}>{children}</MockLibraryProvider>
+      </MockAuthProvider>
     </QueryClientProvider>
   );
 

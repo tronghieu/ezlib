@@ -1,0 +1,74 @@
+# <!-- Powered by BMAD™ Core -->
+schema: 1
+story: "2.2"
+story_title: "Ultra-Simple Add New Books"
+gate: "CONCERNS"
+status_reason: "Strong test coverage with 2 critical workflow gaps that should be addressed before release"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-09-06T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "WORKFLOW-001"
+    severity: high
+    finding: "Skip-to-copies flow (AC2) not fully tested - missing E2E validation for existing book selection bypassing edition form"
+    suggested_action: "Add E2E test for complete skip-to-copies workflow when user selects existing book from search results"
+  - id: "UX-001"
+    severity: medium
+    finding: "Add Another Book reset functionality (AC11) not validated - success flow incomplete"
+    suggested_action: "Add E2E test for workflow reset when Add Another Book button clicked"
+  - id: "VALIDATION-001"
+    severity: medium
+    finding: "Client-side form validation (AC10) only partially tested - missing comprehensive validation across all workflow steps"
+    suggested_action: "Add unit tests for edition form, author modal, and copies form validation with all field constraints"
+
+risk_summary:
+  totals: { critical: 0, high: 1, medium: 2, low: 0 }
+  recommendations:
+    must_fix: 
+      - "WORKFLOW-001: Skip-to-copies flow E2E test - critical UX optimization"
+    monitor: 
+      - "UX-001: Add Another Book reset functionality"
+      - "VALIDATION-001: Comprehensive form validation testing"
+
+evidence:
+  tests_reviewed: 28
+  risks_identified: 3
+  coverage_percentage: 73
+  
+trace:
+  totals:
+    requirements: 11
+    full: 8
+    partial: 3
+    none: 0
+  planning_ref: "docs/qa/assessments/2.2-trace-20250906.md"
+  uncovered: []
+  partial_coverage:
+    - ac: "AC2"
+      reason: "Skip-to-copies flow not fully E2E tested"
+    - ac: "AC10" 
+      reason: "Form validation partially tested, missing comprehensive coverage"
+    - ac: "AC11"
+      reason: "Success notification tested but workflow reset functionality missing"
+  notes: "Strong foundation with unit, integration, and E2E tests. Core functionality fully covered. Gaps in advanced workflow features."
+
+quality_score: 78
+
+recommendations:
+  immediate:
+    - action: "Add E2E test for skip-to-copies workflow when existing book selected"
+      refs: ["tests/test/e2e/story-2.2-add-book-workflow.spec.ts"]
+    - action: "Add comprehensive client-side validation tests for all form steps" 
+      refs: ["src/components/books/__tests__/"]
+  future:
+    - action: "Add E2E test for Add Another Book workflow reset functionality"
+      refs: ["tests/test/e2e/story-2.2-add-book-workflow.spec.ts"]
+    - action: "Consider performance testing for bulk copy creation (99 copies limit)"
+      refs: ["tests/test/integration/api/book-creation-flow.test.ts"]
+
+history:
+  - at: "2025-09-06T00:00:00Z"
+    gate: CONCERNS
+    note: "Initial review - comprehensive coverage with 2 high-priority workflow gaps identified"

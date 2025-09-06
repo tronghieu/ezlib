@@ -72,17 +72,22 @@ Membership records linking users to libraries. Can exist independently of user a
 - **Constraint**: UNIQUE(library_id, member_id)
 
 #### `library_staff`
-Staff and administrative roles within libraries with granular permissions.
+Staff and administrative roles within libraries with simple role-based hierarchy.
 - `id` - Primary key UUID
 - `user_id` - References auth.users(id)
 - `library_id` - References libraries(id)
-- `role` - Enum: owner, manager, librarian, volunteer (hierarchical permissions)
-- `permissions` - JSONB: admin_settings, manage_staff, manage_members, manage_inventory, process_loans, view_reports (granular overrides)
+- `role` - Enum: owner, manager, librarian, volunteer (clear hierarchical permissions)
 - `employment_info` - JSONB: employee_id, hire_date, department, work_schedule
 - `status` - Enum: active, inactive, terminated
 - `is_deleted`, `deleted_at`, `deleted_by` - Soft delete fields
 - `created_at`, `updated_at` - Standard timestamps
 - **Constraint**: UNIQUE(user_id, library_id) - One role per user per library
+
+**Role Hierarchy**:
+- **Owner**: Full library control including settings, staff management, and all operations
+- **Manager**: All operations except library settings modification and staff management
+- **Librarian**: Daily operations including catalog management, inventory, members, and circulation
+- **Volunteer**: Circulation operations only (checkout/return books)
 
 **Key Design**: `library_id` is the primary tenant boundary for all RLS policies
 
@@ -226,7 +231,6 @@ Token-based invitation system for securely adding staff and members to libraries
 - `inviter_id` - References library_staff(id) who created the invitation
 - `email` - Email address of the person being invited
 - `role` - Enum: owner, manager, librarian, volunteer (for staff invitations)
-- `permissions` - JSONB: Granular permission overrides for the invited role
 - `invitation_type` - Enum: library_staff, library_member
 - `status` - Enum: pending, accepted, declined, expired, cancelled
 - `token` - Secure base64url-encoded random token for accessing the invitation
@@ -321,8 +325,10 @@ All sensitive tables use `library_id` for data isolation:
 - **Public**: Read active library catalogs
 - **Users**: Manage own profiles and view own transactions
 - **Library Members**: View own borrowing history
-- **Library Staff**: Full access to library operations
-- **Library Managers**: Staff management capabilities
+- **Volunteers**: Circulation operations (checkout/return books)
+- **Librarians**: Daily operations including catalog, inventory, members, circulation
+- **Managers**: All operations except library settings and staff management
+- **Owners**: Complete library control including settings and staff management
 
 ## Performance Optimizations
 

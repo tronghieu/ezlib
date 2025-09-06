@@ -56,7 +56,6 @@ describe("useAddBook Hook", () => {
   };
 
   const mockBookResult: BookCreationResult = {
-    generalBook: { id: "general-id", canonical_title: "test book" },
     edition: { id: "edition-id", title: "Test Book", isbn_13: "9781234567890" },
     author: {
       id: "author-id",

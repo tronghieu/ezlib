@@ -7,8 +7,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LibrarySelectionPage } from "../library-selection-page";
-import { LibraryProvider } from "@/lib/contexts/library-context";
-import { AuthProvider } from "@/lib/auth/context";
+import { MockLibraryProvider, MockAuthProvider, createMockUser } from "@/lib/test-utils";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { LibraryWithAccess } from "@/lib/types";
 
@@ -51,11 +50,11 @@ jest.mock("../library-selection-grid", () => ({
 }));
 
 // Test data
-const mockUser = {
+const mockUser = createMockUser({
   id: "test-user-123",
   email: "test@library.com",
   created_at: "2024-01-01T00:00:00Z",
-};
+});
 
 const mockLibraries: LibraryWithAccess[] = [
   {
@@ -139,9 +138,9 @@ function renderWithProviders(
   return {
     ...render(
       <QueryClientProvider client={queryClient}>
-        <AuthProvider value={mockAuthValue}>
-          <LibraryProvider value={mockLibraryValue}>{ui}</LibraryProvider>
-        </AuthProvider>
+        <MockAuthProvider value={mockAuthValue}>
+          <MockLibraryProvider value={mockLibraryValue}>{ui}</MockLibraryProvider>
+        </MockAuthProvider>
       </QueryClientProvider>
     ),
     mockLibraryValue,
