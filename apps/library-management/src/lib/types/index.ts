@@ -103,41 +103,12 @@ export interface LibraryStaff {
   user_id: string;
   library_id: string;
   role: StaffRole;
-  permissions: StaffPermissions;
   created_at: string;
   updated_at: string;
 }
 
-export type StaffRole = "owner" | "manager" | "librarian";
+export type StaffRole = "owner" | "manager" | "librarian" | "volunteer";
 
-export interface StaffPermissions {
-  books: {
-    create: boolean;
-    read: boolean;
-    update: boolean;
-    delete: boolean;
-  };
-  members: {
-    create: boolean;
-    read: boolean;
-    update: boolean;
-    delete: boolean;
-  };
-  transactions: {
-    checkout: boolean;
-    return: boolean;
-    renew: boolean;
-    fine: boolean;
-  };
-  reports: {
-    view: boolean;
-    export: boolean;
-  };
-  settings: {
-    view: boolean;
-    update: boolean;
-  };
-}
 
 /**
  * Library Member entity - library patrons
@@ -524,7 +495,7 @@ export interface AppConfig {
 
 /**
  * Library with user access information
- * Extended library record with user's role and permissions
+ * Extended library record with user's role and access
  */
 export interface LibraryWithAccess {
   id: string;
@@ -539,7 +510,6 @@ export interface LibraryWithAccess {
   updated_at: string;
   // User's access information from library_staff
   user_role: string;
-  user_permissions: Database["public"]["Tables"]["library_staff"]["Row"]["permissions"];
   staff_id: string;
   staff_status: string;
 }
@@ -564,6 +534,15 @@ export interface LibraryContextActions {
   refreshLibraries: () => Promise<void>;
   clearLibrarySelection: () => void;
   switchLibrary: (libraryId: string) => Promise<void>;
+  // Role checking functions
+  hasRole: (requiredRoles: string[]) => boolean;
+  hasMinimumRoleLevel: (minimumRole: string) => boolean;
+  canManageBooks: () => boolean;
+  canManageMembers: () => boolean;
+  canManageStaff: () => boolean;
+  canViewReports: () => boolean;
+  canManageSettings: () => boolean;
+  getCurrentRole: () => string | null;
 }
 
 /**
@@ -579,7 +558,6 @@ export type LibraryContextValue = LibraryContextState & LibraryContextActions;
 export interface LibraryAccessValidation {
   hasAccess: boolean;
   role?: string;
-  permissions?: Database["public"]["Tables"]["library_staff"]["Row"]["permissions"];
   staffId?: string;
   error?: string;
 }

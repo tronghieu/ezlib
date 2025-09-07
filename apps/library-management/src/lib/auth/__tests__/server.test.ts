@@ -3,7 +3,7 @@
  */
 
 import {
-  getUserPermissionsForLibrary,
+  getUserRoleForLibrary,
   canAccessLibrary,
   getUserLibraries,
 } from "../server";
@@ -42,28 +42,26 @@ describe("Server-side Authentication and Permission Utilities", () => {
     jest.clearAllMocks();
   });
 
-  describe("getUserPermissionsForLibrary", () => {
-    it("should return user permissions for development (placeholder)", async () => {
-      const permissions = await getUserPermissionsForLibrary(
+  describe("getUserRoleForLibrary", () => {
+    it("should return user role for development (placeholder)", async () => {
+      const role = await getUserRoleForLibrary(
         testUserId,
         testLibraryId
       );
 
-      expect(permissions).toBeDefined();
-      expect(permissions?.userId).toBe(testUserId);
-      expect(permissions?.libraryId).toBe(testLibraryId);
-      expect(permissions?.role).toBe("owner"); // Temporary development setting
+      expect(role).toBeDefined();
+      expect(role).toBe("owner"); // Temporary development setting
     });
 
     it("should handle invalid user/library combinations", async () => {
       // This test will be more meaningful when actual database integration exists
-      const permissions = await getUserPermissionsForLibrary(
+      const role = await getUserRoleForLibrary(
         "invalid-user",
         "invalid-library"
       );
 
       // For now, returns placeholder data
-      expect(permissions).toBeDefined();
+      expect(role).toBeDefined();
     });
   });
 
@@ -115,62 +113,58 @@ describe("Server-side Authentication and Permission Utilities", () => {
     it("should have proper error handling patterns", () => {
       // Test that our utility functions handle errors gracefully
       expect(async () => {
-        await getUserPermissionsForLibrary("", "");
+        await getUserRoleForLibrary("", "");
       }).not.toThrow();
     });
 
     it("should maintain consistent return types", async () => {
-      const permissions = await getUserPermissionsForLibrary(
+      const role = await getUserRoleForLibrary(
         testUserId,
         testLibraryId
       );
 
-      expect(permissions).toHaveProperty("userId");
-      expect(permissions).toHaveProperty("libraryId");
-      expect(permissions).toHaveProperty("role");
-      expect(permissions).toHaveProperty("customPermissions");
-      expect(permissions).toHaveProperty("deniedPermissions");
+      expect(role).toBeDefined();
+      expect(typeof role).toBe("string");
+      expect(["owner", "manager", "librarian", "volunteer"]).toContain(role);
     });
   });
 
   describe("Development placeholder validation", () => {
     it("should provide consistent development data", async () => {
-      const permissions1 = await getUserPermissionsForLibrary(
+      const role1 = await getUserRoleForLibrary(
         testUserId,
         testLibraryId
       );
-      const permissions2 = await getUserPermissionsForLibrary(
+      const role2 = await getUserRoleForLibrary(
         testUserId,
         testLibraryId
       );
 
-      expect(permissions1?.role).toBe(permissions2?.role);
-      expect(permissions1?.userId).toBe(permissions2?.userId);
+      expect(role1).toBe(role2);
     });
 
     it("should maintain library context in development", async () => {
-      const permissions = await getUserPermissionsForLibrary(
+      const role = await getUserRoleForLibrary(
         testUserId,
         testLibraryId
       );
 
-      expect(permissions?.libraryId).toBe(testLibraryId);
-      expect(permissions?.userId).toBe(testUserId);
+      expect(role).toBeDefined();
+      expect(typeof role).toBe("string");
     });
   });
 
   describe("Future database integration patterns", () => {
     it("should be ready for RLS policy integration", async () => {
       // This test validates that our functions are structured to work with RLS
-      const permissions = await getUserPermissionsForLibrary(
+      const role = await getUserRoleForLibrary(
         testUserId,
         testLibraryId
       );
 
       // Verify the structure matches what RLS policies will expect
-      expect(permissions?.libraryId).toBe(testLibraryId);
-      expect(permissions?.userId).toBe(testUserId);
-      expect(["owner", "manager", "librarian"]).toContain(permissions?.role);
+      expect(role).toBeDefined();
+      expect(["owner", "manager", "librarian", "volunteer"]).toContain(role);
     });
 
     it("should support multi-tenant data isolation patterns", async () => {

@@ -4,7 +4,15 @@
  */
 
 import { supabase } from "@/lib/supabase/client";
-import type { BookCopy, BookCopyFormData } from "@/lib/types/books";
+import type { BookCopy, BookCopyFormData, BookEdition, Author } from "@/lib/types/books";
+import type { BookCopyUpdateData } from "@/lib/validation/book-copy";
+
+export interface BookCopyWithDetails extends BookCopy {
+  book_edition: BookEdition & {
+    authors: Author[];
+  };
+}
+
 
 /**
  * Create multiple copies of a book edition for a library
@@ -216,5 +224,214 @@ async function updateLibraryEditionCounts(
   } catch (error) {
     console.warn("Error updating library edition counts:", error);
   }
+}
+
+/**
+ * Fetch detailed information about a book copy including book edition and author details
+ */
+export async function fetchBookCopyDetail(
+  bookCopyId: string,
+  libraryId: string
+): Promise<BookCopyWithDetails> {
+  const { data, error } = await supabase()
+    .from("book_display_view")
+    .select("*")
+    .eq("id", bookCopyId)
+    .eq("library_id", libraryId)
+    .eq("is_deleted", false)
+    .single();
+
+  if (error) {
+    console.error("Error fetching book copy detail:", error);
+    throw new Error(`Failed to fetch book copy: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Book copy not found");
+  }
+
+  // Ensure proper typing
+  const bookCopy = data as BookCopyWithDetails;
+  
+  if (!bookCopy.book_edition) {
+    throw new Error("Book edition not found for this copy");
+  }
+
+  return bookCopy;
+}
+
+/**
+ * Update book copy information
+ */
+export async function updateBookCopy(
+  bookCopyId: string,
+  updateData: BookCopyUpdateData,
+  libraryId: string
+): Promise<BookCopyWithDetails> {
+  // Check if copy_number is being updated and validate uniqueness
+  if (updateData.copy_number) {
+    const { data: existingCopy, error: checkError } = await supabase()
+      .from("book_copies")
+      .select("id")
+      .eq("copy_number", updateData.copy_number)
+      .eq("library_id", libraryId)
+      .neq("id", bookCopyId) // Exclude current copy
+      .limit(1);
+
+    if (checkError) {
+      console.error("Error checking copy number uniqueness:", checkError);
+      throw new Error("Failed to validate copy number");
+    }
+
+    if (existingCopy && existingCopy.length > 0) {
+      throw new Error(`Copy number "${updateData.copy_number}" already exists in your library`);
+    }
+  }
+
+  // Prepare update data with proper structure
+  const updatePayload = {
+    copy_number: updateData.copy_number,
+    barcode: updateData.barcode || null,
+    location: {
+      shelf: updateData.shelf_location || null,
+      section: updateData.section || null,
+      call_number: updateData.call_number || null,
+    },
+    condition_info: {
+      condition: updateData.condition,
+      notes: updateData.notes || null,
+      last_maintenance: new Date().toISOString(),
+    },
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase()
+    .from("book_copies")
+    .update(updatePayload)
+    .eq("id", bookCopyId)
+    .eq("library_id", libraryId)
+    .eq("is_deleted", false)
+    .select(`
+      *,
+      book_edition:book_editions (
+        *,
+        authors (
+          id,
+          name,
+          biography,
+          birth_date,
+          death_date,
+          created_at,
+          updated_at
+        )
+      )
+    `)
+    .single();
+
+  if (error) {
+    console.error("Error updating book copy:", error);
+    throw new Error(`Failed to update book copy: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Book copy not found or no changes made");
+  }
+
+  return data as BookCopyWithDetails;
+}
+
+/**
+ * Soft delete a book copy (mark as deleted)
+ */
+export async function softDeleteBookCopy(
+  bookCopyId: string,
+  libraryId: string
+): Promise<void> {
+  // Get current user for audit trail
+  const { data: { user } } = await supabase().auth.getUser();
+  
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const { error } = await supabase()
+    .from("book_copies")
+    .update({
+      is_deleted: true,
+      deleted_at: new Date().toISOString(),
+      deleted_by: user.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", bookCopyId)
+    .eq("library_id", libraryId)
+    .eq("is_deleted", false);
+
+  if (error) {
+    console.error("Error deleting book copy:", error);
+    throw new Error(`Failed to delete book copy: ${error.message}`);
+  }
+}
+
+
+/**
+ * Check if book copy can be safely deleted (no active borrows/holds)
+ */
+export async function checkBookCopyDeleteSafety(
+  bookCopyId: string,
+  libraryId: string
+): Promise<{
+  canDelete: boolean;
+  activeBorrows: number;
+  activeHolds: number;
+  warnings: string[];
+}> {
+  // Check for active borrowing transactions
+  const { data: activeBorrows, error: borrowError } = await supabase()
+    .from("borrowing_transactions")
+    .select("id")
+    .eq("book_copy_id", bookCopyId)
+    .eq("library_id", libraryId)
+    .in("status", ["active", "overdue"]);
+
+  if (borrowError) {
+    console.error("Error checking active borrows:", borrowError);
+    throw new Error(`Failed to check borrowing status: ${borrowError.message}`);
+  }
+
+  // Get book copy availability info
+  const { data: bookCopy, error: copyError } = await supabase()
+    .from("book_copies")
+    .select("availability")
+    .eq("id", bookCopyId)
+    .eq("library_id", libraryId)
+    .single();
+
+  if (copyError) {
+    console.error("Error fetching book copy:", copyError);
+    throw new Error(`Failed to fetch book copy: ${copyError.message}`);
+  }
+
+  const activeHolds = bookCopy?.availability?.hold_queue?.length || 0;
+  const activeBorrowsCount = activeBorrows?.length || 0;
+
+  const warnings: string[] = [];
+  let canDelete = true;
+
+  if (activeBorrowsCount > 0) {
+    warnings.push(`${activeBorrowsCount} active borrowing transaction(s)`);
+    canDelete = false;
+  }
+
+  if (activeHolds > 0) {
+    warnings.push(`${activeHolds} active hold(s) in queue`);
+    // Note: We might still allow deletion with holds, but warn the user
+  }
+
+  return {
+    canDelete,
+    activeBorrows: activeBorrowsCount,
+    activeHolds,
+    warnings,
+  };
 }
 

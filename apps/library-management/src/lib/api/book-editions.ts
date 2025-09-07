@@ -65,7 +65,7 @@ export async function searchBookEditions(searchTerm: string): Promise<BookSearch
  */
 export async function createBookEdition(editionData: BookEditionFormData): Promise<BookEdition> {
   try {
-    // 1. Check catalog access permissions for creating editions and authors
+    // 1. Check catalog access role for creating editions and authors
     const { data: hasCatalogAccess, error: catalogError } = await supabase()
       .rpc("user_has_catalog_access");
 
@@ -74,7 +74,7 @@ export async function createBookEdition(editionData: BookEditionFormData): Promi
     }
 
     if (!hasCatalogAccess) {
-      throw new Error("Insufficient permissions. Catalog access required to create book editions.");
+      throw new Error("Insufficient role access. Catalog access required to create book editions.");
     }
 
     // 2. Start a transaction-like operation

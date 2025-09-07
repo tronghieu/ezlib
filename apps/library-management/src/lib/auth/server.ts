@@ -1,21 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 /**
- * Server-side Authentication and Permission Utilities
- * Implements server-side permission checking for protected API routes
+ * Server-side Authentication and Role Utilities
+ * Implements server-side role checking for protected API routes
  * and database operations with library staff validation
  */
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  LibraryRole,
-  Permission,
-  UserPermissions,
-  hasPermission,
-  requirePermission,
-  PermissionError,
-} from "./permissions";
+/**
+ * Library staff roles in hierarchy order (most to least privileged)
+ */
+export type LibraryRole = "owner" | "manager" | "librarian" | "volunteer";
 
 /**
  * Create authenticated Supabase server client
@@ -53,7 +49,6 @@ export interface LibraryStaffData {
   user_id: string;
   library_id: string;
   role: LibraryRole;
-  permissions: Record<string, any>; // JSONB custom permissions
   status: "active" | "inactive" | "pending";
   invited_at: string;
   activated_at?: string;
@@ -104,7 +99,6 @@ export async function getAuthenticatedUser(libraryId?: string) {
     user_id: user.id,
     library_id: libraryId || "demo-library-id",
     role: "owner" as LibraryRole, // Temporary - grant full access for development
-    permissions: {},
     status: "active",
     invited_at: new Date().toISOString(),
     activated_at: new Date().toISOString(),
@@ -117,19 +111,19 @@ export async function getAuthenticatedUser(libraryId?: string) {
 }
 
 /**
- * Get user permissions for a specific library
+ * Get user role for a specific library
  */
-export async function getUserPermissionsForLibrary(
+export async function getUserRoleForLibrary(
   userId: string,
   libraryId: string
-): Promise<UserPermissions | null> {
+): Promise<LibraryRole | null> {
   const supabase = await createAuthenticatedClient();
 
   try {
     // Attempt to query real database first
     const { data: staffData, error } = await supabase
       .from("library_staff")
-      .select("role, permissions, status")
+      .select("role, status")
       .eq("user_id", userId)
       .eq("library_id", libraryId)
       .eq("status", "active")
@@ -137,13 +131,7 @@ export async function getUserPermissionsForLibrary(
 
     if (!error && staffData) {
       // Real database data available
-      return {
-        userId,
-        libraryId,
-        role: staffData.role as LibraryRole,
-        customPermissions: staffData.permissions?.granted || [],
-        deniedPermissions: staffData.permissions?.denied || [],
-      };
+      return staffData.role as LibraryRole;
     }
 
     // If error is "relation does not exist", table hasn't been created yet
@@ -167,13 +155,7 @@ export async function getUserPermissionsForLibrary(
   }
 
   // Fallback to development placeholder when database is not available
-  return {
-    userId,
-    libraryId,
-    role: "owner", // Grant full access during development
-    customPermissions: [],
-    deniedPermissions: [],
-  };
+  return "owner"; // Grant full access during development
 }
 
 /**
@@ -183,19 +165,19 @@ export async function requireLibraryAccess(libraryId?: string) {
   try {
     const { user, staffData } = await getAuthenticatedUser(libraryId);
 
-    const userPermissions = await getUserPermissionsForLibrary(
+    const userRole = await getUserRoleForLibrary(
       user.id,
       staffData.library_id
     );
 
-    if (!userPermissions) {
+    if (!userRole) {
       redirect("/unauthorized");
     }
 
     return {
       user,
       staffData,
-      permissions: userPermissions,
+      role: userRole,
     };
   } catch (error) {
     console.error("Library access validation failed:", error);
@@ -224,22 +206,23 @@ export async function withAuth<T extends any[]>(
 }
 
 /**
- * Middleware for API routes requiring specific permissions
+ * Middleware for API routes requiring specific roles
  */
-export async function withPermission<T extends any[]>(
+export async function withRole<T extends any[]>(
   handler: (...args: T) => Promise<Response>,
-  requiredPermission: Permission,
+  requiredRoles: LibraryRole[],
   libraryId?: string
 ) {
   return async (...args: T): Promise<Response> => {
     try {
-      const { permissions } = await requireLibraryAccess(libraryId);
+      const { role } = await requireLibraryAccess(libraryId);
 
-      if (!hasPermission(permissions, requiredPermission)) {
+      if (!requiredRoles.includes(role)) {
         return new Response(
           JSON.stringify({
-            error: "Insufficient permissions",
-            required: requiredPermission,
+            error: "Insufficient role access",
+            required: `Role must be one of: ${requiredRoles.join(", ")}`,
+            current: role,
           }),
           { status: 403, headers: { "Content-Type": "application/json" } }
         );
@@ -247,16 +230,6 @@ export async function withPermission<T extends any[]>(
 
       return handler(...args);
     } catch (error) {
-      if (error instanceof PermissionError) {
-        return new Response(
-          JSON.stringify({
-            error: error.message,
-            permission: error.permission,
-          }),
-          { status: 403, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
       return new Response(
         JSON.stringify({ error: "Authentication required" }),
         { status: 401, headers: { "Content-Type": "application/json" } }
@@ -266,22 +239,24 @@ export async function withPermission<T extends any[]>(
 }
 
 /**
- * Database query wrapper with automatic permission checking
+ * Database query wrapper with automatic role checking
  */
 export async function withLibraryScope<T>(
   query: (
     supabase: Awaited<ReturnType<typeof createAuthenticatedClient>>,
     libraryId: string
   ) => Promise<T>,
-  requiredPermission?: Permission,
+  requiredRoles?: LibraryRole[],
   libraryId?: string
 ): Promise<T> {
   const supabase = await createAuthenticatedClient();
-  const { permissions, staffData } = await requireLibraryAccess(libraryId);
+  const { role, staffData } = await requireLibraryAccess(libraryId);
 
-  // Check permission if specified
-  if (requiredPermission) {
-    requirePermission(permissions, requiredPermission);
+  // Check role if specified
+  if (requiredRoles && !requiredRoles.includes(role)) {
+    throw new Error(
+      `Insufficient role access. Required: ${requiredRoles.join(", ")}, Current: ${role}`
+    );
   }
 
   // Execute query with library scope
@@ -292,8 +267,7 @@ export async function withLibraryScope<T>(
  * Utility to validate library context in server components
  */
 export async function validateLibraryContext(libraryId: string) {
-  const { user, staffData, permissions } =
-    await requireLibraryAccess(libraryId);
+  const { user, staffData, role } = await requireLibraryAccess(libraryId);
 
   // Ensure library ID matches staff access
   if (staffData.library_id !== libraryId) {
@@ -303,7 +277,7 @@ export async function validateLibraryContext(libraryId: string) {
   return {
     user,
     staffData,
-    permissions,
+    role,
     libraryId: staffData.library_id,
   };
 }
@@ -387,6 +361,6 @@ export async function canAccessLibrary(
   userId: string,
   libraryId: string
 ): Promise<boolean> {
-  const userPermissions = await getUserPermissionsForLibrary(userId, libraryId);
-  return userPermissions !== null;
+  const userRole = await getUserRoleForLibrary(userId, libraryId);
+  return userRole !== null;
 }

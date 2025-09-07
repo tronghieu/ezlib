@@ -47,7 +47,7 @@ const copiesFormSchema = z.object({
     .max(99, "Cannot add more than 99 copies at once"),
   copy_number: z
     .string()
-    .max(20, "Copy number must be less than 20 characters")
+    .max(50, "Copy number must be less than 50 characters")
     .regex(
       /^[A-Za-z0-9\-_]*$/,
       "Copy number can only contain letters, numbers, hyphens and underscores"

@@ -66,7 +66,6 @@ CREATE TABLE public.invitations (
     inviter_id UUID NOT NULL REFERENCES public.library_staff(id) ON DELETE CASCADE,
     email TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('owner', 'manager', 'librarian', 'volunteer')),
-    permissions JSONB DEFAULT '{}', -- For granular permissions override
     invitation_type TEXT NOT NULL CHECK (invitation_type IN ('library_staff', 'library_member')),
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'expired', 'cancelled')),
     token TEXT UNIQUE NOT NULL DEFAULT replace(gen_random_uuid()::text, '-', ''), -- Secure invitation token
@@ -164,7 +163,7 @@ CREATE POLICY "Social follows are public for discovery" ON public.social_follows
 -- Invitation policies
 CREATE POLICY "Staff can view library invitations" ON public.invitations
     FOR SELECT USING (
-        library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
+        public.get_user_role(library_id) IS NOT NULL
     );
 
 CREATE POLICY "Public can view pending invitations by token" ON public.invitations
@@ -172,27 +171,26 @@ CREATE POLICY "Public can view pending invitations by token" ON public.invitatio
         status = 'pending' AND expires_at > NOW()
     );
 
-CREATE POLICY "Staff can manage invitations" ON public.invitations
-    FOR ALL USING (
-        library_id IN (
-            SELECT library_id FROM public.library_staff
-            WHERE user_id = auth.uid()
-            AND is_deleted = FALSE
-            AND (
-                role IN ('owner', 'manager')
-                OR (invitation_type = 'library_staff' AND permissions->>'manage_staff' = 'true')
-                OR (invitation_type = 'library_member' AND permissions->>'manage_members' = 'true')
-            )
-        )
+CREATE POLICY "Owners can create invitations" ON public.invitations
+    FOR INSERT WITH CHECK (
+        public.get_user_role(library_id) = 'owner'
+    );
+
+CREATE POLICY "Inviters and owners can edit invitations" ON public.invitations
+    FOR UPDATE USING (
+        inviter_id IN (SELECT id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
+        OR public.get_user_role(library_id) = 'owner'
+    );
+
+CREATE POLICY "Inviters can view own invitations" ON public.invitations
+    FOR SELECT USING (
+        inviter_id IN (SELECT id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
     );
 
 CREATE POLICY "Inviters can delete own invitations" ON public.invitations
     FOR DELETE USING (
         inviter_id IN (SELECT id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
-        OR library_id IN (
-            SELECT library_id FROM public.library_staff
-            WHERE user_id = auth.uid() AND role IN ('owner', 'manager') AND is_deleted = FALSE
-        )
+        OR public.get_user_role(library_id) IN ('owner', 'manager')
     );
 
 -- Invitation response policies
@@ -200,10 +198,7 @@ CREATE POLICY "Staff can view invitation responses" ON public.invitation_respons
     FOR SELECT USING (
         invitation_id IN (
             SELECT id FROM public.invitations
-            WHERE library_id IN (
-                SELECT library_id FROM public.library_staff
-                WHERE user_id = auth.uid() AND is_deleted = FALSE
-            )
+            WHERE public.get_user_role(library_id) IS NOT NULL
         )
     );
 
@@ -212,8 +207,25 @@ CREATE POLICY "Users can view own invitation responses" ON public.invitation_res
         responder_user_id = auth.uid()
     );
 
+CREATE POLICY "Inviters can view responses to their invitations" ON public.invitation_responses
+    FOR SELECT USING (
+        invitation_id IN (
+            SELECT id FROM public.invitations
+            WHERE inviter_id IN (
+                SELECT id FROM public.library_staff
+                WHERE user_id = auth.uid() AND is_deleted = FALSE
+            )
+        )
+    );
+
 CREATE POLICY "System can create invitation responses" ON public.invitation_responses
     FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Prohibit invitation response edits" ON public.invitation_responses
+    FOR UPDATE USING (false);
+
+CREATE POLICY "Prohibit invitation response deletes" ON public.invitation_responses
+    FOR DELETE USING (false);
 
 -- =============================================================================
 -- INVITATION SYSTEM FUNCTIONS
@@ -294,13 +306,11 @@ BEGIN
             user_id,
             library_id,
             role,
-            permissions,
             employment_info
         ) VALUES (
             accepting_user_id,
             invitation_record.library_id,
             invitation_record.role,
-            COALESCE(invitation_record.permissions, '{}'),
             jsonb_build_object('hire_date', NOW()::date)
         ) RETURNING id INTO created_staff_id;
 

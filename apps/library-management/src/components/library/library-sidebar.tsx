@@ -2,7 +2,7 @@
 
 /**
  * Library Dashboard Sidebar Navigation
- * Sidebar navigation component for library management with permission-based filtering
+ * Sidebar navigation component for library management with role-based filtering
  */
 
 import React from "react";
@@ -40,7 +40,6 @@ interface NavItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   description?: string;
-  requiredPermissions?: string[];
 }
 
 export function LibrarySidebar(): React.JSX.Element {
@@ -64,28 +63,24 @@ export function LibrarySidebar(): React.JSX.Element {
       href: `/${currentLibrary.code}/books`,
       icon: Book,
       description: "Manage book collection",
-      requiredPermissions: ["books.view"],
     },
     {
       title: "Members",
       href: `/${currentLibrary.code}/members`,
       icon: Users,
       description: "Member registration and management",
-      requiredPermissions: ["members.view"],
     },
     {
       title: "Circulation",
       href: `/${currentLibrary.code}/circulation`,
       icon: ArrowRightLeft,
       description: "Check-in/out and renewals",
-      requiredPermissions: ["transactions.create"],
     },
     {
       title: "Reports",
       href: `/${currentLibrary.code}/reports`,
       icon: BarChart3,
       description: "Analytics and reports",
-      requiredPermissions: ["reports.view"],
     },
   ];
 
@@ -102,21 +97,18 @@ export function LibrarySidebar(): React.JSX.Element {
       href: `/${currentLibrary.code}/books/add`,
       icon: BookOpen,
       description: "Add new book to inventory",
-      requiredPermissions: ["books.create"],
     },
     {
       title: "Register Member",
       href: `/${currentLibrary.code}/members/add`,
       icon: UserCheck,
       description: "Register new library member",
-      requiredPermissions: ["members.create"],
     },
     {
       title: "Quick Checkout",
       href: `/${currentLibrary.code}/circulation/checkout`,
       icon: Package,
       description: "Quick book checkout",
-      requiredPermissions: ["transactions.create"],
     },
   ];
 
@@ -127,23 +119,10 @@ export function LibrarySidebar(): React.JSX.Element {
       href: `/${currentLibrary.code}/settings`,
       icon: Settings,
       description: "Library configuration",
-      requiredPermissions: ["settings.manage"],
     },
   ];
 
-  // Filter items based on user permissions
-  const filterByPermissions = (items: NavItem[]) => {
-    return items.filter((item) => {
-      if (!item.requiredPermissions) return true;
-      // For now, show all items - permission system can be enhanced later
-      // TODO: Implement proper permission checking based on currentLibrary.user_role
-      return true;
-    });
-  };
-
-  const filteredNavigation = filterByPermissions(navigationItems);
-  const filteredQuickAccess = filterByPermissions(quickAccessItems);
-  const filteredSettings = filterByPermissions(settingsItems);
+  // Show all navigation items - role-based access control is handled at the page level
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -157,7 +136,7 @@ export function LibrarySidebar(): React.JSX.Element {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filteredNavigation.map((item) => (
+              {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
@@ -180,7 +159,7 @@ export function LibrarySidebar(): React.JSX.Element {
           <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filteredQuickAccess.map((item) => (
+              {quickAccessItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <a href={item.href}>
@@ -198,7 +177,7 @@ export function LibrarySidebar(): React.JSX.Element {
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
-              {filteredSettings.map((item) => (
+              {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild

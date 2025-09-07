@@ -101,6 +101,33 @@ function loadSelectedLibraryFromStorage(
 }
 
 // =============================================================================
+// ROLE CHECKING UTILITIES
+// =============================================================================
+
+/**
+ * Role hierarchy for permission checking
+ * Higher index = more privileged
+ */
+const ROLE_HIERARCHY = ["volunteer", "librarian", "manager", "owner"];
+
+/**
+ * Check if current user has any of the required roles
+ */
+function hasAnyRole(currentRole: string, requiredRoles: string[]): boolean {
+  if (!currentRole || requiredRoles.length === 0) return false;
+  return requiredRoles.includes(currentRole);
+}
+
+/**
+ * Check if current user has minimum role level
+ */
+function hasMinimumRole(currentRole: string, minimumRole: string): boolean {
+  const currentIndex = ROLE_HIERARCHY.indexOf(currentRole);
+  const minimumIndex = ROLE_HIERARCHY.indexOf(minimumRole);
+  return currentIndex >= minimumIndex;
+}
+
+// =============================================================================
 // LIBRARY ACCESS VALIDATION
 // =============================================================================
 
@@ -117,7 +144,6 @@ async function validateLibraryAccess(
         `
         id,
         role,
-        permissions,
         status,
         libraries (
           id,
@@ -148,7 +174,6 @@ async function validateLibraryAccess(
     return {
       hasAccess: true,
       role: data.role,
-      permissions: data.permissions,
       staffId: data.id,
     };
   } catch (error) {
@@ -208,7 +233,6 @@ async function fetchUserLibraries(
     .map((item) => ({
       ...item.libraries!,
       user_role: item.role,
-      user_permissions: {}, // Set to empty object since we're using role-based access now
       staff_id: item.id,
       staff_status: item.status,
     }));
@@ -346,12 +370,50 @@ export function LibraryProvider({
     [user, state.availableLibraries, selectLibrary]
   );
 
+  // Role checking functions
+  const hasRole = useCallback((requiredRoles: string[]): boolean => {
+    if (!state.currentLibrary?.user_role) return false;
+    return hasAnyRole(state.currentLibrary.user_role, requiredRoles);
+  }, [state.currentLibrary?.user_role]);
+
+  const hasMinimumRoleLevel = useCallback((minimumRole: string): boolean => {
+    if (!state.currentLibrary?.user_role) return false;
+    return hasMinimumRole(state.currentLibrary.user_role, minimumRole);
+  }, [state.currentLibrary?.user_role]);
+
+  // Specific role helpers
+  const canManageBooks = useCallback(() => 
+    hasRole(["owner", "manager", "librarian"]), [hasRole]);
+    
+  const canManageMembers = useCallback(() => 
+    hasRole(["owner", "manager", "librarian"]), [hasRole]);
+    
+  const canManageStaff = useCallback(() => 
+    hasRole(["owner"]), [hasRole]);
+    
+  const canViewReports = useCallback(() => 
+    hasRole(["owner", "manager"]), [hasRole]);
+    
+  const canManageSettings = useCallback(() => 
+    hasRole(["owner"]), [hasRole]);
+
+  const getCurrentRole = useCallback(() => 
+    state.currentLibrary?.user_role || null, [state.currentLibrary?.user_role]);
+
   const contextValue: LibraryContextValue = {
     ...state,
     selectLibrary,
     refreshLibraries,
     clearLibrarySelection,
     switchLibrary,
+    hasRole,
+    hasMinimumRoleLevel,
+    canManageBooks,
+    canManageMembers,
+    canManageStaff,
+    canViewReports,
+    canManageSettings,
+    getCurrentRole,
   };
 
   return (

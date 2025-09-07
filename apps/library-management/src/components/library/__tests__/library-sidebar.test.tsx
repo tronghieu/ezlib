@@ -1,6 +1,6 @@
 /**
  * Library Sidebar Tests
- * Tests for the sidebar navigation component with permission-based filtering
+ * Tests for the sidebar navigation component with role-based access
  */
 
 import React from "react";
@@ -42,7 +42,6 @@ const mockLibrary = {
   status: "active",
   created_at: "2024-01-01T00:00:00.000Z",
   updated_at: "2024-01-01T00:00:00.000Z",
-  user_permissions: {},
   staff_id: "staff-1",
 };
 
@@ -252,7 +251,7 @@ describe("LibraryDashboardSidebar", () => {
     });
   });
 
-  describe("permission-based navigation", () => {
+  describe("role-based navigation", () => {
     it("should render all navigation items for librarian role", () => {
       render(<LibrarySidebar />);
 
@@ -277,7 +276,7 @@ describe("LibraryDashboardSidebar", () => {
 
     // Note: Permission filtering is currently showing all items
     // This test documents current behavior and can be enhanced
-    // when proper permission system is implemented
+    // when role-based filtering is implemented at page level
     it("should handle different user roles (future enhancement)", () => {
       const memberLibrary = {
         ...mockLibrary,
@@ -298,7 +297,7 @@ describe("LibraryDashboardSidebar", () => {
       render(<LibrarySidebar />);
 
       // Currently all items are shown - this is expected behavior
-      // Future enhancement would filter based on permissions
+      // Future enhancement would filter based on roles at page level
       expect(screen.getByText("Dashboard")).toBeInTheDocument();
     });
   });

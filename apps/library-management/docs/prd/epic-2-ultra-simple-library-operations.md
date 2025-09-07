@@ -40,7 +40,7 @@ so that **I can quickly build our book inventory without complex cataloging work
 10. Progressive form validation ensures required fields at each step
 11. Success notification with option to "Add Another Book" resets to step 1
 
-## Story 2.3: Book Details and Management
+## Story 2.3: Book Copies Details and Management
 
 As a **library staff member**,  
 I want **to view detailed book information and edit book records**,  
@@ -48,15 +48,13 @@ so that **I can maintain accurate inventory data and make necessary corrections*
 
 **Acceptance Criteria:**
 
-1. Book detail view displays complete metadata including description, genre, and publication details
-2. Edit functionality for all book fields except system-generated data
-3. Book location management (shelf, section) with validation against library layout
+1. Book copy detail view displays complete metadata including book editions details
+2. Edit functionality for all book copy fields except book edition information
+3. Book copy location management (shelf, section) with validation against library layout
 4. Book condition tracking (new, good, fair, poor) with notes field
 5. Historical view of book's circulation activity and maintenance records
-6. Image upload/replacement functionality for book covers
-7. Delete/remove book functionality with confirmation dialog and audit trail
-8. Integration status display showing last metadata enrichment attempt
-9. Manual re-enrichment option to update metadata from external sources
+6. Delete/remove book copies functionality with confirmation dialog and audit trail
+7. Role restrictions for editing book copies, allow all library staff can view but only librarian+ can edit
 
 ## Story 2.4: Ultra-Simple Member Management
 

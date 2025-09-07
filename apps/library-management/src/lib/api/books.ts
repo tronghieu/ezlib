@@ -234,18 +234,18 @@ export async function createBook(
   bookData: BookCreationData
 ): Promise<BookCreationResult> {
   try {
-    // Step 1: Check library permissions
-    const { data: libraryRole, error: permissionError } = await supabase()
+    // Step 1: Check library role access
+    const { data: libraryRole, error: roleError } = await supabase()
       .rpc("get_user_role", { 
         library_id_param: bookData.library_id 
       });
 
-    if (permissionError) {
-      throw new Error(`Permission check failed: ${permissionError.message}`);
+    if (roleError) {
+      throw new Error(`Role check failed: ${roleError.message}`);
     }
 
     if (!libraryRole || !["owner", "manager", "librarian"].includes(libraryRole)) {
-      throw new Error("Insufficient permissions. Owner, manager, or librarian role required.");
+      throw new Error("Insufficient role access. Owner, manager, or librarian role required.");
     }
 
     // Step 2: Check catalog access for creating authors/editions
@@ -257,7 +257,7 @@ export async function createBook(
     }
 
     if (!hasCatalogAccess) {
-      throw new Error("Insufficient permissions. Catalog access required to create books.");
+      throw new Error("Insufficient role access. Catalog access required to create books.");
     }
 
     // Step 3: Check for duplicates

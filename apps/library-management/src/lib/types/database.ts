@@ -105,7 +105,7 @@ export type Database = {
           book_edition_id: string | null
           created_at: string | null
           credit_text: string | null
-          general_book_id: string
+          general_book_id: string | null
           id: string
           role: string
           sort_order: number | null
@@ -115,7 +115,7 @@ export type Database = {
           book_edition_id?: string | null
           created_at?: string | null
           credit_text?: string | null
-          general_book_id: string
+          general_book_id?: string | null
           id?: string
           role: string
           sort_order?: number | null
@@ -125,7 +125,7 @@ export type Database = {
           book_edition_id?: string | null
           created_at?: string | null
           credit_text?: string | null
-          general_book_id?: string
+          general_book_id?: string | null
           id?: string
           role?: string
           sort_order?: number | null
@@ -170,11 +170,11 @@ export type Database = {
       }
       book_copies: {
         Row: {
-          availability: Json
+          availability: Json | null
           available_copies: number
           barcode: string | null
           book_edition_id: string
-          condition_info: Json
+          condition_info: Json | null
           copy_number: string
           created_at: string | null
           deleted_at: string | null
@@ -182,17 +182,17 @@ export type Database = {
           id: string
           is_deleted: boolean
           library_id: string
-          location: Json
+          location: Json | null
           status: string
           total_copies: number
           updated_at: string | null
         }
         Insert: {
-          availability?: Json
+          availability?: Json | null
           available_copies?: number
           barcode?: string | null
           book_edition_id: string
-          condition_info?: Json
+          condition_info?: Json | null
           copy_number: string
           created_at?: string | null
           deleted_at?: string | null
@@ -200,17 +200,17 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           library_id: string
-          location?: Json
+          location?: Json | null
           status?: string
           total_copies?: number
           updated_at?: string | null
         }
         Update: {
-          availability?: Json
+          availability?: Json | null
           available_copies?: number
           barcode?: string | null
           book_edition_id?: string
-          condition_info?: Json
+          condition_info?: Json | null
           copy_number?: string
           created_at?: string | null
           deleted_at?: string | null
@@ -218,7 +218,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           library_id?: string
-          location?: Json
+          location?: Json | null
           status?: string
           total_copies?: number
           updated_at?: string | null
@@ -266,7 +266,7 @@ export type Database = {
           country: string | null
           created_at: string | null
           edition_metadata: Json | null
-          general_book_id: string
+          general_book_id: string | null
           id: string
           isbn_13: string | null
           language: string
@@ -279,7 +279,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           edition_metadata?: Json | null
-          general_book_id: string
+          general_book_id?: string | null
           id?: string
           isbn_13?: string | null
           language: string
@@ -292,7 +292,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           edition_metadata?: Json | null
-          general_book_id?: string
+          general_book_id?: string | null
           id?: string
           isbn_13?: string | null
           language?: string
@@ -767,7 +767,6 @@ export type Database = {
           id: string
           is_deleted: boolean
           library_id: string
-          permissions: Json
           role: string
           status: string
           updated_at: string | null
@@ -781,7 +780,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           library_id: string
-          permissions?: Json
           role?: string
           status?: string
           updated_at?: string | null
@@ -795,7 +793,6 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           library_id?: string
-          permissions?: Json
           role?: string
           status?: string
           updated_at?: string | null
@@ -823,7 +820,7 @@ export type Database = {
           book_edition_id: string
           content: string
           created_at: string | null
-          general_book_id: string
+          general_book_id: string | null
           id: string
           language: string
           rating: number
@@ -836,7 +833,7 @@ export type Database = {
           book_edition_id: string
           content: string
           created_at?: string | null
-          general_book_id: string
+          general_book_id?: string | null
           id?: string
           language?: string
           rating: number
@@ -849,7 +846,7 @@ export type Database = {
           book_edition_id?: string
           content?: string
           created_at?: string | null
-          general_book_id?: string
+          general_book_id?: string | null
           id?: string
           language?: string
           rating?: number
@@ -1135,13 +1132,13 @@ export type Database = {
         Args: { book_edition_id_param: string }
         Returns: string
       }
-      get_library_role: {
-        Args: { target_library_id: string; target_user_id?: string }
-        Returns: string
-      }
       get_user_library_ids: {
         Args: { target_user_id?: string }
         Returns: string[]
+      }
+      get_user_role: {
+        Args: { library_id_param: string; target_user_id?: string }
+        Returns: string
       }
       process_invitation_acceptance: {
         Args: {
@@ -1166,20 +1163,8 @@ export type Database = {
           relevance_score: number
         }[]
       }
-      user_can_manage_staff: {
-        Args: { target_library_id: string; target_user_id?: string }
-        Returns: boolean
-      }
-      user_has_library_access: {
-        Args: { target_library_id: string; target_user_id?: string }
-        Returns: boolean
-      }
-      user_has_permission: {
-        Args: {
-          library_id_param?: string
-          permission_name: string
-          target_user_id?: string
-        }
+      user_has_catalog_access: {
+        Args: { target_user_id?: string }
         Returns: boolean
       }
     }

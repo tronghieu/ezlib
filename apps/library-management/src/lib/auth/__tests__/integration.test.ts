@@ -10,7 +10,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import {
-  getUserPermissionsForLibrary,
+  getUserRoleForLibrary,
   canAccessLibrary,
   getUserLibraries,
 } from "../server";
@@ -194,18 +194,17 @@ describe("Authentication Database Integration Tests", () => {
       }
     });
 
-    it("should handle missing tables gracefully in getUserPermissionsForLibrary", async () => {
+    it("should handle missing tables gracefully in getUserRoleForLibrary", async () => {
       // Test the actual function behavior with potentially missing tables
-      const permissions = await getUserPermissionsForLibrary(
+      const role = await getUserRoleForLibrary(
         testUserId || "test-user",
         testLibraryId || "test-library"
       );
 
-      // Should return permissions even if database tables don't exist yet
-      expect(permissions).toBeDefined();
-      expect(permissions?.userId).toBeDefined();
-      expect(permissions?.libraryId).toBeDefined();
-      expect(permissions?.role).toBeDefined();
+      // Should return role even if database tables don't exist yet
+      expect(role).toBeDefined();
+      expect(typeof role).toBe("string");
+      expect(["owner", "manager", "librarian", "volunteer"]).toContain(role);
     });
 
     it("should provide real library data when available", async () => {
@@ -254,14 +253,14 @@ describe("Authentication Database Integration Tests", () => {
       createClient("http://invalid-url", "invalid-key");
 
       // The functions should still work even with invalid client
-      const permissions = await getUserPermissionsForLibrary(
+      const role = await getUserRoleForLibrary(
         "test-user",
         "test-library"
       );
 
-      expect(permissions).toBeDefined();
+      expect(role).toBeDefined();
       // Should fallback to placeholder data when database is unavailable
-      expect(permissions?.role).toBe("owner"); // Placeholder default
+      expect(role).toBe("owner"); // Placeholder default
     });
 
     it("should handle missing table scenarios", async () => {
@@ -293,27 +292,23 @@ describe("Authentication Database Integration Tests", () => {
 
     it("should maintain consistent behavior between real and placeholder data", async () => {
       // Test both scenarios to ensure consistent API
-      const permissionsReal = await getUserPermissionsForLibrary(
+      const roleReal = await getUserRoleForLibrary(
         testUserId || "user1",
         testLibraryId || "lib1"
       );
-      const permissionsPlaceholder = await getUserPermissionsForLibrary(
+      const rolePlaceholder = await getUserRoleForLibrary(
         "placeholder-user",
         "placeholder-lib"
       );
 
-      // Both should have the same structure
-      expect(permissionsReal).toHaveProperty("userId");
-      expect(permissionsReal).toHaveProperty("libraryId");
-      expect(permissionsReal).toHaveProperty("role");
-      expect(permissionsReal).toHaveProperty("customPermissions");
-      expect(permissionsReal).toHaveProperty("deniedPermissions");
+      // Both should return valid roles
+      expect(roleReal).toBeDefined();
+      expect(typeof roleReal).toBe("string");
+      expect(["owner", "manager", "librarian", "volunteer"]).toContain(roleReal);
 
-      expect(permissionsPlaceholder).toHaveProperty("userId");
-      expect(permissionsPlaceholder).toHaveProperty("libraryId");
-      expect(permissionsPlaceholder).toHaveProperty("role");
-      expect(permissionsPlaceholder).toHaveProperty("customPermissions");
-      expect(permissionsPlaceholder).toHaveProperty("deniedPermissions");
+      expect(rolePlaceholder).toBeDefined();
+      expect(typeof rolePlaceholder).toBe("string");
+      expect(["owner", "manager", "librarian", "volunteer"]).toContain(rolePlaceholder);
     });
   });
 
