@@ -1,5 +1,5 @@
 /**
- * Library Dashboard Sidebar Tests
+ * Library Sidebar Tests
  * Tests for the sidebar navigation component with permission-based filtering
  */
 
@@ -8,7 +8,7 @@ import { render, screen } from "@testing-library/react";
 import { usePathname } from "next/navigation";
 import { useLibraryContext } from "@/lib/contexts/library-context";
 import { useSidebar } from "@/components/ui/sidebar";
-import { LibraryDashboardSidebar } from "../library-dashboard-sidebar";
+import { LibrarySidebar } from "../library-sidebar";
 
 // Mock the dependencies
 jest.mock("next/navigation");
@@ -73,13 +73,13 @@ describe("LibraryDashboardSidebar", () => {
 
   describe("when library is selected", () => {
     it("should render sidebar header with library switcher", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       expect(screen.getByTestId("library-switcher")).toBeInTheDocument();
     });
 
     it("should render main navigation items", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       expect(screen.getByText("Navigation")).toBeInTheDocument();
       expect(screen.getByText("Dashboard")).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe("LibraryDashboardSidebar", () => {
     });
 
     it("should render navigation items with correct hrefs", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       const dashboardLink = screen.getByRole("link", { name: /Dashboard/i });
       expect(dashboardLink).toHaveAttribute("href", "/TEST-LIB/dashboard");
@@ -111,7 +111,7 @@ describe("LibraryDashboardSidebar", () => {
     });
 
     it("should render quick actions section", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       expect(screen.getByText("Quick Actions")).toBeInTheDocument();
       expect(screen.getByText("Search")).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe("LibraryDashboardSidebar", () => {
     });
 
     it("should render quick action items with correct hrefs", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       const searchLink = screen.getByRole("link", { name: /Search/i });
       expect(searchLink).toHaveAttribute("href", "/TEST-LIB/search");
@@ -147,7 +147,7 @@ describe("LibraryDashboardSidebar", () => {
     });
 
     it("should render settings section", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       expect(screen.getByText("Settings")).toBeInTheDocument();
 
@@ -156,7 +156,7 @@ describe("LibraryDashboardSidebar", () => {
     });
 
     it("should render footer with user navigation", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       expect(screen.getByTestId("nav-user")).toBeInTheDocument();
     });
@@ -164,7 +164,7 @@ describe("LibraryDashboardSidebar", () => {
     it("should highlight active navigation item", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/dashboard");
 
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       // Check that the dashboard link is active
       const dashboardLink = screen.getByRole("link", { name: /Dashboard/i });
@@ -174,7 +174,7 @@ describe("LibraryDashboardSidebar", () => {
     it("should highlight different active navigation item", () => {
       mockUsePathname.mockReturnValue("/TEST-LIB/inventory");
 
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       // Check that inventory section would be highlighted
       const inventoryLink = screen.getByRole("link", { name: /Inventory/i });
@@ -195,7 +195,7 @@ describe("LibraryDashboardSidebar", () => {
         error: null,
       });
 
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       expect(screen.getByText("Loading...")).toBeInTheDocument();
     });
@@ -203,7 +203,7 @@ describe("LibraryDashboardSidebar", () => {
 
   describe("accessibility", () => {
     it("should have proper navigation structure", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       // Check for navigation landmarks
       const links = screen.getAllByRole("link");
@@ -216,7 +216,7 @@ describe("LibraryDashboardSidebar", () => {
     });
 
     it("should have proper tooltips for navigation items", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       // Navigation items should have tooltips (title attributes or aria-labels)
       const dashboardLink = screen.getByRole("link", { name: /Dashboard/i });
@@ -226,7 +226,7 @@ describe("LibraryDashboardSidebar", () => {
 
   describe("responsive behavior", () => {
     it("should render with collapsible sidebar variant", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       // Check that the sidebar component renders (basic smoke test)
       expect(screen.getByTestId("library-switcher")).toBeInTheDocument();
@@ -244,7 +244,7 @@ describe("LibraryDashboardSidebar", () => {
         toggleSidebar: jest.fn(),
       });
 
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       // Should still render main elements
       expect(screen.getByTestId("library-switcher")).toBeInTheDocument();
@@ -254,7 +254,7 @@ describe("LibraryDashboardSidebar", () => {
 
   describe("permission-based navigation", () => {
     it("should render all navigation items for librarian role", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       // All main navigation items should be visible for librarian
       expect(screen.getByText("Dashboard")).toBeInTheDocument();
@@ -266,7 +266,7 @@ describe("LibraryDashboardSidebar", () => {
     });
 
     it("should render all quick actions for librarian role", () => {
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       // All quick actions should be visible for librarian
       expect(screen.getByText("Search")).toBeInTheDocument();
@@ -295,7 +295,7 @@ describe("LibraryDashboardSidebar", () => {
         error: null,
       });
 
-      render(<LibraryDashboardSidebar />);
+      render(<LibrarySidebar />);
 
       // Currently all items are shown - this is expected behavior
       // Future enhancement would filter based on permissions
@@ -311,7 +311,7 @@ describe("LibraryDashboardSidebar", () => {
         name: "New Library",
       };
 
-      const { rerender } = render(<LibraryDashboardSidebar />);
+      const { rerender } = render(<LibrarySidebar />);
 
       // Initial library
       let dashboardLink = screen.getByRole("link", { name: /Dashboard/i });
@@ -329,7 +329,7 @@ describe("LibraryDashboardSidebar", () => {
         error: null,
       });
 
-      rerender(<LibraryDashboardSidebar />);
+      rerender(<LibrarySidebar />);
 
       // Check updated hrefs
       dashboardLink = screen.getByRole("link", { name: /Dashboard/i });

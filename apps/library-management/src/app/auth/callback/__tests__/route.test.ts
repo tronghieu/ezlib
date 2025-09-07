@@ -148,7 +148,7 @@ describe("Auth Callback Route", () => {
 
   describe("POST /auth/callback", () => {
     test("returns method not allowed", async () => {
-      const request = new NextRequest(
+      new NextRequest(
         "https://manage.ezlib.com/auth/callback",
         {
           method: "POST",

@@ -7,7 +7,10 @@ import { MockLibraryProvider, MockAuthProvider } from "@/lib/test-utils";
 import React from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { LibraryProvider, useLibraryContext } from "../library-context";
+import { 
+  // LibraryProvider, // Using MockLibraryProvider instead
+  useLibraryContext 
+} from "../library-context";
 import {
   useLibraryBooks,
   useLibraryMembers,

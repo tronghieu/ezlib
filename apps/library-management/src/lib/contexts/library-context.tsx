@@ -19,7 +19,7 @@ import type {
   LibraryAccessValidation,
 } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
-import { useAuthContext } from "@/lib/auth/context";
+import { useAuth } from "@/lib/auth/hooks";
 
 // =============================================================================
 // CONTEXT DEFINITION
@@ -226,7 +226,7 @@ export function LibraryProvider({
   children,
 }: LibraryProviderProps): React.JSX.Element {
   const [state, dispatch] = useReducer(libraryReducer, initialState);
-  const { user, loading: authLoading } = useAuthContext();
+  const { user, loading: authLoading } = useAuth();
 
   // Fetch libraries when user authentication changes
   const refreshLibraries = useCallback(async (): Promise<void> => {

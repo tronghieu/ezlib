@@ -9,12 +9,12 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LibrarySelectionGrid } from "./library-selection-grid";
 import { useLibraryContext } from "@/lib/contexts/library-context";
-import { useAuthContext } from "@/lib/auth/context";
+import { useAuth } from "@/lib/auth/hooks";
 import type { LibraryWithAccess } from "@/lib/types";
 
 export function LibrarySelectionPage(): React.JSX.Element {
   const router = useRouter();
-  const { user, loading, isInitialized } = useAuthContext();
+  const { user, loading } = useAuth();
   const {
     availableLibraries,
     isLoading: libraryLoading,
@@ -30,15 +30,15 @@ export function LibrarySelectionPage(): React.JSX.Element {
     router.push(`/${library.code}/dashboard`);
   };
 
-  // Redirect to login if not authenticated - but only after auth is initialized
+  // Redirect to login if not authenticated - but only after auth is loaded
   useEffect(() => {
-    if (isInitialized && !user) {
+    if (!loading && !user) {
       router.push("/auth/login");
     }
-  }, [user, isInitialized, router]);
+  }, [user, loading, router]);
 
-  // Show loading state while authentication is initializing
-  if (loading || !isInitialized) {
+  // Show loading state while authentication is loading
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <p className="text-gray-600">Loading your libraries...</p>

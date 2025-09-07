@@ -43,7 +43,7 @@ interface NavItem {
   requiredPermissions?: string[];
 }
 
-export function LibraryDashboardSidebar(): React.JSX.Element {
+export function LibrarySidebar(): React.JSX.Element {
   const { currentLibrary } = useLibraryContext();
   const pathname = usePathname();
 

@@ -1,6 +1,6 @@
 /**
- * Client-side Authentication and Permission Hooks
- * Provides React hooks for managing authentication state and permission-based UI
+ * Client-side Authentication Hooks
+ * Simplified authentication state management
  */
 
 "use client";
@@ -8,15 +8,9 @@
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import type { User, Session } from "@supabase/supabase-js";
-import {
-  LibraryRole,
-  Permission,
-  UserPermissions,
-  hasPermission,
-  hasAnyPermission,
-  hasAllPermissions,
-  getUserPermissions,
-} from "./permissions";
+
+// Simplified types without complex permission system
+type LibraryRole = "owner" | "manager" | "librarian";
 
 /**
  * Authentication state
@@ -34,7 +28,6 @@ export interface AuthState {
 export interface LibraryAccess {
   libraryId: string;
   role: LibraryRole;
-  permissions: UserPermissions;
   loading: boolean;
   error: string | null;
 }
@@ -93,20 +86,13 @@ export function useAuth(): AuthState {
 }
 
 /**
- * Hook for library access and permissions
+ * Hook for library access (simplified)
  */
 export function useLibraryAccess(libraryId: string): LibraryAccess {
   const { user } = useAuth();
   const [access, setAccess] = useState<LibraryAccess>({
     libraryId,
     role: "librarian",
-    permissions: {
-      userId: "",
-      libraryId,
-      role: "librarian",
-      customPermissions: [],
-      deniedPermissions: [],
-    },
     loading: true,
     error: null,
   });
@@ -121,59 +107,10 @@ export function useLibraryAccess(libraryId: string): LibraryAccess {
       return;
     }
 
-    // TODO: Implement actual library access fetching when API endpoints exist
-
-    /* Future implementation:
-    
-    const fetchLibraryAccess = async () => {
-      try {
-        const response = await fetch(`/api/libraries/${libraryId}/access`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch library access');
-        }
-        
-        const data = await response.json();
-        
-        setAccess({
-          libraryId,
-          role: data.role,
-          permissions: {
-            userId: user.id,
-            libraryId,
-            role: data.role,
-            customPermissions: data.customPermissions || [],
-            deniedPermissions: data.deniedPermissions || []
-          },
-          loading: false,
-          error: null
-        });
-      } catch (error) {
-        setAccess(prev => ({
-          ...prev,
-          loading: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }));
-      }
-    };
-    
-    fetchLibraryAccess();
-    */
-
     // Temporary placeholder for development
     const placeholderAccess: LibraryAccess = {
       libraryId,
       role: "owner", // Grant full access during development
-      permissions: {
-        userId: user.id,
-        libraryId,
-        role: "owner",
-        customPermissions: [],
-        deniedPermissions: [],
-      },
       loading: false,
       error: null,
     };
@@ -182,117 +119,6 @@ export function useLibraryAccess(libraryId: string): LibraryAccess {
   }, [user, libraryId]);
 
   return access;
-}
-
-/**
- * Hook to check if user has a specific permission
- */
-export function usePermission(
-  permission: Permission,
-  libraryId: string
-): {
-  hasPermission: boolean;
-  loading: boolean;
-  error: string | null;
-} {
-  const { permissions, loading, error } = useLibraryAccess(libraryId);
-
-  return {
-    hasPermission: loading ? false : hasPermission(permissions, permission),
-    loading,
-    error,
-  };
-}
-
-/**
- * Hook to check if user has any of the specified permissions
- */
-export function useAnyPermission(
-  permissions: Permission[],
-  libraryId: string
-): {
-  hasAnyPermission: boolean;
-  loading: boolean;
-  error: string | null;
-} {
-  const {
-    permissions: userPermissions,
-    loading,
-    error,
-  } = useLibraryAccess(libraryId);
-
-  return {
-    hasAnyPermission: loading
-      ? false
-      : hasAnyPermission(userPermissions, permissions),
-    loading,
-    error,
-  };
-}
-
-/**
- * Hook to check if user has all of the specified permissions
- */
-export function useAllPermissions(
-  permissions: Permission[],
-  libraryId: string
-): {
-  hasAllPermissions: boolean;
-  loading: boolean;
-  error: string | null;
-} {
-  const {
-    permissions: userPermissions,
-    loading,
-    error,
-  } = useLibraryAccess(libraryId);
-
-  return {
-    hasAllPermissions: loading
-      ? false
-      : hasAllPermissions(userPermissions, permissions),
-    loading,
-    error,
-  };
-}
-
-/**
- * Hook to get all user permissions
- */
-export function useUserPermissions(libraryId: string): {
-  permissions: Permission[];
-  loading: boolean;
-  error: string | null;
-} {
-  const {
-    permissions: userPermissions,
-    loading,
-    error,
-  } = useLibraryAccess(libraryId);
-
-  return {
-    permissions: loading ? [] : getUserPermissions(userPermissions),
-    loading,
-    error,
-  };
-}
-
-/**
- * Hook for permission-based conditional rendering
- */
-export function usePermissionGate(
-  permission: Permission,
-  libraryId: string
-): {
-  canRender: boolean;
-  loading: boolean;
-} {
-  const { hasPermission, loading } = usePermission(permission, libraryId);
-
-  return {
-    canRender: hasPermission,
-    loading,
-  };
 }
 
 /**

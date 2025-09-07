@@ -15,11 +15,22 @@ import {
 } from "../use-library-data";
 import { MockLibraryProvider, MockAuthProvider } from "@/lib/test-utils";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/auth/hooks";
+import { useLibraryContext } from "@/lib/contexts/library-context";
 import type { LibraryWithAccess } from "@/lib/types";
 
 // Mock Supabase client
 jest.mock("@/lib/supabase/client", () => ({
   createClient: jest.fn(),
+}));
+
+// Mock auth and library context hooks
+jest.mock("@/lib/auth/hooks", () => ({
+  useAuth: jest.fn(),
+}));
+
+jest.mock("@/lib/contexts/library-context", () => ({
+  useLibraryContext: jest.fn(),
 }));
 
 // Test data
@@ -231,6 +242,25 @@ describe("useLibraryData", () => {
     };
 
     (createClient as jest.Mock).mockReturnValue(mockSupabase);
+
+    // Setup context mocks
+    (useAuth as jest.Mock).mockReturnValue({
+      user: mockUser,
+      loading: false,
+      error: null,
+      session: null,
+    });
+
+    (useLibraryContext as jest.Mock).mockReturnValue({
+      currentLibrary: mockLibrary,
+      availableLibraries: [mockLibrary],
+      isLoading: false,
+      error: null,
+      selectLibrary: jest.fn(),
+      refreshLibraries: jest.fn(),
+      clearLibrarySelection: jest.fn(),
+      switchLibrary: jest.fn(),
+    });
   });
 
   afterEach(() => {

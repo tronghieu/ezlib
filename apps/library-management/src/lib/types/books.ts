@@ -126,6 +126,8 @@ export interface BookEditionFormData {
 
 export interface BookCopyFormData {
   total_copies: number;
+  copy_number?: string;  // Manual copy identification code
+  barcode?: string;      // Barcode for library management systems
   shelf_location?: string;
   section?: string;
   call_number?: string;

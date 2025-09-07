@@ -11,13 +11,11 @@ import {
   CommandInput,
   CommandList,
   CommandEmpty,
-  CommandGroup,
-  CommandItem,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, BookPlus, Book, Calendar, Info } from "lucide-react";
+import { BookPlus, Book, Calendar, Info } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useBookSearch } from "@/lib/hooks/use-book-search";
 import type { BookEdition } from "@/lib/types/books";
@@ -32,7 +30,6 @@ export function BookSearchCombobox({
   onCreateNewEdition,
 }: BookSearchComboboxProps): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   const { data: searchResults, isLoading } = useBookSearch(
@@ -71,7 +68,6 @@ export function BookSearchCombobox({
 
         onExistingBookSelected(edition);
       }
-      setIsOpen(false);
     },
     [searchResults, onExistingBookSelected]
   );
@@ -95,7 +91,6 @@ export function BookSearchCombobox({
             placeholder="Search by book title..."
             value={searchTerm}
             onValueChange={setSearchTerm}
-            onFocus={() => setIsOpen(true)}
           />
 
           {showResults && (
@@ -154,7 +149,7 @@ export function BookSearchCombobox({
                     <div className="space-y-1">
                       <p className="text-sm font-medium">No books found</p>
                       <p className="text-xs text-muted-foreground">
-                        &quot;{debouncedSearch}&quot; doesn't match any existing
+                        &quot;{debouncedSearch}&quot; doesn&apos;t match any existing
                         books
                       </p>
                     </div>
@@ -200,7 +195,7 @@ export function BookSearchCombobox({
                 <li>• Search by book title to find existing editions</li>
                 <li>• Select an existing book to skip to adding copies</li>
                 <li>
-                  • Create a new book if your search doesn't find matches
+                  • Create a new book if your search doesn&apos;t find matches
                 </li>
               </ul>
             </div>

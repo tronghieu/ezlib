@@ -2,33 +2,27 @@
  * Test utilities for mocking context providers
  */
 
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { User } from '@supabase/supabase-js';
-import type { LibraryWithAccess } from '@/lib/types';
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { User } from "@supabase/supabase-js";
+import type { LibraryWithAccess } from "@/lib/types";
 
 // Create a mock User factory with all required properties
 export const createMockUser = (overrides: Partial<User> = {}): User => ({
-  id: 'mock-user-id',
+  id: "mock-user-id",
   app_metadata: {},
   user_metadata: {},
-  aud: 'authenticated',
-  confirmation_sent_at: '2024-01-01T00:00:00Z',
-  recovery_sent_at: null,
-  email_change_sent_at: null,
-  new_email: null,
-  new_phone: null,
-  invited_at: null,
-  action_link: null,
-  email: 'test@example.com',
-  phone: null,
-  created_at: '2024-01-01T00:00:00Z',
-  confirmed_at: '2024-01-01T00:00:00Z',
-  email_confirmed_at: '2024-01-01T00:00:00Z',
-  phone_confirmed_at: null,
-  last_sign_in_at: '2024-01-01T00:00:00Z',
-  role: 'authenticated',
-  updated_at: '2024-01-01T00:00:00Z',
+  aud: "authenticated",
+  confirmation_sent_at: "2024-01-01T00:00:00Z",
+  action_link: undefined,
+  email: "test@example.com",
+  created_at: "2024-01-01T00:00:00Z",
+  confirmed_at: "2024-01-01T00:00:00Z",
+  email_confirmed_at: "2024-01-01T00:00:00Z",
+  phone_confirmed_at: undefined,
+  last_sign_in_at: "2024-01-01T00:00:00Z",
+  role: "authenticated",
+  updated_at: "2024-01-01T00:00:00Z",
   identities: [],
   is_anonymous: false,
   factors: [],
@@ -36,23 +30,23 @@ export const createMockUser = (overrides: Partial<User> = {}): User => ({
 });
 
 // Mock AuthProvider that accepts a value prop for testing
-export function MockAuthProvider({ 
-  children, 
-  value 
-}: { 
-  children: React.ReactNode; 
+export function MockAuthProvider({
+  children,
+  value,
+}: {
+  children: React.ReactNode;
   value: {
     user: User | null;
     isLoading: boolean;
     error: string | null;
-    signIn: any;
-    signOut: any;
-    refreshSession: any;
+    signIn: () => Promise<void>;
+    signOut: () => Promise<void>;
+    refreshSession: () => Promise<void>;
   };
 }) {
-  // Create a context with the provided value
+  // Create a mock context with the provided value
   const MockAuthContext = React.createContext(value);
-  
+
   return (
     <MockAuthContext.Provider value={value}>
       {children}
@@ -61,25 +55,25 @@ export function MockAuthProvider({
 }
 
 // Mock LibraryProvider that accepts a value prop for testing
-export function MockLibraryProvider({ 
-  children, 
-  value 
-}: { 
-  children: React.ReactNode; 
+export function MockLibraryProvider({
+  children,
+  value,
+}: {
+  children: React.ReactNode;
   value: {
     currentLibrary: LibraryWithAccess | null;
     availableLibraries: LibraryWithAccess[];
     isLoading: boolean;
     error: string | null;
-    selectLibrary: any;
-    refreshLibraries: any;
-    clearLibrarySelection: any;
-    switchLibrary: any;
+    selectLibrary: (libraryId: string) => void;
+    refreshLibraries: () => Promise<void>;
+    clearLibrarySelection: () => void;
+    switchLibrary: (libraryId: string) => Promise<void>;
   };
 }) {
-  // Create a context with the provided value
+  // Create a mock context with the provided value
   const MockLibraryContext = React.createContext(value);
-  
+
   return (
     <MockLibraryContext.Provider value={value}>
       {children}
@@ -96,9 +90,11 @@ export function createTestWrapper() {
     },
   });
 
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+  const TestQueryProvider = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+
+  TestQueryProvider.displayName = "TestQueryProvider";
+
+  return TestQueryProvider;
 }

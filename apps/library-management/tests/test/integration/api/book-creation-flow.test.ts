@@ -70,7 +70,7 @@ describe("Book Creation Flow Integration", () => {
     expect(createdEdition.language).toBe(editionData.language);
     expect(createdEdition.isbn_13).toBe(editionData.isbn);
     expect(createdEdition.authors).toHaveLength(1);
-    expect(createdEdition.authors[0].id).toBe(createdAuthor.id);
+    expect(createdEdition.authors?.[0].id).toBe(createdAuthor.id);
 
     // Step 4: Search for the created book
     const bookSearchResults = await searchBookEditions("Integration Test Book");
@@ -102,17 +102,17 @@ describe("Book Creation Flow Integration", () => {
     expect(createdCopies[2].copy_number).toBe("003");
 
     // Verify location data
-    expect(createdCopies[0].location.shelf).toBe("Test-A1");
-    expect(createdCopies[0].location.section).toBe("Integration Testing");
-    expect(createdCopies[0].location.call_number).toBe("TEST.001");
+    expect(createdCopies[0].location?.shelf).toBe("Test-A1");
+    expect(createdCopies[0].location?.section).toBe("Integration Testing");
+    expect(createdCopies[0].location?.call_number).toBe("TEST.001");
 
     // Verify condition data
-    expect(createdCopies[0].condition_info.condition).toBe("excellent");
-    expect(createdCopies[0].condition_info.notes).toBe("Integration test copies");
+    expect(createdCopies[0].condition_info?.condition).toBe("excellent");
+    expect(createdCopies[0].condition_info?.notes).toBe("Integration test copies");
 
     // Verify availability
-    expect(createdCopies[0].availability.status).toBe("available");
-    expect(createdCopies[0].availability.current_borrower_id).toBeNull();
+    expect(createdCopies[0].availability?.status).toBe("available");
+    expect(createdCopies[0].availability?.current_borrower_id).toBeNull();
 
     // Copies created successfully - test complete
   });
@@ -213,7 +213,7 @@ describe("Book Creation Flow Integration", () => {
     );
 
     expect(createdCopies[0].location).toBeNull();
-    expect(createdCopies[0].condition_info.notes).toBeNull();
+    expect(createdCopies[0].condition_info?.notes).toBeNull();
   });
 
   it("should validate required fields", async () => {

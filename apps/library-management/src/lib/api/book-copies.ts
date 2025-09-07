@@ -19,32 +19,54 @@ export async function createBookCopies(
   copyData: BookCopyFormData
 ): Promise<BookCopy[]> {
   try {
-    // Get the next available copy number for this edition in this library
-    const { data: existingCopies, error: countError } = await supabase()
-      .from("book_copies")
-      .select("copy_number")
-      .eq("book_edition_id", editionId)
-      .eq("library_id", libraryId)
-      .order("copy_number", { ascending: false })
-      .limit(1);
-
-    if (countError) {
-      console.error("Error counting existing copies:", countError);
-    }
-
-    // Determine starting copy number
-    const lastCopyNumber = existingCopies?.[0]?.copy_number || "000";
-    const startingNumber = parseInt(lastCopyNumber) + 1;
-
-    // Create copies array
     const copiesToCreate = [];
-    for (let i = 0; i < copyData.total_copies; i++) {
-      const copyNumber = (startingNumber + i).toString().padStart(3, "0");
-      
+
+    // Handle manual copy number (only for single copy creation)
+    if (copyData.copy_number && copyData.total_copies === 1) {
+      // Validate copy number is unique within library for this edition
+      const { data: existingCopy, error: checkError } = await supabase()
+        .from("book_copies")
+        .select("id")
+        .eq("book_edition_id", editionId)
+        .eq("library_id", libraryId)
+        .eq("copy_number", copyData.copy_number)
+        .limit(1);
+
+      if (checkError) {
+        console.error("Error checking copy number uniqueness:", checkError);
+        throw new Error("Failed to validate copy number");
+      }
+
+      if (existingCopy && existingCopy.length > 0) {
+        throw new Error(`Copy number "${copyData.copy_number}" already exists for this book in your library`);
+      }
+
+      // Validate barcode is unique within library (if provided)
+      if (copyData.barcode) {
+        const { data: existingBarcode, error: barcodeError } = await supabase()
+          .from("book_copies")
+          .select("id")
+          .eq("library_id", libraryId)
+          .eq("barcode", copyData.barcode)
+          .limit(1);
+
+        if (barcodeError) {
+          console.error("Error checking barcode uniqueness:", barcodeError);
+          throw new Error("Failed to validate barcode");
+        }
+
+        if (existingBarcode && existingBarcode.length > 0) {
+          throw new Error(`Barcode "${copyData.barcode}" already exists in your library`);
+        }
+      }
+
       copiesToCreate.push({
         library_id: libraryId,
         book_edition_id: editionId,
-        copy_number: copyNumber,
+        copy_number: copyData.copy_number,
+        barcode: copyData.barcode || null,
+        total_copies: 1,
+        available_copies: 1,
         location: copyData.shelf_location || copyData.section || copyData.call_number ? {
           shelf: copyData.shelf_location || null,
           section: copyData.section || null,
@@ -66,6 +88,66 @@ export async function createBookCopies(
         },
         status: "active" as const,
       });
+    } else {
+      // Auto-generate copy numbers for multiple copies or when no manual number provided
+      if (copyData.copy_number && copyData.total_copies > 1) {
+        throw new Error("Custom copy numbers can only be used when adding exactly 1 copy. For multiple copies, leave the copy number blank to auto-generate sequential numbers.");
+      }
+
+      if (copyData.barcode && copyData.total_copies > 1) {
+        throw new Error("Custom barcodes can only be used when adding exactly 1 copy. For multiple copies, leave the barcode blank.");
+      }
+
+      // Get the next available copy number for auto-generation
+      const { data: existingCopies, error: countError } = await supabase()
+        .from("book_copies")
+        .select("copy_number")
+        .eq("book_edition_id", editionId)
+        .eq("library_id", libraryId)
+        .order("copy_number", { ascending: false })
+        .limit(1);
+
+      if (countError) {
+        console.error("Error counting existing copies:", countError);
+      }
+
+      // Determine starting copy number
+      const lastCopyNumber = existingCopies?.[0]?.copy_number || "000";
+      const startingNumber = parseInt(lastCopyNumber) + 1;
+
+      // Create copies array with auto-generated numbers
+      for (let i = 0; i < copyData.total_copies; i++) {
+        const copyNumber = (startingNumber + i).toString().padStart(3, "0");
+        
+        copiesToCreate.push({
+          library_id: libraryId,
+          book_edition_id: editionId,
+          copy_number: copyNumber,
+          barcode: null, // No custom barcode for auto-generated copies
+          total_copies: 1,
+          available_copies: 1,
+          location: copyData.shelf_location || copyData.section || copyData.call_number ? {
+            shelf: copyData.shelf_location || null,
+            section: copyData.section || null,
+            call_number: copyData.call_number || null,
+          } : null,
+          condition_info: {
+            condition: copyData.condition || "good",
+            notes: copyData.notes || null,
+            acquisition_date: new Date().toISOString(),
+            acquisition_price: null,
+            last_maintenance: null,
+          },
+          availability: {
+            status: "available" as const,
+            since: new Date().toISOString(),
+            current_borrower_id: null,
+            due_date: null,
+            hold_queue: [],
+          },
+          status: "active" as const,
+        });
+      }
     }
 
     // Insert all copies

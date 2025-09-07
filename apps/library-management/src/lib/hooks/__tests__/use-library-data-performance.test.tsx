@@ -117,7 +117,7 @@ const mockLibrary: LibraryWithAccess = {
 function createPerformanceWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: { retry: false, staleTime: 0, cacheTime: 0 },
+      queries: { retry: false, staleTime: 0, gcTime: 0 },
       mutations: { retry: false },
     },
   });

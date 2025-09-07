@@ -99,7 +99,7 @@ describe("Authentication Database Integration Tests", () => {
       .from("libraries")
       .insert({
         name: "Integration Test Library",
-        code: "INT-TEST",
+        code: "INT-TEST", 
         address: { city: "Test City", state: "TS" },
         settings: { loan_period: 14 },
       })
@@ -110,7 +110,7 @@ describe("Authentication Database Integration Tests", () => {
       console.warn("Cannot create test library:", libraryError.message);
       testLibraryId = "integration-test-library-id"; // Fallback to mock ID
     } else {
-      testLibraryId = testLibrary.id;
+      testLibraryId = (testLibrary as any).id;
     }
 
     // Create library staff association (if library_staff table exists)
@@ -220,13 +220,14 @@ describe("Authentication Database Integration Tests", () => {
       expect(library).toHaveProperty("libraries");
 
       // Check if we're getting real data or placeholder
-      if (library.libraries.code === "INT-TEST") {
+      const libraryData = Array.isArray(library.libraries) ? library.libraries[0] : library.libraries;
+      if (libraryData?.code === "INT-TEST") {
         // Real test data was successfully created and retrieved
-        expect(library.libraries.name).toBe("Integration Test Library");
+        expect(libraryData.name).toBe("Integration Test Library");
         console.log("✓ Successfully using real database data");
       } else {
         // Placeholder data is being used (expected in early development)
-        expect(library.libraries.code).toBe("DEMO-LIB");
+        expect(libraryData?.code).toBe("DEMO-LIB");
         console.log("ℹ Using placeholder data - real database not available");
       }
     });
@@ -329,7 +330,7 @@ describe("Authentication Database Integration Tests", () => {
       expect(placeholderLib.libraries).toHaveProperty("settings");
 
       // Foreign key relationship should be consistent
-      expect(placeholderLib.library_id).toBe(placeholderLib.libraries.id);
+      expect(placeholderLib.library_id).toBe((placeholderLib.libraries as any).id);
     });
 
     it("should handle the transition from development to production", async () => {

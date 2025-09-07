@@ -6,8 +6,8 @@
  */
 
 import React from "react";
-import { LibraryDashboardSidebar } from "@/components/library/library-dashboard-sidebar";
-import { LibraryDashboardHeader } from "@/components/library/library-dashboard-header";
+import { LibrarySidebar } from "@/components/library/library-sidebar";
+import { LibraryHeader } from "@/components/library/library-header";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { withLibraryAccess } from "@/lib/contexts/library-context";
 
@@ -20,9 +20,9 @@ function LibraryLayout({ children }: LibraryLayoutProps): React.JSX.Element {
   return (
     <div className="min-h-screen bg-background">
       <SidebarProvider>
-        <LibraryDashboardSidebar />
+        <LibrarySidebar />
         <SidebarInset>
-          <LibraryDashboardHeader />
+          <LibraryHeader />
           <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>

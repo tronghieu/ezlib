@@ -12,13 +12,32 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, AlertCircle, Book, User, Calendar, Building } from "lucide-react";
+// Badge component not used in current implementation
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Loader2,
+  Package,
+  AlertCircle,
+  Book,
+  User,
+  Calendar,
+  Building,
+  Hash,
+  Scan,
+  Globe,
+} from "lucide-react";
 import { useLibraryContext } from "@/lib/contexts/library-context";
 import { useCreateBookCopies } from "@/lib/hooks/use-book-management";
 import type { BookEdition, BookCopyFormData } from "@/lib/types/books";
+import { Separator } from "../ui/separator";
 
 // Form validation schema
 const copiesFormSchema = z.object({
@@ -26,6 +45,24 @@ const copiesFormSchema = z.object({
     .number()
     .min(1, "Must add at least 1 copy")
     .max(99, "Cannot add more than 99 copies at once"),
+  copy_number: z
+    .string()
+    .max(20, "Copy number must be less than 20 characters")
+    .regex(
+      /^[A-Za-z0-9\-_]*$/,
+      "Copy number can only contain letters, numbers, hyphens and underscores"
+    )
+    .optional()
+    .or(z.literal("")),
+  barcode: z
+    .string()
+    .max(50, "Barcode must be less than 50 characters")
+    .regex(
+      /^[A-Za-z0-9\-_]*$/,
+      "Barcode can only contain letters, numbers, hyphens and underscores"
+    )
+    .optional()
+    .or(z.literal("")),
   shelf_location: z
     .string()
     .max(50, "Shelf location must be less than 50 characters")
@@ -38,8 +75,7 @@ const copiesFormSchema = z.object({
     .string()
     .max(50, "Call number must be less than 50 characters")
     .optional(),
-  condition: z
-    .enum(["excellent", "good", "fair", "poor"]),
+  condition: z.enum(["excellent", "good", "fair", "poor"]),
   notes: z
     .string()
     .max(500, "Notes must be less than 500 characters")
@@ -68,10 +104,13 @@ export function AddCopiesForm({
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<CopiesFormData>({
     resolver: zodResolver(copiesFormSchema),
     defaultValues: {
       total_copies: 1,
+      copy_number: "",
+      barcode: "",
       shelf_location: "",
       section: "",
       call_number: "",
@@ -92,6 +131,8 @@ export function AddCopiesForm({
 
     const copyData: BookCopyFormData = {
       total_copies: data.total_copies,
+      copy_number: data.copy_number?.trim() || undefined,
+      barcode: data.barcode?.trim() || undefined,
       shelf_location: data.shelf_location?.trim() || undefined,
       section: data.section?.trim() || undefined,
       call_number: data.call_number?.trim() || undefined,
@@ -107,7 +148,9 @@ export function AddCopiesForm({
         },
         onError: (err) => {
           console.error("Error creating book copies:", err);
-          setError(err instanceof Error ? err.message : "Failed to create book copies");
+          setError(
+            err instanceof Error ? err.message : "Failed to create book copies"
+          );
         },
       }
     );
@@ -121,7 +164,6 @@ export function AddCopiesForm({
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h3 className="text-lg font-medium">Add Book Copies</h3>
         <p className="text-sm text-muted-foreground">
           Add physical copies of this book to your library&apos;s inventory.
         </p>
@@ -129,20 +171,26 @@ export function AddCopiesForm({
 
       {/* Book Summary */}
       <Card className="bg-muted/50">
-        <CardContent className="p-4">
+        <CardContent>
           <div className="flex items-start gap-3">
             <Book className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex-1 space-y-2">
               <div>
                 <h4 className="font-medium text-sm">{edition.title}</h4>
                 {edition.subtitle && (
-                  <p className="text-sm text-muted-foreground">{edition.subtitle}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {edition.subtitle}
+                  </p>
                 )}
               </div>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <User className="h-3 w-3" />
                   {primaryAuthor}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Globe className="h-3 w-3" />
+                  {edition.language.toUpperCase()}
                 </div>
                 {publicationYear && (
                   <div className="flex items-center gap-1">
@@ -156,21 +204,18 @@ export function AddCopiesForm({
                     {publisher}
                   </div>
                 )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  Language: {edition.language.toUpperCase()}
-                </Badge>
                 {edition.isbn_13 && (
-                  <Badge variant="outline" className="text-xs">
+                  <div className="flex items-center gap-1">
                     ISBN: {edition.isbn_13}
-                  </Badge>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      <Separator />
 
       {/* Error Alert */}
       {error && (
@@ -181,60 +226,142 @@ export function AddCopiesForm({
       )}
 
       {/* Copies Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+      <div>
+        <div className="mb-4">
+          <h4 className="text-base font-medium flex items-center gap-2">
             <Package className="h-4 w-4" />
             Copy Details for {currentLibrary?.name}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h4>
+        </div>
+        <div>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Number of Copies */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="total_copies" className="required">
-                  Number of Copies <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="total_copies"
-                  type="number"
-                  min="1"
-                  max="99"
-                  placeholder="1"
-                  {...register("total_copies", { valueAsNumber: true })}
-                  aria-invalid={errors.total_copies ? "true" : "false"}
-                />
-                {errors.total_copies && (
-                  <p className="text-sm text-red-600">{errors.total_copies.message}</p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  How many physical copies to add to your library
-                </p>
+            {/* Form Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column: Copies & Condition */}
+              <div className="space-y-4 bg-muted/50 p-3 rounded-2xl border">
+                {/* Number of Copies */}
+                <div className="space-y-2">
+                  <Label htmlFor="total_copies" className="required">
+                    Number of Copies <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="total_copies"
+                    type="number"
+                    min="1"
+                    max="99"
+                    placeholder="1"
+                    {...register("total_copies", { valueAsNumber: true })}
+                    aria-invalid={errors.total_copies ? "true" : "false"}
+                  />
+                  {errors.total_copies && (
+                    <p className="text-sm text-red-600">
+                      {errors.total_copies.message}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    How many physical copies to add to your library
+                  </p>
+                </div>
+
+                {/* Condition */}
+                <div className="space-y-2">
+                  <Label htmlFor="condition">Condition</Label>
+                  <Select
+                    value={watch("condition")}
+                    onValueChange={(
+                      value: "excellent" | "good" | "fair" | "poor"
+                    ) => {
+                      setValue("condition", value);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select condition" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="excellent">Excellent</SelectItem>
+                      <SelectItem value="good">Good</SelectItem>
+                      <SelectItem value="fair">Fair</SelectItem>
+                      <SelectItem value="poor">Poor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.condition && (
+                    <p className="text-sm text-red-600">
+                      {errors.condition.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {/* Condition */}
-              <div className="space-y-2">
-                <Label htmlFor="condition">Condition</Label>
-                <select
-                  id="condition"
-                  {...register("condition")}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="excellent">Excellent</option>
-                  <option value="good">Good</option>
-                  <option value="fair">Fair</option>
-                  <option value="poor">Poor</option>
-                </select>
-                {errors.condition && (
-                  <p className="text-sm text-red-600">{errors.condition.message}</p>
-                )}
+              {/* Right Column: Management */}
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium">
+                    Management (Optional)
+                  </Label>
+                </div>
+
+                {/* Auto vs Manual Info */}
+
+                {/* Copy Number */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="copy_number"
+                    className="flex items-center gap-2"
+                  >
+                    <Hash className="h-3 w-3" />
+                    Identify Code
+                  </Label>
+                  <Input
+                    id="copy_number"
+                    type="text"
+                    placeholder="e.g. A001, SC-01, 123"
+                    {...register("copy_number")}
+                    aria-invalid={errors.copy_number ? "true" : "false"}
+                  />
+                  {errors.copy_number && (
+                    <p className="text-sm text-red-600">
+                      {errors.copy_number.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Barcode */}
+                <div className="space-y-2">
+                  <Label htmlFor="barcode" className="flex items-center gap-2">
+                    <Scan className="h-3 w-3" />
+                    Barcode
+                  </Label>
+                  <Input
+                    id="barcode"
+                    type="text"
+                    placeholder="e.g. 1234567890123"
+                    {...register("barcode")}
+                    aria-invalid={errors.barcode ? "true" : "false"}
+                  />
+                  {errors.barcode && (
+                    <p className="text-sm text-red-600">
+                      {errors.barcode.message}
+                    </p>
+                  )}
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs text-blue-800">
+                    <strong>Auto vs Manual:</strong> If left blank, the system
+                    will auto-generate a sequential identify code. Use custom
+                    codes if your library has specific numbering or barcode
+                    requirements.
+                  </p>
+                </div>
               </div>
             </div>
 
+            <Separator className="h-0 border-t border-dashed bg-transparent" />
+
             {/* Location Information */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Location Information (Optional)</Label>
+              <Label className="text-sm font-medium">
+                Location Information (Optional)
+              </Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Shelf Location */}
                 <div className="space-y-2">
@@ -247,7 +374,9 @@ export function AddCopiesForm({
                     aria-invalid={errors.shelf_location ? "true" : "false"}
                   />
                   {errors.shelf_location && (
-                    <p className="text-sm text-red-600">{errors.shelf_location.message}</p>
+                    <p className="text-sm text-red-600">
+                      {errors.shelf_location.message}
+                    </p>
                   )}
                 </div>
 
@@ -262,7 +391,9 @@ export function AddCopiesForm({
                     aria-invalid={errors.section ? "true" : "false"}
                   />
                   {errors.section && (
-                    <p className="text-sm text-red-600">{errors.section.message}</p>
+                    <p className="text-sm text-red-600">
+                      {errors.section.message}
+                    </p>
                   )}
                 </div>
 
@@ -277,7 +408,9 @@ export function AddCopiesForm({
                     aria-invalid={errors.call_number ? "true" : "false"}
                   />
                   {errors.call_number && (
-                    <p className="text-sm text-red-600">{errors.call_number.message}</p>
+                    <p className="text-sm text-red-600">
+                      {errors.call_number.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -302,43 +435,42 @@ export function AddCopiesForm({
             {totalCopies > 0 && (
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
                 <p className="text-sm">
-                  <strong>Summary:</strong> Adding {totalCopies} cop{totalCopies === 1 ? "y" : "ies"} of 
-                  &quot;{edition.title}&quot; to {currentLibrary?.name}. 
-                  All copies will be set to &quot;available&quot; status automatically.
+                  <strong>Summary:</strong> Adding {totalCopies} cop
+                  {totalCopies === 1 ? "y" : "ies"} of &quot;{edition.title}
+                  &quot; to {currentLibrary?.name}. All copies will be set to
+                  &quot;available&quot; status automatically.
                 </p>
               </div>
             )}
 
             {/* Form Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-              <Button
-                type="submit"
-                disabled={createBookCopies.isPending}
-                className="sm:order-2"
-              >
-                {createBookCopies.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add {totalCopies} Cop{totalCopies === 1 ? "y" : "ies"}
-              </Button>
-
+            <div className="flex flex-col sm:flex-row gap-3 pt-6 sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onCancel}
                 disabled={createBookCopies.isPending}
-                className="sm:order-1"
               >
                 Back to Search
+              </Button>
+
+              <Button type="submit" disabled={createBookCopies.isPending}>
+                {createBookCopies.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Add {totalCopies} Cop{totalCopies === 1 ? "y" : "ies"}
               </Button>
             </div>
 
             {/* Help Text */}
             <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
-              <strong>Note:</strong> All location information is optional and can be updated later. 
-              Each copy will be automatically assigned a unique copy number within your library.
+              <strong>Note:</strong> All location information is optional and
+              can be updated later. Each copy will be automatically assigned a
+              unique copy number within your library.
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

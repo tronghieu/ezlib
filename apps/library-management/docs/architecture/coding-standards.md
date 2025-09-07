@@ -111,7 +111,7 @@ export default eslintConfig;
 **MANDATORY Requirements:**
 
 - **Strict Mode**: Always enabled
-- **No Any Types**: Avoid `any`, use proper types
+- **No Any Types**: Never use `any`, use `unknown` or use proper types
 - **Explicit Return Types**: For public functions
 - **Interface Definitions**: For all component props
 - **Type Imports**: Use `import type` for type-only imports
