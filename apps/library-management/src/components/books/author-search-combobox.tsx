@@ -6,7 +6,14 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, UserPlus, User, Book } from "lucide-react";
@@ -34,25 +41,30 @@ export function AuthorSearchCombobox({
     debouncedSearch.length > 2 && !selectedAuthor
   );
 
-  const handleAuthorSelect = useCallback((authorId: string) => {
-    const selectedResult = searchResults?.find((author) => author.id === authorId);
-    if (selectedResult) {
-      // Convert search result to full Author object
-      const author: Author = {
-        id: selectedResult.id,
-        name: selectedResult.name,
-        canonical_name: selectedResult.name.toLowerCase(),
-        biography: null,
-        metadata: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      
-      onAuthorSelected(author);
-    }
-    setIsOpen(false);
-    setSearchTerm("");
-  }, [searchResults, onAuthorSelected]);
+  const handleAuthorSelect = useCallback(
+    (authorId: string) => {
+      const selectedResult = searchResults?.find(
+        (author) => author.id === authorId
+      );
+      if (selectedResult) {
+        // Convert search result to full Author object
+        const author: Author = {
+          id: selectedResult.id,
+          name: selectedResult.name,
+          canonical_name: selectedResult.name.toLowerCase(),
+          biography: null,
+          metadata: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        onAuthorSelected(author);
+        setIsOpen(false);
+        setSearchTerm("");
+      }
+    },
+    [searchResults, onAuthorSelected]
+  );
 
   const handleClearSelection = (): void => {
     onAuthorSelected({} as Author); // Reset selection
@@ -63,6 +75,13 @@ export function AuthorSearchCombobox({
   const showResults = debouncedSearch.length > 2 && !selectedAuthor;
   const hasResults = searchResults && searchResults.length > 0;
   const showNoResults = showResults && !isLoading && !hasResults;
+
+  // Auto-open dropdown when we have search results
+  React.useEffect(() => {
+    if (showResults && (hasResults || !isLoading)) {
+      setIsOpen(true);
+    }
+  }, [showResults, hasResults, isLoading]);
 
   // If author is already selected, show selected state
   if (selectedAuthor) {
@@ -97,9 +116,7 @@ export function AuthorSearchCombobox({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Search for Authors
-        </label>
+        <label className="text-sm font-medium">Search for Authors</label>
         <p className="text-sm text-muted-foreground">
           Search for an existing author or create a new one.
         </p>
@@ -107,29 +124,28 @@ export function AuthorSearchCombobox({
 
       <div className="relative">
         <Command className="rounded-lg border shadow-md">
-          <div className="flex items-center border-b px-3">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-            <CommandInput
-              placeholder="Search by author name..."
-              value={searchTerm}
-              onValueChange={setSearchTerm}
-              onFocus={() => setIsOpen(true)}
-              className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-          
+          <CommandInput
+            placeholder="Search by author name..."
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            onFocus={() => setIsOpen(true)}
+          />
+
           {showResults && isOpen && (
             <CommandList className="max-h-60 overflow-y-auto">
               {isLoading ? (
                 <div className="flex items-center justify-center py-6">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900" />
-                  <span className="ml-2 text-sm text-muted-foreground">Searching authors...</span>
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    Searching authors...
+                  </span>
                 </div>
               ) : hasResults ? (
                 <CommandGroup heading="Found Authors">
-                  {searchResults.map((author) => (
+                  {searchResults?.map((author) => (
                     <CommandItem
                       key={author.id}
+                      value={author.name}
                       onSelect={() => handleAuthorSelect(author.id)}
                       className="flex items-start gap-3 p-3 cursor-pointer hover:bg-accent"
                     >
@@ -139,7 +155,8 @@ export function AuthorSearchCombobox({
                         {author.book_count && author.book_count > 0 && (
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Book className="h-3 w-3" />
-                            {author.book_count} book{author.book_count === 1 ? "" : "s"}
+                            {author.book_count} book
+                            {author.book_count === 1 ? "" : "s"}
                           </div>
                         )}
                       </div>
@@ -153,7 +170,8 @@ export function AuthorSearchCombobox({
                     <div className="space-y-1">
                       <p className="text-sm font-medium">No authors found</p>
                       <p className="text-xs text-muted-foreground">
-                        &quot;{debouncedSearch}&quot; doesn&apos;t match any existing authors
+                        &quot;{debouncedSearch}&quot; doesn&apos;t match any
+                        existing authors
                       </p>
                     </div>
                   </div>
@@ -174,7 +192,7 @@ export function AuthorSearchCombobox({
                 Add &quot;{debouncedSearch}&quot; as a new author
               </p>
             </div>
-            <Button 
+            <Button
               type="button"
               onClick={onCreateNewAuthor}
               size="sm"
@@ -189,22 +207,20 @@ export function AuthorSearchCombobox({
 
       {/* Instructions */}
       {!showResults && !selectedAuthor && (
-        <Card className="bg-muted/50">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <Search className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium">How to search authors</p>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Type at least 3 characters to start searching</li>
-                  <li>• Search by author name to find existing authors</li>
-                  <li>• Select an existing author or create a new one</li>
-                  <li>• Authors are shared across all libraries</li>
-                </ul>
-              </div>
+        <div className="text-card-foreground flex flex-col gap-6 rounded-xl py-6">
+          <div className="flex items-start gap-3">
+            <Search className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium">How to search authors</p>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>• Type at least 3 characters to start searching</li>
+                <li>• Search by author name to find existing authors</li>
+                <li>• Select an existing author or create a new one</li>
+                <li>• Authors are shared across all libraries</li>
+              </ul>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );

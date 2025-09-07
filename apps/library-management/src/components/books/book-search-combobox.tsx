@@ -24,7 +24,7 @@ import type { BookEdition } from "@/lib/types/books";
 
 interface BookSearchComboboxProps {
   onExistingBookSelected: (edition: BookEdition) => void;
-  onCreateNewEdition: () => void;
+  onCreateNewEdition: (suggestedTitle?: string) => void;
 }
 
 export function BookSearchCombobox({
@@ -39,8 +39,6 @@ export function BookSearchCombobox({
     debouncedSearch,
     debouncedSearch.length > 2
   );
-
-
 
   const handleBookSelect = useCallback(
     (bookId: string) => {
@@ -82,7 +80,6 @@ export function BookSearchCombobox({
   const hasResults = searchResults && searchResults.length > 0;
   const showNoResults = showResults && !isLoading && !hasResults;
 
-
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -112,7 +109,9 @@ export function BookSearchCombobox({
                 </div>
               ) : hasResults ? (
                 <div className="p-2 border-t">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Found Books</div>
+                  <div className="text-xs font-medium text-muted-foreground mb-2">
+                    Found Books
+                  </div>
                   {searchResults.map((book) => (
                     <div
                       key={book.id}
@@ -123,7 +122,9 @@ export function BookSearchCombobox({
                       <div className="flex-1 space-y-1">
                         <div className="font-medium text-sm">{book.title}</div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>by {book.authors?.join(", ") || "Unknown Author"}</span>
+                          <span>
+                            by {book.authors?.join(", ") || "Unknown Author"}
+                          </span>
                           {book.publication_year && (
                             <>
                               <span>•</span>
@@ -153,8 +154,8 @@ export function BookSearchCombobox({
                     <div className="space-y-1">
                       <p className="text-sm font-medium">No books found</p>
                       <p className="text-xs text-muted-foreground">
-                        &quot;{debouncedSearch}&quot; doesn't match any
-                        existing books
+                        &quot;{debouncedSearch}&quot; doesn't match any existing
+                        books
                       </p>
                     </div>
                   </div>
@@ -175,7 +176,11 @@ export function BookSearchCombobox({
                 Add &quot;{debouncedSearch}&quot; as a new book edition
               </p>
             </div>
-            <Button onClick={onCreateNewEdition} size="sm" className="shrink-0">
+            <Button
+              onClick={() => onCreateNewEdition(debouncedSearch)}
+              size="sm"
+              className="shrink-0"
+            >
               <BookPlus className="mr-2 h-4 w-4" />
               Add New Book
             </Button>
@@ -185,24 +190,22 @@ export function BookSearchCombobox({
 
       {/* Instructions */}
       {!showResults && (
-        <Card className="bg-muted/50">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium">How to search</p>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Type at least 3 characters to start searching</li>
-                  <li>• Search by book title to find existing editions</li>
-                  <li>• Select an existing book to skip to adding copies</li>
-                  <li>
-                    • Create a new book if your search doesn't find matches
-                  </li>
-                </ul>
-              </div>
+        <div className="text-card-foreground flex flex-col gap-6 rounded-xl py-6">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium">How to search</p>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>• Type at least 3 characters to start searching</li>
+                <li>• Search by book title to find existing editions</li>
+                <li>• Select an existing book to skip to adding copies</li>
+                <li>
+                  • Create a new book if your search doesn't find matches
+                </li>
+              </ul>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );
