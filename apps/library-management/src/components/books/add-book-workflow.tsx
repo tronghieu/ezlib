@@ -33,6 +33,7 @@ export function AddBookWorkflow({
   const [currentStep, setCurrentStep] = useState<WorkflowStep>("search");
   const [selectedEdition, setSelectedEdition] = useState<BookEdition | null>(null);
   const [createdEdition, setCreatedEdition] = useState<BookEdition | null>(null);
+  const [suggestedTitle, setSuggestedTitle] = useState<string>("");
   const queryClient = useQueryClient();
   const { currentLibrary } = useLibraryContext();
 
@@ -44,7 +45,8 @@ export function AddBookWorkflow({
     setCurrentStep("copies");
   };
 
-  const handleCreateNewEdition = (): void => {
+  const handleCreateNewEdition = (suggestedTitle?: string): void => {
+    setSuggestedTitle(suggestedTitle || "");
     setCurrentStep("edition");
   };
 
@@ -139,7 +141,7 @@ export function AddBookWorkflow({
     <div className="space-y-6">
       {/* Progress Steps */}
       <div className="flex items-center justify-center">
-        <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto pb-2 px-4 w-full max-w-full">
+        <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto pb-2 px-4">
           {(["search", "edition", "copies", "complete"] as const).map((step, index) => (
             <React.Fragment key={step}>
               <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
@@ -165,7 +167,7 @@ export function AddBookWorkflow({
               </div>
               {index < 3 && (
                 <div
-                  className={`h-0.5 w-8 sm:w-12 transition-colors flex-shrink-0 ${
+                  className={`h-0.5 w-4 sm:w-6 transition-colors flex-shrink-0 ${
                     isStepCompleted(step) ? "bg-primary" : "bg-muted"
                   }`}
                 />
@@ -186,7 +188,7 @@ export function AddBookWorkflow({
             {currentStep === "complete" && "Success!"}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {currentStep === "search" && (
             <BookSearchCombobox
               onExistingBookSelected={handleExistingBookSelected}
@@ -196,6 +198,7 @@ export function AddBookWorkflow({
 
           {currentStep === "edition" && (
             <AddEditionForm
+              suggestedTitle={suggestedTitle}
               onEditionCreated={handleEditionCreated}
               onCancel={() => setCurrentStep("search")}
             />
@@ -238,7 +241,7 @@ export function AddBookWorkflow({
 
           {/* Cancel Action (only show on search step) */}
           {currentStep === "search" && (
-            <div className="flex justify-end pt-4 border-t">
+            <div className="flex justify-end pt-4">
               <Button variant="outline" onClick={onCancel}>
                 Cancel
               </Button>

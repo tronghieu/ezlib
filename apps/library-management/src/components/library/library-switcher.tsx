@@ -21,11 +21,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 export function LibrarySwitcher(): React.JSX.Element {
   const { currentLibrary, availableLibraries, selectLibrary, isLoading } =
     useLibraryContext();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -67,11 +70,13 @@ export function LibrarySwitcher(): React.JSX.Element {
   // If user has access to only one library, show simple display
   if (availableLibraries.length <= 1) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-md">
-        <Building2 className="h-4 w-4 text-gray-600" />
-        <span className="text-sm font-medium text-gray-900">
-          {currentLibrary.name}
-        </span>
+      <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+        <Building2 className="h-5 w-5 text-gray-600" />
+        {!isCollapsed && (
+          <span className="text-sm font-medium text-gray-900">
+            {currentLibrary.name}
+          </span>
+        )}
       </div>
     );
   }
@@ -88,15 +93,17 @@ export function LibrarySwitcher(): React.JSX.Element {
             >
               <div className="flex items-center gap-2">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Building2 className="h-4 w-4" />
+                  <Building2 className="h-5 w-5" />
                 </div>
-                <div className="leading-none">
-                  <span className="font-medium truncate-ellipsis">
-                    {currentLibrary.name}
-                  </span>
-                </div>
+                {!isCollapsed && (
+                  <div className="leading-none">
+                    <span className="font-medium truncate-ellipsis">
+                      {currentLibrary.name}
+                    </span>
+                  </div>
+                )}
               </div>
-              <ChevronsUpDown className="ml-auto" />
+              {!isCollapsed && <ChevronsUpDown className="ml-auto" />}
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 

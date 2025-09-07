@@ -14,7 +14,7 @@
 CREATE TABLE public.reviews (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_edition_id UUID NOT NULL REFERENCES public.book_editions(id) ON DELETE CASCADE,
-    general_book_id UUID NOT NULL REFERENCES public.general_books(id) ON DELETE CASCADE, -- Denormalized for efficient querying
+    general_book_id UUID REFERENCES public.general_books(id) ON DELETE SET NULL, -- Denormalized for efficient querying
     reviewer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
@@ -130,89 +130,89 @@ ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invitation_responses ENABLE ROW LEVEL SECURITY;
 
 -- Review policies
-CREATE POLICY "Public reviews visible to all" ON public.reviews 
+CREATE POLICY "Public reviews visible to all" ON public.reviews
     FOR SELECT USING (visibility = 'public');
 
-CREATE POLICY "Followers can view follower-only reviews" ON public.reviews 
+CREATE POLICY "Followers can view follower-only reviews" ON public.reviews
     FOR SELECT USING (
         visibility = 'followers' AND (
             reviewer_id = auth.uid() OR
             reviewer_id IN (
-                SELECT following_id FROM public.social_follows 
+                SELECT following_id FROM public.social_follows
                 WHERE follower_id = auth.uid()
             )
         )
     );
 
-CREATE POLICY "Users can manage own reviews" ON public.reviews 
+CREATE POLICY "Users can manage own reviews" ON public.reviews
     FOR ALL USING (reviewer_id = auth.uid());
 
 -- Author follow policies
-CREATE POLICY "Users can manage own author follows" ON public.author_follows 
+CREATE POLICY "Users can manage own author follows" ON public.author_follows
     FOR ALL USING (user_id = auth.uid());
 
-CREATE POLICY "Author follows are public for discovery" ON public.author_follows 
+CREATE POLICY "Author follows are public for discovery" ON public.author_follows
     FOR SELECT USING (true);
 
 -- Social follow policies
-CREATE POLICY "Users can manage own social follows" ON public.social_follows 
+CREATE POLICY "Users can manage own social follows" ON public.social_follows
     FOR ALL USING (follower_id = auth.uid());
 
-CREATE POLICY "Social follows are public for discovery" ON public.social_follows 
+CREATE POLICY "Social follows are public for discovery" ON public.social_follows
     FOR SELECT USING (true);
 
 -- Invitation policies
-CREATE POLICY "Staff can view library invitations" ON public.invitations 
+CREATE POLICY "Staff can view library invitations" ON public.invitations
     FOR SELECT USING (
         library_id IN (SELECT library_id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
     );
 
-CREATE POLICY "Public can view pending invitations by token" ON public.invitations 
+CREATE POLICY "Public can view pending invitations by token" ON public.invitations
     FOR SELECT USING (
         status = 'pending' AND expires_at > NOW()
     );
 
-CREATE POLICY "Staff can manage invitations" ON public.invitations 
+CREATE POLICY "Staff can manage invitations" ON public.invitations
     FOR ALL USING (
         library_id IN (
-            SELECT library_id FROM public.library_staff 
-            WHERE user_id = auth.uid() 
-            AND is_deleted = FALSE 
+            SELECT library_id FROM public.library_staff
+            WHERE user_id = auth.uid()
+            AND is_deleted = FALSE
             AND (
-                role IN ('owner', 'manager') 
+                role IN ('owner', 'manager')
                 OR (invitation_type = 'library_staff' AND permissions->>'manage_staff' = 'true')
                 OR (invitation_type = 'library_member' AND permissions->>'manage_members' = 'true')
             )
         )
     );
 
-CREATE POLICY "Inviters can delete own invitations" ON public.invitations 
+CREATE POLICY "Inviters can delete own invitations" ON public.invitations
     FOR DELETE USING (
         inviter_id IN (SELECT id FROM public.library_staff WHERE user_id = auth.uid() AND is_deleted = FALSE)
         OR library_id IN (
-            SELECT library_id FROM public.library_staff 
+            SELECT library_id FROM public.library_staff
             WHERE user_id = auth.uid() AND role IN ('owner', 'manager') AND is_deleted = FALSE
         )
     );
 
 -- Invitation response policies
-CREATE POLICY "Staff can view invitation responses" ON public.invitation_responses 
+CREATE POLICY "Staff can view invitation responses" ON public.invitation_responses
     FOR SELECT USING (
         invitation_id IN (
-            SELECT id FROM public.invitations 
+            SELECT id FROM public.invitations
             WHERE library_id IN (
-                SELECT library_id FROM public.library_staff 
+                SELECT library_id FROM public.library_staff
                 WHERE user_id = auth.uid() AND is_deleted = FALSE
             )
         )
     );
 
-CREATE POLICY "Users can view own invitation responses" ON public.invitation_responses 
+CREATE POLICY "Users can view own invitation responses" ON public.invitation_responses
     FOR SELECT USING (
         responder_user_id = auth.uid()
     );
 
-CREATE POLICY "System can create invitation responses" ON public.invitation_responses 
+CREATE POLICY "System can create invitation responses" ON public.invitation_responses
     FOR INSERT WITH CHECK (true);
 
 -- =============================================================================
@@ -226,12 +226,12 @@ BEGIN
     -- Automatically expire invitations that have passed their expiry date
     IF NEW.expires_at <= NOW() AND OLD.status = 'pending' THEN
         NEW.status = 'expired';
-        
+
         -- Create audit trail
         INSERT INTO public.invitation_responses (invitation_id, response_type, notes)
         VALUES (NEW.id, 'expired', 'Automatically expired');
     END IF;
-    
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
@@ -250,23 +250,23 @@ DECLARE
     result JSONB;
 BEGIN
     -- Get the invitation
-    SELECT * INTO invitation_record 
-    FROM public.invitations 
-    WHERE token = invitation_token 
-    AND status = 'pending' 
+    SELECT * INTO invitation_record
+    FROM public.invitations
+    WHERE token = invitation_token
+    AND status = 'pending'
     AND expires_at > NOW();
-    
+
     IF NOT FOUND THEN
         RETURN jsonb_build_object(
             'success', false,
             'error', 'Invalid or expired invitation token'
         );
     END IF;
-    
+
     -- Check if user email matches invitation email
     IF NOT EXISTS (
-        SELECT 1 FROM public.user_profiles 
-        WHERE id = accepting_user_id 
+        SELECT 1 FROM public.user_profiles
+        WHERE id = accepting_user_id
         AND email = invitation_record.email
     ) THEN
         RETURN jsonb_build_object(
@@ -274,13 +274,13 @@ BEGIN
             'error', 'Email does not match invitation'
         );
     END IF;
-    
+
     -- Process based on invitation type
     IF invitation_record.invitation_type = 'library_staff' THEN
         -- Check if staff record already exists
         IF EXISTS (
-            SELECT 1 FROM public.library_staff 
-            WHERE user_id = accepting_user_id 
+            SELECT 1 FROM public.library_staff
+            WHERE user_id = accepting_user_id
             AND library_id = invitation_record.library_id
         ) THEN
             RETURN jsonb_build_object(
@@ -288,12 +288,12 @@ BEGIN
                 'error', 'User is already a staff member of this library'
             );
         END IF;
-        
+
         -- Create library staff record
         INSERT INTO public.library_staff (
-            user_id, 
-            library_id, 
-            role, 
+            user_id,
+            library_id,
+            role,
             permissions,
             employment_info
         ) VALUES (
@@ -303,12 +303,12 @@ BEGIN
             COALESCE(invitation_record.permissions, '{}'),
             jsonb_build_object('hire_date', NOW()::date)
         ) RETURNING id INTO created_staff_id;
-        
+
     ELSIF invitation_record.invitation_type = 'library_member' THEN
         -- Check if member record already exists
         IF EXISTS (
-            SELECT 1 FROM public.library_members 
-            WHERE user_id = accepting_user_id 
+            SELECT 1 FROM public.library_members
+            WHERE user_id = accepting_user_id
             AND library_id = invitation_record.library_id
         ) THEN
             RETURN jsonb_build_object(
@@ -316,7 +316,7 @@ BEGIN
                 'error', 'User is already a member of this library'
             );
         END IF;
-        
+
         -- Create library member record
         INSERT INTO public.library_members (
             user_id,
@@ -333,12 +333,12 @@ BEGIN
             )
         ) RETURNING id INTO created_member_id;
     END IF;
-    
+
     -- Update invitation status
-    UPDATE public.invitations 
+    UPDATE public.invitations
     SET status = 'accepted', updated_at = NOW()
     WHERE id = invitation_record.id;
-    
+
     -- Create response record
     INSERT INTO public.invitation_responses (
         invitation_id,
@@ -355,7 +355,7 @@ BEGIN
         created_staff_id,
         created_member_id
     );
-    
+
     RETURN jsonb_build_object(
         'success', true,
         'invitation_type', invitation_record.invitation_type,
@@ -378,21 +378,21 @@ DECLARE
     invitation_record public.invitations%ROWTYPE;
 BEGIN
     -- Get the invitation
-    SELECT * INTO invitation_record 
-    FROM public.invitations 
-    WHERE token = invitation_token 
-    AND status = 'pending' 
+    SELECT * INTO invitation_record
+    FROM public.invitations
+    WHERE token = invitation_token
+    AND status = 'pending'
     AND expires_at > NOW();
-    
+
     IF NOT FOUND THEN
         RETURN false;
     END IF;
-    
+
     -- Update invitation status
-    UPDATE public.invitations 
+    UPDATE public.invitations
     SET status = 'declined', updated_at = NOW()
     WHERE id = invitation_record.id;
-    
+
     -- Create response record
     INSERT INTO public.invitation_responses (
         invitation_id,
@@ -405,7 +405,7 @@ BEGIN
         'declined',
         response_notes
     );
-    
+
     RETURN true;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
@@ -419,20 +419,20 @@ COMMENT ON FUNCTION public.decline_invitation(TEXT, UUID, TEXT) IS 'Processes in
 -- =============================================================================
 
 -- Update timestamp triggers
-CREATE TRIGGER update_reviews_updated_at 
-    BEFORE UPDATE ON public.reviews 
-    FOR EACH ROW 
+CREATE TRIGGER update_reviews_updated_at
+    BEFORE UPDATE ON public.reviews
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TRIGGER update_invitations_updated_at 
-    BEFORE UPDATE ON public.invitations 
-    FOR EACH ROW 
+CREATE TRIGGER update_invitations_updated_at
+    BEFORE UPDATE ON public.invitations
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Invitation expiration trigger
-CREATE TRIGGER invitation_expiration_check 
-    BEFORE UPDATE ON public.invitations 
-    FOR EACH ROW 
+CREATE TRIGGER invitation_expiration_check
+    BEFORE UPDATE ON public.invitations
+    FOR EACH ROW
     EXECUTE FUNCTION public.handle_invitation_expiration();
 
 -- =============================================================================

@@ -98,7 +98,7 @@ export default function LibraryDashboardPage(): React.JSX.Element {
               <QuickActionButton
                 title="Add Book"
                 icon={<Plus className="h-4 w-4" />}
-                href={`/${currentLibrary.code}/inventory/add`}
+                href={`/${currentLibrary.code}/books/add`}
                 description="Add new book to inventory"
               />
               <QuickActionButton

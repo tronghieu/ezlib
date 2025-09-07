@@ -28,15 +28,15 @@ BEGIN
     IF target_user_id IS NULL THEN
         RETURN NULL;
     END IF;
-    
+
     -- Get user's role in the specified library (bypasses RLS)
     SELECT role INTO user_role
     FROM library_staff
-    WHERE user_id = target_user_id 
-        AND library_id = library_id_param 
-        AND is_deleted = FALSE 
+    WHERE user_id = target_user_id
+        AND library_id = library_id_param
+        AND is_deleted = FALSE
         AND status = 'active';
-    
+
     RETURN user_role;
 END;
 $$;
@@ -56,13 +56,13 @@ BEGIN
     IF target_user_id IS NULL THEN
         RETURN FALSE;
     END IF;
-    
+
     -- Check if user has catalog access role in ANY library
     RETURN EXISTS (
         SELECT 1 FROM library_staff
-        WHERE user_id = target_user_id 
+        WHERE user_id = target_user_id
             AND role IN ('owner', 'manager', 'librarian')
-            AND is_deleted = FALSE 
+            AND is_deleted = FALSE
             AND status = 'active'
     );
 END;
@@ -215,19 +215,19 @@ CREATE TABLE public.book_copies (
     barcode TEXT UNIQUE, -- Optional barcode for scanning
     total_copies INTEGER NOT NULL DEFAULT 1,
     available_copies INTEGER NOT NULL DEFAULT 1,
-    location JSONB NOT NULL DEFAULT '{
+    location JSONB DEFAULT '{
         "shelf": null,
         "section": null,
         "call_number": null
     }'::jsonb,
-    condition_info JSONB NOT NULL DEFAULT '{
+    condition_info JSONB DEFAULT '{
         "condition": "good",
         "notes": null,
         "acquisition_date": null,
         "acquisition_price": null,
         "last_maintenance": null
     }'::jsonb,
-    availability JSONB NOT NULL DEFAULT '{
+    availability JSONB DEFAULT '{
         "status": "available",
         "current_borrower_id": null,
         "due_date": null,
@@ -551,4 +551,3 @@ CREATE POLICY "Owners can manage staff" ON public.library_staff
     FOR ALL USING (
         public.get_user_role(library_id) = 'owner'
     );
-

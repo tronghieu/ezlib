@@ -107,7 +107,7 @@ Universal book concepts representing literary works across all editions.
 #### `book_editions`
 Specific publications of a general book (different publishers, translations, formats).
 - `id` - Primary key UUID
-- `general_book_id` - References general_books(id)
+- `general_book_id` - References general_books(id) if linked to a general book
 - `isbn_13` - 13-digit ISBN (optional for rare/old books)
 - `title` - Edition-specific title
 - `subtitle` - Edition subtitle

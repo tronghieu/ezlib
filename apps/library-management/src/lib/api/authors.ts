@@ -16,6 +16,8 @@ export async function searchAuthors(searchTerm: string): Promise<AuthorSearchRes
     return [];
   }
 
+  console.log("Making author search API call for:", searchTerm);
+
   try {
     const { data, error } = await supabase()
       .from("authors")
@@ -29,17 +31,23 @@ export async function searchAuthors(searchTerm: string): Promise<AuthorSearchRes
       .or(`name.ilike.%${searchTerm}%,canonical_name.ilike.%${searchTerm}%`)
       .limit(10);
 
+    console.log("Author search API response:", { data, error });
+
     if (error) {
       console.error("Error searching authors:", error);
       throw new Error(`Author search failed: ${error.message}`);
     }
 
     // Transform the joined data into search results
-    return (data || []).map((author) => ({
+    const results = (data || []).map((author) => ({
       id: author.id,
       name: author.name,
       book_count: author.book_contributors?.length || 0,
     }));
+
+    console.log("Author search results transformation:", { data, results });
+
+    return results;
   } catch (error) {
     console.error("Author search error:", error);
     throw error;

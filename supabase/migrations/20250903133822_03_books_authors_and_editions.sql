@@ -68,7 +68,7 @@ CREATE TABLE public.general_books (
 -- Book editions (specific editions/translations)
 CREATE TABLE public.book_editions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    general_book_id UUID NOT NULL REFERENCES public.general_books(id) ON DELETE CASCADE,
+    general_book_id UUID REFERENCES public.general_books(id) ON DELETE SET NULL,
     isbn_13 TEXT, -- Can be null for rare/old books
     title TEXT NOT NULL,
     subtitle TEXT,
@@ -95,7 +95,7 @@ CREATE TABLE public.book_editions (
 -- Book contributors (authors, translators, editors, etc.)
 CREATE TABLE public.book_contributors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    general_book_id UUID NOT NULL REFERENCES public.general_books(id) ON DELETE CASCADE,
+    general_book_id UUID REFERENCES public.general_books(id) ON DELETE SET NULL,
     book_edition_id UUID REFERENCES public.book_editions(id) ON DELETE CASCADE, -- NULL for general contributors
     author_id UUID NOT NULL REFERENCES public.authors(id) ON DELETE CASCADE,
     role TEXT NOT NULL CHECK (role IN (
@@ -140,7 +140,7 @@ CREATE INDEX idx_book_contributors_author ON public.book_contributors(author_id,
 -- Authors and general_books are public tables (no RLS needed for reads)
 -- book_editions and book_contributors are also public (no RLS for reads)
 
--- Future: If we add user-generated content or private collections, 
+-- Future: If we add user-generated content or private collections,
 -- we would add RLS policies here
 
 -- =============================================================================
@@ -148,18 +148,18 @@ CREATE INDEX idx_book_contributors_author ON public.book_contributors(author_id,
 -- =============================================================================
 
 -- ISBN-13 format validation
-ALTER TABLE public.book_editions 
-ADD CONSTRAINT check_isbn_13_format 
+ALTER TABLE public.book_editions
+ADD CONSTRAINT check_isbn_13_format
 CHECK (isbn_13 IS NULL OR isbn_13 ~ '^\d{13}$');
 
 -- Language code validation (ISO 639-1)
-ALTER TABLE public.book_editions 
-ADD CONSTRAINT check_language_code 
+ALTER TABLE public.book_editions
+ADD CONSTRAINT check_language_code
 CHECK (language ~ '^[a-z]{2}$');
 
 -- Book format validation
-ALTER TABLE public.book_editions 
-ADD CONSTRAINT check_book_format 
+ALTER TABLE public.book_editions
+ADD CONSTRAINT check_book_format
 CHECK (edition_metadata->>'format' IN ('hardcover', 'paperback', 'ebook', 'audiobook', 'other'));
 
 -- =============================================================================
@@ -167,19 +167,19 @@ CHECK (edition_metadata->>'format' IN ('hardcover', 'paperback', 'ebook', 'audio
 -- =============================================================================
 
 -- Update timestamp triggers
-CREATE TRIGGER update_authors_updated_at 
-    BEFORE UPDATE ON public.authors 
-    FOR EACH ROW 
+CREATE TRIGGER update_authors_updated_at
+    BEFORE UPDATE ON public.authors
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TRIGGER update_general_books_updated_at 
-    BEFORE UPDATE ON public.general_books 
-    FOR EACH ROW 
+CREATE TRIGGER update_general_books_updated_at
+    BEFORE UPDATE ON public.general_books
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TRIGGER update_book_editions_updated_at 
-    BEFORE UPDATE ON public.book_editions 
-    FOR EACH ROW 
+CREATE TRIGGER update_book_editions_updated_at
+    BEFORE UPDATE ON public.book_editions
+    FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at_column();
 
 -- =============================================================================

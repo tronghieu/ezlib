@@ -158,7 +158,7 @@ Author profiles with metadata enrichment and social features.
 #### `book_contributors`
 Many-to-many relationship linking books to authors/translators/editors with role specification.
 - `id` - Primary key UUID
-- `general_book_id` - References general_books(id)
+- `general_book_id` - References general_books(id) if link to general book
 - `book_edition_id` - Optional reference to book_editions(id) for edition-specific contributors
 - `author_id` - References authors(id)
 - `role` - Enum: author, co_author, translator, editor, illustrator, photographer, foreword, afterword, introduction, narrator, adapter, compiler
