@@ -311,6 +311,9 @@ export function LibraryProvider({
       } else if (!user && hasInitialized) {
         // Reset initialization flag when user logs out
         setHasInitialized(false);
+      } else if (!user && !hasInitialized) {
+        // No user and not initialized - set loading to false
+        dispatch({ type: "SET_LOADING", payload: false });
       }
     }
   }, [refreshLibraries, authLoading, hasInitialized, user]);

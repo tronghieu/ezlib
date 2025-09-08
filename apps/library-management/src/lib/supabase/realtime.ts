@@ -7,7 +7,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import type { Database } from "@/lib/types/database";
+import type { Database } from "@/types/database.d";
 
 // Type-safe table names for subscriptions
 type TableName = keyof Database["public"]["Tables"];

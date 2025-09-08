@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -10,10 +11,10 @@ import { BookCopyDetail } from "@/components/books/book-copy-detail";
 import { useLibraryContext } from "@/lib/contexts/library-context";
 
 interface BookDetailPageProps {
-  params: {
+  params: Promise<{
     "library-code": string;
     id: string;
-  };
+  }>;
 }
 
 function BookDetailPageSkeleton(): React.JSX.Element {
@@ -61,6 +62,7 @@ function BookDetailPageSkeleton(): React.JSX.Element {
 function BookDetailPageContent({
   params,
 }: BookDetailPageProps): React.JSX.Element {
+  const resolvedParams = React.use(params);
   const { currentLibrary } = useLibraryContext();
 
   if (!currentLibrary) {
@@ -71,7 +73,7 @@ function BookDetailPageContent({
     );
   }
 
-  if (!params.id) {
+  if (!resolvedParams.id) {
     notFound();
   }
 
@@ -101,7 +103,7 @@ function BookDetailPageContent({
 
       {/* Book Copy Detail Component */}
       <BookCopyDetail
-        bookCopyId={params.id}
+        bookCopyId={resolvedParams.id}
         libraryId={currentLibrary.id}
         libraryCode={currentLibrary.code}
       />

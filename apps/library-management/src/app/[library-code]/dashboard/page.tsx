@@ -23,7 +23,7 @@ import {
   Scan,
   Clock,
 } from "lucide-react";
-import type { Json } from "@/lib/types/database";
+import type { Json } from "@/types/database.d";
 
 export default function LibraryDashboardPage(): React.JSX.Element {
   const { currentLibrary } = useLibraryContext();

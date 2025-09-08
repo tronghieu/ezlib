@@ -1,10 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BookCopyDetail } from "../book-copy-detail";
 import { useBookCopyDetail } from "@/lib/hooks/use-book-copy-detail";
 import { usePermissions } from "@/lib/hooks/use-permissions";
-import type { BookCopyWithDetails } from "@/lib/api/book-copy-detail";
+import type { BookCopyWithDetails } from "@/lib/api/book-copies";
 
 // Mock the hooks
 jest.mock("@/lib/hooks/use-book-copy-detail");
@@ -22,6 +22,18 @@ const mockUseBookCopyDetail = useBookCopyDetail as jest.MockedFunction<
 const mockUsePermissions = usePermissions as jest.MockedFunction<
   typeof usePermissions
 >;
+
+// Type definitions for test mocks
+type MockBookCopyDetailReturn = {
+  data?: BookCopyWithDetails;
+  isLoading: boolean;
+  error: Error | null;
+};
+
+type MockPermissionsReturn = {
+  canEditBookCopies: boolean;
+  canDeleteBookCopies: boolean;
+};
 
 const createMockBookCopyWithDetails = (): BookCopyWithDetails => ({
   id: "test-book-copy-id",
@@ -103,12 +115,12 @@ describe("BookCopyDetail", () => {
       data: undefined,
       isLoading: true,
       error: null,
-    } as any);
+    } as MockBookCopyDetailReturn);
 
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: false,
       canDeleteBookCopies: false,
-    } as any);
+    } as MockPermissionsReturn);
 
     renderWithQueryClient(
       <BookCopyDetail
@@ -129,12 +141,12 @@ describe("BookCopyDetail", () => {
       data: undefined,
       isLoading: false,
       error: mockError,
-    } as any);
+    } as MockBookCopyDetailReturn);
 
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: false,
       canDeleteBookCopies: false,
-    } as any);
+    } as MockPermissionsReturn);
 
     renderWithQueryClient(
       <BookCopyDetail
@@ -155,12 +167,12 @@ describe("BookCopyDetail", () => {
       data: mockBookCopy,
       isLoading: false,
       error: null,
-    } as any);
+    } as MockBookCopyDetailReturn);
 
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: false,
       canDeleteBookCopies: false,
-    } as any);
+    } as MockPermissionsReturn);
 
     renderWithQueryClient(
       <BookCopyDetail
@@ -206,13 +218,13 @@ describe("BookCopyDetail", () => {
       data: mockBookCopy,
       isLoading: false,
       error: null,
-    } as any);
+    } as MockBookCopyDetailReturn);
 
     // Test without edit permission
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: false,
       canDeleteBookCopies: false,
-    } as any);
+    } as MockPermissionsReturn);
 
     const { rerender } = renderWithQueryClient(
       <BookCopyDetail
@@ -228,7 +240,7 @@ describe("BookCopyDetail", () => {
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: true,
       canDeleteBookCopies: false,
-    } as any);
+    } as MockPermissionsReturn);
 
     rerender(
       <BookCopyDetail
@@ -248,13 +260,13 @@ describe("BookCopyDetail", () => {
       data: mockBookCopy,
       isLoading: false,
       error: null,
-    } as any);
+    } as MockBookCopyDetailReturn);
 
     // Test without delete permission
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: false,
       canDeleteBookCopies: false,
-    } as any);
+    } as MockPermissionsReturn);
 
     const { rerender } = renderWithQueryClient(
       <BookCopyDetail
@@ -270,7 +282,7 @@ describe("BookCopyDetail", () => {
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: false,
       canDeleteBookCopies: true,
-    } as any);
+    } as MockPermissionsReturn);
 
     rerender(
       <BookCopyDetail
@@ -315,12 +327,12 @@ describe("BookCopyDetail", () => {
       data: mockBookCopy,
       isLoading: false,
       error: null,
-    } as any);
+    } as MockBookCopyDetailReturn);
 
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: false,
       canDeleteBookCopies: false,
-    } as any);
+    } as MockPermissionsReturn);
 
     renderWithQueryClient(
       <BookCopyDetail
@@ -345,12 +357,12 @@ describe("BookCopyDetail", () => {
       data: mockBookCopy,
       isLoading: false,
       error: null,
-    } as any);
+    } as MockBookCopyDetailReturn);
 
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: false,
       canDeleteBookCopies: false,
-    } as any);
+    } as MockPermissionsReturn);
 
     renderWithQueryClient(
       <BookCopyDetail
@@ -373,12 +385,12 @@ describe("BookCopyDetail", () => {
       data: mockBookCopy,
       isLoading: false,
       error: null,
-    } as any);
+    } as MockBookCopyDetailReturn);
 
     mockUsePermissions.mockReturnValue({
       canEditBookCopies: false,
       canDeleteBookCopies: true,
-    } as any);
+    } as MockPermissionsReturn);
 
     renderWithQueryClient(
       <BookCopyDetail

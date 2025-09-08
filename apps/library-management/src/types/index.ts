@@ -109,7 +109,6 @@ export interface LibraryStaff {
 
 export type StaffRole = "owner" | "manager" | "librarian" | "volunteer";
 
-
 /**
  * Library Member entity - library patrons
  * @note This will be added to database schema in future migration

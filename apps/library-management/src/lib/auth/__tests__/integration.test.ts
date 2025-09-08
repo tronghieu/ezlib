@@ -110,7 +110,7 @@ describe("Authentication Database Integration Tests", () => {
       console.warn("Cannot create test library:", libraryError.message);
       testLibraryId = "integration-test-library-id"; // Fallback to mock ID
     } else {
-      testLibraryId = (testLibrary as any).id;
+      testLibraryId = testLibrary?.id;
     }
 
     // Create library staff association (if library_staff table exists)
@@ -325,7 +325,7 @@ describe("Authentication Database Integration Tests", () => {
       expect(placeholderLib.libraries).toHaveProperty("settings");
 
       // Foreign key relationship should be consistent
-      expect(placeholderLib.library_id).toBe((placeholderLib.libraries as any).id);
+      expect(placeholderLib.library_id).toBe(placeholderLib.libraries?.id);
     });
 
     it("should handle the transition from development to production", async () => {

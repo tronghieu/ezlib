@@ -6,8 +6,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
 import type { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase/client";
 
 // Simplified types without complex permission system
 type LibraryRole = "owner" | "manager" | "librarian";
@@ -44,13 +44,10 @@ export function useAuth(): AuthState {
   });
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-    );
+    const client = supabase();
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    client.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         setState((prev) => ({ ...prev, error: error.message, loading: false }));
       } else {
@@ -67,7 +64,7 @@ export function useAuth(): AuthState {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = client.auth.onAuthStateChange(async (event, session) => {
       setState((prev) => ({
         ...prev,
         user: session?.user || null,
@@ -129,11 +126,7 @@ export const authUtils = {
    * Sign out current user
    */
   async signOut(): Promise<{ error: Error | null }> {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-    );
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase().auth.signOut();
 
     if (!error) {
       // Redirect to login page after successful logout
@@ -150,12 +143,7 @@ export const authUtils = {
     email: string,
     redirectTo?: string
   ): Promise<{ error: Error | null }> {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-    );
-
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase().auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo:

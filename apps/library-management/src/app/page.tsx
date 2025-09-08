@@ -1,6 +1,5 @@
 import { LibrarySelectionPage } from "@/components/library/library-selection-page";
 import { UserInfoBox } from "@/components/library/user-info-box";
-import { get } from "react-hook-form";
 
 export default function Home() {
   return (

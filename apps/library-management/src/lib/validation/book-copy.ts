@@ -25,6 +25,7 @@ export const bookCopyUpdateSchema = z.object({
     .optional()
     .or(z.literal("")),
 
+  // Support both flat fields (for forms) AND nested objects (for tests/API consistency)
   shelf_location: z
     .string()
     .max(50, "Shelf location must be less than 50 characters")
@@ -44,14 +45,44 @@ export const bookCopyUpdateSchema = z.object({
     .or(z.literal("")),
 
   condition: z.enum(["excellent", "good", "fair", "poor"], {
-    required_error: "Condition is required",
-    invalid_type_error: "Invalid condition value",
-  }),
+    message: "Invalid condition value",
+  }).optional(),
+  
   notes: z
     .string()
     .max(500, "Notes must be less than 500 characters")
     .optional()
     .or(z.literal("")),
+
+  // Nested structure support for tests and backwards compatibility
+  location: z.object({
+    shelf: z.string().max(50).optional().or(z.literal("")),
+    section: z.string().max(50).optional().or(z.literal("")), 
+    call_number: z.string().max(100).optional().or(z.literal("")),
+  }).optional(),
+
+  condition_info: z.object({
+    condition: z.enum(["excellent", "good", "fair", "poor"]),
+    notes: z.string().max(500).optional().or(z.literal("")),
+  }).optional(),
+}).transform((data) => {
+  // Transform nested structures to flat fields if needed for backwards compatibility
+  if (data.condition_info?.condition && !data.condition) {
+    data.condition = data.condition_info.condition;
+  }
+  if (data.condition_info?.notes && !data.notes) {
+    data.notes = data.condition_info.notes;
+  }
+  if (data.location?.shelf && !data.shelf_location) {
+    data.shelf_location = data.location.shelf;
+  }
+  if (data.location?.section && !data.section) {
+    data.section = data.location.section;
+  }
+  if (data.location?.call_number && !data.call_number) {
+    data.call_number = data.location.call_number;
+  }
+  return data;
 });
 
 /**
@@ -62,14 +93,58 @@ export type BookCopyUpdateData = z.infer<typeof bookCopyUpdateSchema>;
 /**
  * Validation schema for book copy creation (more fields required)
  */
-export const bookCopyCreateSchema = bookCopyUpdateSchema.extend({
-  book_edition_id: z.string().uuid("Invalid book edition ID"),
-  library_id: z.string().uuid("Invalid library ID"),
+export const bookCopyCreateSchema = z.object({
+  copy_number: z
+    .string()
+    .max(50, "Copy number must be less than 50 characters")
+    .regex(
+      /^[A-Za-z0-9\-_]*$/,
+      "Copy number can only contain letters, numbers, hyphens and underscores"
+    )
+    .optional()
+    .or(z.literal("")),
+
   barcode: z
     .string()
     .max(50, "Barcode must be less than 50 characters")
+    .regex(
+      /^[A-Za-z0-9\-_]*$/,
+      "Barcode can only contain letters, numbers, hyphens and underscores"
+    )
     .optional()
     .or(z.literal("")),
+
+  shelf_location: z
+    .string()
+    .max(50, "Shelf location must be less than 50 characters")
+    .optional()
+    .or(z.literal("")),
+
+  section: z
+    .string()
+    .max(50, "Section must be less than 50 characters")
+    .optional()
+    .or(z.literal("")),
+
+  call_number: z
+    .string()
+    .max(50, "Call number must be less than 50 characters")
+    .optional()
+    .or(z.literal("")),
+
+  condition: z.enum(["excellent", "good", "fair", "poor"], {
+    message: "Invalid condition value",
+  }),
+  
+  notes: z
+    .string()
+    .max(500, "Notes must be less than 500 characters")
+    .optional()
+    .or(z.literal("")),
+
+  // Additional fields for creation
+  book_edition_id: z.string().uuid("Invalid book edition ID"),
+  library_id: z.string().uuid("Invalid library ID"),
   status: z
     .enum(["active", "inactive", "damaged", "lost", "maintenance"])
     .default("active"),
@@ -187,11 +262,32 @@ export function validateLocation(location: {
   section?: string;
   call_number?: string;
 }): { isValid: boolean; error?: string } {
-  const result = bookCopyUpdateSchema.shape.location.safeParse(location);
-  if (!result.success) {
+  // Validate individual location fields using the schema
+  const shelfResult = location.shelf ? 
+    bookCopyUpdateSchema.shape.shelf_location.safeParse(location.shelf) : { success: true };
+  const sectionResult = location.section ? 
+    bookCopyUpdateSchema.shape.section.safeParse(location.section) : { success: true };
+  const callNumberResult = location.call_number ? 
+    bookCopyUpdateSchema.shape.call_number.safeParse(location.call_number) : { success: true };
+
+  if (!shelfResult.success) {
     return {
       isValid: false,
-      error: result.error.issues[0].message,
+      error: shelfResult.error.issues[0].message,
+    };
+  }
+
+  if (!sectionResult.success) {
+    return {
+      isValid: false,
+      error: sectionResult.error.issues[0].message,
+    };
+  }
+
+  if (!callNumberResult.success) {
+    return {
+      isValid: false,
+      error: callNumberResult.error.issues[0].message,
     };
   }
 

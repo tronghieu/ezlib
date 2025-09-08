@@ -125,10 +125,10 @@ $$;
 -- BOOK DISPLAY VIEWS - Optimized queries for book listings
 -- =============================================================================
 
--- Main view for book listings - combines book copies with edition and author info
+-- Main view for book listings - comprehensive view for multiple usage scenarios
 CREATE VIEW public.book_display_view AS
 SELECT 
-    -- Book copy information
+    -- Book copy information (core fields)
     bc.id as book_copy_id,
     bc.copy_number,
     bc.available_copies,
@@ -138,8 +138,20 @@ SELECT
     bc.created_at as copy_created_at,
     bc.updated_at as copy_updated_at,
     
-    -- Book edition information
+    -- Inventory management fields
+    bc.barcode,
+    bc.location,
+    bc.condition_info,
+    bc.availability,
+    
+    -- Audit trail fields
+    bc.is_deleted,
+    bc.deleted_at,
+    bc.deleted_by,
+    
+    -- Book edition information (core fields)
     be.id as book_edition_id,
+    be.general_book_id,
     be.isbn_13,
     be.title,
     be.subtitle,
@@ -147,21 +159,51 @@ SELECT
     be.country,
     be.edition_metadata,
     be.social_stats,
+    be.created_at as edition_created_at,
+    be.updated_at as edition_updated_at,
+    
+    -- Extracted metadata for direct access (commonly needed fields)
+    (be.edition_metadata->>'publisher') as publisher,
+    (be.edition_metadata->>'publication_date') as publication_date,
+    (be.edition_metadata->>'page_count')::INTEGER as page_count,
+    (be.edition_metadata->>'cover_image_url') as cover_image_url,
+    (be.edition_metadata->>'format') as format,
+    (be.edition_metadata->>'last_enriched_at') as last_enriched_at,
+    
+    -- Social stats for direct access
+    (be.social_stats->>'review_count')::INTEGER as review_count,
+    (be.social_stats->>'average_rating')::NUMERIC as average_rating,
+    
+    -- Location info for direct access
+    (bc.location->>'shelf') as shelf,
+    (bc.location->>'section') as section,
+    (bc.location->>'call_number') as call_number,
+    
+    -- Condition info for direct access
+    (bc.condition_info->>'condition') as condition,
+    (bc.condition_info->>'notes') as condition_notes,
+    (bc.condition_info->>'acquisition_date') as acquisition_date,
+    (bc.condition_info->>'acquisition_price')::NUMERIC as acquisition_price,
+    
+    -- Availability info for direct access
+    (bc.availability->>'status') as current_availability_status,
+    (bc.availability->>'current_borrower_id')::UUID as current_borrower_id,
+    (bc.availability->>'due_date')::TIMESTAMPTZ as due_date,
     
     -- Computed author information (using our optimized function)
     public.get_book_authors(be.id) as authors_display,
     
-    -- Availability status
+    -- Computed availability status (enhanced logic)
     CASE 
+        WHEN bc.is_deleted = TRUE THEN 'deleted'
+        WHEN bc.status != 'active' THEN bc.status::TEXT
         WHEN bc.available_copies > 0 THEN 'available'
         WHEN bc.total_copies > 0 THEN 'unavailable'
         ELSE 'unknown'
     END as availability_status
 
 FROM public.book_copies bc
-JOIN public.book_editions be ON bc.book_edition_id = be.id
-WHERE bc.is_deleted = FALSE 
-  AND bc.status = 'active';
+JOIN public.book_editions be ON bc.book_edition_id = be.id;
 
 -- Search-optimized view with pre-computed search fields
 CREATE VIEW public.book_search_view AS
@@ -186,18 +228,25 @@ FROM public.book_display_view bdv;
 CREATE VIEW public.library_book_summary_view AS
 SELECT 
     library_id,
-    COUNT(*) as total_book_copies,
-    COUNT(DISTINCT book_edition_id) as unique_titles,
-    SUM(total_copies) as total_physical_copies,
-    SUM(available_copies) as total_available_copies,
-    SUM(total_copies - available_copies) as total_borrowed_copies,
+    COUNT(*) FILTER (WHERE is_deleted = FALSE AND copy_status = 'active') as total_book_copies,
+    COUNT(DISTINCT book_edition_id) FILTER (WHERE is_deleted = FALSE AND copy_status = 'active') as unique_titles,
+    SUM(total_copies) FILTER (WHERE is_deleted = FALSE AND copy_status = 'active') as total_physical_copies,
+    SUM(available_copies) FILTER (WHERE is_deleted = FALSE AND copy_status = 'active') as total_available_copies,
+    SUM(total_copies - available_copies) FILTER (WHERE is_deleted = FALSE AND copy_status = 'active') as total_borrowed_copies,
     
-    -- Availability statistics
-    COUNT(*) FILTER (WHERE available_copies > 0) as available_titles,
-    COUNT(*) FILTER (WHERE available_copies = 0 AND total_copies > 0) as fully_borrowed_titles,
+    -- Availability statistics (active copies only)
+    COUNT(*) FILTER (WHERE is_deleted = FALSE AND copy_status = 'active' AND available_copies > 0) as available_titles,
+    COUNT(*) FILTER (WHERE is_deleted = FALSE AND copy_status = 'active' AND available_copies = 0 AND total_copies > 0) as fully_borrowed_titles,
     
-    -- Recent additions
-    COUNT(*) FILTER (WHERE copy_created_at >= NOW() - INTERVAL '30 days') as recent_additions
+    -- Status breakdown (all copies)
+    COUNT(*) FILTER (WHERE is_deleted = FALSE AND copy_status = 'active') as active_copies,
+    COUNT(*) FILTER (WHERE is_deleted = FALSE AND copy_status = 'damaged') as damaged_copies,
+    COUNT(*) FILTER (WHERE is_deleted = FALSE AND copy_status = 'lost') as lost_copies,
+    COUNT(*) FILTER (WHERE is_deleted = FALSE AND copy_status = 'maintenance') as maintenance_copies,
+    COUNT(*) FILTER (WHERE is_deleted = TRUE) as deleted_copies,
+    
+    -- Recent additions (active only)
+    COUNT(*) FILTER (WHERE is_deleted = FALSE AND copy_status = 'active' AND copy_created_at >= NOW() - INTERVAL '30 days') as recent_additions
 
 FROM public.book_display_view
 GROUP BY library_id;
@@ -218,10 +267,18 @@ ALTER VIEW public.library_book_summary_view SET (security_invoker = true);
 COMMENT ON FUNCTION public.get_book_authors IS 'Efficient author aggregation to replace N+1 queries in React hooks';
 COMMENT ON FUNCTION public.search_books_by_library IS 'Server-side search to replace client-side filtering';
 
-COMMENT ON VIEW public.book_display_view IS 'Optimized view combining book copies with edition and author information for efficient listing';
+COMMENT ON VIEW public.book_display_view IS 'Comprehensive view combining book copies with edition and author information for multiple usage scenarios: catalog browsing, inventory management, and administrative operations';
 COMMENT ON VIEW public.book_search_view IS 'Search-optimized view with pre-computed search fields and full-text search vectors';
 COMMENT ON VIEW public.library_book_summary_view IS 'Aggregated statistics view for library dashboard and reporting';
 
+-- Column comments for enhanced view
 COMMENT ON COLUMN public.book_display_view.authors_display IS 'Comma-separated list of authors from get_book_authors function';
-COMMENT ON COLUMN public.book_display_view.availability_status IS 'Computed availability: available, unavailable, or unknown';
+COMMENT ON COLUMN public.book_display_view.availability_status IS 'Computed availability: available, unavailable, deleted, damaged, lost, maintenance, or unknown';
+COMMENT ON COLUMN public.book_display_view.publisher IS 'Extracted publisher from edition_metadata JSONB for direct access';
+COMMENT ON COLUMN public.book_display_view.cover_image_url IS 'Extracted cover image URL from edition_metadata JSONB for direct access';
+COMMENT ON COLUMN public.book_display_view.shelf IS 'Extracted shelf location from location JSONB for direct access';
+COMMENT ON COLUMN public.book_display_view.condition IS 'Extracted physical condition from condition_info JSONB for direct access';
+COMMENT ON COLUMN public.book_display_view.current_availability_status IS 'Real-time availability status from availability JSONB';
+COMMENT ON COLUMN public.book_display_view.current_borrower_id IS 'ID of current borrower if book is checked out';
+COMMENT ON COLUMN public.book_display_view.due_date IS 'Due date for current loan if book is checked out';
 COMMENT ON COLUMN public.book_search_view.search_vector IS 'Full-text search vector for PostgreSQL text search';

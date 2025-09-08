@@ -10,15 +10,11 @@ describe("bookCopyUpdateSchema", () => {
   it("should validate valid book copy update data", () => {
     const validData: BookCopyUpdateData = {
       copy_number: "A-001",
-      location: {
-        shelf: "A1",
-        section: "Fiction",
-        call_number: "FIC-SMI-001",
-      },
-      condition_info: {
-        condition: "good",
-        notes: "Some wear on the cover",
-      },
+      shelf_location: "A1",
+      section: "Fiction",
+      call_number: "FIC-SMI-001",
+      condition: "good",
+      notes: "Some wear on the cover",
     };
 
     const result = bookCopyUpdateSchema.safeParse(validData);
@@ -30,11 +26,7 @@ describe("bookCopyUpdateSchema", () => {
 
   it("should validate minimal valid data", () => {
     const minimalData: BookCopyUpdateData = {
-      copy_number: "A001",
-      location: {},
-      condition_info: {
-        condition: "good",
-      },
+      condition: "good",
     };
 
     const result = bookCopyUpdateSchema.safeParse(minimalData);

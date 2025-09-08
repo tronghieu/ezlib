@@ -133,7 +133,7 @@ export function BookForm({
 }
 
 // ✅ Good: Type-only imports
-import type { Database } from "@/lib/database.types";
+import type { Database } from "@/lib/types/database.ts";
 import type { User } from "@supabase/supabase-js";
 
 // ❌ Bad: Any types
@@ -161,7 +161,12 @@ not-found.tsx           # 404 pages
 book-form.tsx           # Form components
 member-table.tsx        # Table components
 search-input.tsx        # Input components
+
 ```
+
+### Types defination file with suffix .d.ts
+user.d.ts            # User types
+book.d.ts            # Book types
 
 ### Utility Files
 
@@ -175,10 +180,6 @@ use-local-storage.ts    # Utility hooks
 supabase-client.ts      # Service clients
 form-validation.ts      # Validation utilities
 date-utils.ts           # Date utilities
-
-# Types (descriptive)
-database-types.ts       # Generated types
-form-types.ts          # Form-related types
 ```
 
 ### Directory Structure
@@ -188,34 +189,18 @@ form-types.ts          # Form-related types
 src/
 ├── app/                        # Next.js App Router
 ├── components/
-│   ├── ui/                    # UI primitives
-│   ├── forms/                 # Form components
-│   ├── tables/                # Table components
-│   └── layout/                # Layout components
+ |   ├── auth/                   # Authentication components
+ |   ├── ui/                    # UI primitives
+ |   ├── books/                 # Book components
+ |   ├── library/               # Library components
+ |   └── ... (feature)/         # 
 ├── lib/
-│   ├── supabase/             # Database integration
-│   ├── validation/           # Form schemas
-│   └── hooks/                # Custom hooks
-```
-
-## Import/Export Standards
-
-### Import Organization
-
-```typescript
-// 1. External libraries (React, Next.js, etc.)
-import React from "react";
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// 2. Internal components and utilities (absolute imports)
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/hooks/use-auth";
-import { createServerClient } from "@/lib/supabase/server";
-
-// 3. Type-only imports (separate group)
-import type { Database } from "@/lib/database.types";
-import type { User } from "@supabase/supabase-js";
+ │   ├── supabase/             # Database integration
+ │   ├── validation/           # Form schemas
+ │   ├── hooks/                # Custom hooks
+ │   └── utils/                # Utility functions
+├── types/                      # Types definations
+├── messages/                   # i18 messages
 ```
 
 ### Export Standards

@@ -222,7 +222,7 @@ export function EditBookCopyForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="location.shelf"
+                    name="shelf_location"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Shelf</FormLabel>
@@ -239,7 +239,7 @@ export function EditBookCopyForm({
 
                   <FormField
                     control={form.control}
-                    name="location.section"
+                    name="section"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Section</FormLabel>
@@ -257,7 +257,7 @@ export function EditBookCopyForm({
 
                 <FormField
                   control={form.control}
-                  name="location.call_number"
+                  name="call_number"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Call Number</FormLabel>
@@ -285,7 +285,7 @@ export function EditBookCopyForm({
                 
                 <FormField
                   control={form.control}
-                  name="condition_info.condition"
+                  name="condition"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Condition *</FormLabel>
@@ -329,7 +329,7 @@ export function EditBookCopyForm({
 
                 <FormField
                   control={form.control}
-                  name="condition_info.notes"
+                  name="notes"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Condition Notes</FormLabel>

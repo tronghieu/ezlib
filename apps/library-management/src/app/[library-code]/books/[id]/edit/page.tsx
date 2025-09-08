@@ -1,18 +1,18 @@
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EditBookCopyForm } from "@/components/books/edit-book-copy-form";
 import { useLibraryContext } from "@/lib/contexts/library-context";
 import { usePermissions } from "@/lib/hooks/use-permissions";
 
 interface EditBookCopyPageProps {
-  params: {
+  params: Promise<{
     "library-code": string;
     id: string;
-  };
+  }>;
 }
 
 function EditBookCopyPageSkeleton(): React.JSX.Element {
@@ -60,6 +60,7 @@ function EditBookCopyPageSkeleton(): React.JSX.Element {
 function EditBookCopyPageContent({
   params,
 }: EditBookCopyPageProps): React.JSX.Element {
+  const resolvedParams = React.use(params);
   const { currentLibrary } = useLibraryContext();
   const { canEditBookCopies } = usePermissions();
 
@@ -71,7 +72,7 @@ function EditBookCopyPageContent({
     );
   }
 
-  if (!params.id) {
+  if (!resolvedParams.id) {
     notFound();
   }
 
@@ -88,7 +89,7 @@ function EditBookCopyPageContent({
             You don&apos;t have permission to edit book copies.
           </p>
           <Button asChild>
-            <Link href={`/${currentLibrary.code}/books/${params.id}`}>
+            <Link href={`/${currentLibrary.code}/books/${resolvedParams.id}`}>
               Back to Book Details
             </Link>
           </Button>
@@ -109,7 +110,7 @@ function EditBookCopyPageContent({
         </Link>
         <ChevronLeft className="h-4 w-4 rotate-180" />
         <Link
-          href={`/${currentLibrary.code}/books/${params.id}`}
+          href={`/${currentLibrary.code}/books/${resolvedParams.id}`}
           className="hover:text-foreground transition-colors"
         >
           Book Details
@@ -121,7 +122,7 @@ function EditBookCopyPageContent({
       {/* Back Button */}
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
-          <Link href={`/${currentLibrary.code}/books/${params.id}`}>
+          <Link href={`/${currentLibrary.code}/books/${resolvedParams.id}`}>
             <ChevronLeft className="h-4 w-4" />
             Back to Details
           </Link>
@@ -141,7 +142,7 @@ function EditBookCopyPageContent({
 
       {/* Edit Form */}
       <EditBookCopyForm
-        bookCopyId={params.id}
+        bookCopyId={resolvedParams.id}
         libraryId={currentLibrary.id}
         libraryCode={currentLibrary.code}
       />

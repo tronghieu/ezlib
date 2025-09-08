@@ -4,7 +4,7 @@
  */
 
 import { supabase } from "@/lib/supabase/client";
-import type { BookCopy, BookCopyFormData, BookEdition, Author } from "@/lib/types/books";
+import type { BookCopy, BookCopyFormData, BookEdition, Author } from "@/types/books.d";
 import type { BookCopyUpdateData } from "@/lib/validation/book-copy";
 
 export interface BookCopyWithDetails extends BookCopy {
@@ -233,10 +233,11 @@ export async function fetchBookCopyDetail(
   bookCopyId: string,
   libraryId: string
 ): Promise<BookCopyWithDetails> {
+  // Use book_display_view for optimized single query
   const { data, error } = await supabase()
     .from("book_display_view")
     .select("*")
-    .eq("id", bookCopyId)
+    .eq("book_copy_id", bookCopyId)
     .eq("library_id", libraryId)
     .eq("is_deleted", false)
     .single();
@@ -250,12 +251,56 @@ export async function fetchBookCopyDetail(
     throw new Error("Book copy not found");
   }
 
-  // Ensure proper typing
-  const bookCopy = data as BookCopyWithDetails;
-  
-  if (!bookCopy.book_edition) {
-    throw new Error("Book edition not found for this copy");
-  }
+  // Transform view data to match our BookCopyWithDetails interface
+  const bookCopy: BookCopyWithDetails = {
+    // Book copy fields
+    id: data.book_copy_id,
+    library_id: data.library_id,
+    book_edition_id: data.book_edition_id,
+    copy_number: data.copy_number,
+    barcode: data.barcode,
+    total_copies: data.total_copies,
+    available_copies: data.available_copies,
+    location: data.location,
+    condition_info: data.condition_info,
+    availability: data.availability,
+    status: data.copy_status,
+    is_deleted: data.is_deleted,
+    deleted_at: data.deleted_at,
+    deleted_by: data.deleted_by,
+    created_at: data.copy_created_at,
+    updated_at: data.copy_updated_at,
+    
+    // Additional display fields
+    title: data.title,
+    authors_display: data.authors_display,
+    
+    // Book edition nested object
+    book_edition: {
+      id: data.book_edition_id,
+      general_book_id: data.general_book_id,
+      isbn_13: data.isbn_13,
+      title: data.title,
+      subtitle: data.subtitle,
+      language: data.language,
+      country: data.country,
+      edition_metadata: data.edition_metadata,
+      social_stats: data.social_stats,
+      created_at: data.edition_created_at,
+      updated_at: data.edition_updated_at,
+      // Parse authors from display string (simplified for view usage)
+      authors: data.authors_display ? 
+        data.authors_display.split(', ').map((name: string) => ({
+          id: '', // Not available in view
+          name: name.trim(),
+          biography: null,
+          birth_date: null,
+          death_date: null,
+          created_at: null,
+          updated_at: null
+        })) : []
+    }
+  };
 
   return bookCopy;
 }
@@ -288,6 +333,21 @@ export async function updateBookCopy(
     }
   }
 
+  // Get current book copy to preserve existing condition_info data
+  const { data: currentCopy, error: fetchError } = await supabase()
+    .from("book_copies")
+    .select("condition_info")
+    .eq("id", bookCopyId)
+    .eq("library_id", libraryId)
+    .single();
+
+  if (fetchError) {
+    console.error("Error fetching current copy:", fetchError);
+    throw new Error("Failed to fetch current book copy");
+  }
+
+  const currentConditionInfo = currentCopy?.condition_info || {};
+
   // Prepare update data with proper structure
   const updatePayload = {
     copy_number: updateData.copy_number,
@@ -298,6 +358,7 @@ export async function updateBookCopy(
       call_number: updateData.call_number || null,
     },
     condition_info: {
+      ...currentConditionInfo,
       condition: updateData.condition,
       notes: updateData.notes || null,
       last_maintenance: new Date().toISOString(),

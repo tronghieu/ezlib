@@ -600,7 +600,6 @@ export type Database = {
           inviter_id: string
           library_id: string
           metadata: Json | null
-          permissions: Json | null
           personal_message: string | null
           role: string
           status: string
@@ -616,7 +615,6 @@ export type Database = {
           inviter_id: string
           library_id: string
           metadata?: Json | null
-          permissions?: Json | null
           personal_message?: string | null
           role: string
           status?: string
@@ -632,7 +630,6 @@ export type Database = {
           inviter_id?: string
           library_id?: string
           metadata?: Json | null
-          permissions?: Json | null
           personal_message?: string | null
           role?: string
           status?: string
@@ -1032,20 +1029,48 @@ export type Database = {
     Views: {
       book_display_view: {
         Row: {
+          acquisition_date: string | null
+          acquisition_price: number | null
           authors_display: string | null
+          availability: Json | null
           availability_status: string | null
           available_copies: number | null
+          average_rating: number | null
+          barcode: string | null
           book_copy_id: string | null
           book_edition_id: string | null
+          call_number: string | null
+          condition: string | null
+          condition_info: Json | null
+          condition_notes: string | null
           copy_created_at: string | null
           copy_number: string | null
           copy_status: string | null
           copy_updated_at: string | null
           country: string | null
+          cover_image_url: string | null
+          current_availability_status: string | null
+          current_borrower_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          due_date: string | null
+          edition_created_at: string | null
           edition_metadata: Json | null
+          edition_updated_at: string | null
+          format: string | null
+          general_book_id: string | null
+          is_deleted: boolean | null
           isbn_13: string | null
           language: string | null
+          last_enriched_at: string | null
           library_id: string | null
+          location: Json | null
+          page_count: number | null
+          publication_date: string | null
+          publisher: string | null
+          review_count: number | null
+          section: string | null
+          shelf: string | null
           social_stats: Json | null
           subtitle: string | null
           title: string | null
@@ -1059,27 +1084,69 @@ export type Database = {
             referencedRelation: "libraries"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "book_editions_general_book_id_fkey"
+            columns: ["general_book_id"]
+            isOneToOne: false
+            referencedRelation: "general_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_book_copies_deleted_by"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "library_staff"
+            referencedColumns: ["id"]
+          },
         ]
       }
       book_search_view: {
         Row: {
+          acquisition_date: string | null
+          acquisition_price: number | null
           authors_display: string | null
           authors_search: string | null
+          availability: Json | null
           availability_status: string | null
           available_copies: number | null
+          average_rating: number | null
+          barcode: string | null
           book_copy_id: string | null
           book_edition_id: string | null
+          call_number: string | null
+          condition: string | null
+          condition_info: Json | null
+          condition_notes: string | null
           copy_created_at: string | null
           copy_number: string | null
           copy_status: string | null
           copy_updated_at: string | null
           country: string | null
+          cover_image_url: string | null
+          current_availability_status: string | null
+          current_borrower_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          due_date: string | null
+          edition_created_at: string | null
           edition_metadata: Json | null
+          edition_updated_at: string | null
+          format: string | null
+          general_book_id: string | null
+          is_deleted: boolean | null
           isbn_13: string | null
           isbn_search: string | null
           language: string | null
+          last_enriched_at: string | null
           library_id: string | null
+          location: Json | null
+          page_count: number | null
+          publication_date: string | null
+          publisher: string | null
+          review_count: number | null
           search_vector: unknown | null
+          section: string | null
+          shelf: string | null
           social_stats: Json | null
           subtitle: string | null
           title: string | null
@@ -1094,13 +1161,32 @@ export type Database = {
             referencedRelation: "libraries"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "book_editions_general_book_id_fkey"
+            columns: ["general_book_id"]
+            isOneToOne: false
+            referencedRelation: "general_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_book_copies_deleted_by"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "library_staff"
+            referencedColumns: ["id"]
+          },
         ]
       }
       library_book_summary_view: {
         Row: {
+          active_copies: number | null
           available_titles: number | null
+          damaged_copies: number | null
+          deleted_copies: number | null
           fully_borrowed_titles: number | null
           library_id: string | null
+          lost_copies: number | null
+          maintenance_copies: number | null
           recent_additions: number | null
           total_available_copies: number | null
           total_book_copies: number | null
