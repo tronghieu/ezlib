@@ -8,7 +8,7 @@
 import React from "react";
 import { LibraryCard } from "./library-card";
 import { AlertCircle, Building2 } from "lucide-react";
-import type { LibraryWithAccess } from "@/lib/types";
+import type { LibraryWithAccess } from "@/types";
 
 interface LibrarySelectionGridProps {
   libraries: LibraryWithAccess[];

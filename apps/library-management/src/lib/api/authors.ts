@@ -4,7 +4,7 @@
  */
 
 import { supabase } from "@/lib/supabase/client";
-import type { Author, AuthorSearchResult, AuthorFormData } from "@/lib/types/books";
+import type { Author, AuthorSearchResult, AuthorFormData } from "@/types/books";
 
 /**
  * Search for existing authors by name

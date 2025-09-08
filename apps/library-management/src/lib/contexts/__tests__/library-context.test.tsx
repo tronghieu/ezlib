@@ -15,7 +15,7 @@ import {
 } from "../library-context";
 
 import { createClient } from "@/lib/supabase/client";
-import type { LibraryWithAccess } from "@/lib/types";
+import type { LibraryWithAccess } from "@/types";
 
 // Mock Supabase client
 jest.mock("@/lib/supabase/client", () => ({
@@ -50,7 +50,6 @@ const mockLibraries: LibraryWithAccess[] = [
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
     user_role: "admin",
-    user_permissions: { manage_books: true },
     staff_id: "staff-1",
     staff_status: "active",
   },
@@ -66,7 +65,6 @@ const mockLibraries: LibraryWithAccess[] = [
     created_at: "2024-01-02T00:00:00Z",
     updated_at: "2024-01-02T00:00:00Z",
     user_role: "librarian",
-    user_permissions: { manage_books: false },
     staff_id: "staff-2",
     staff_status: "active",
   },
@@ -131,8 +129,8 @@ function renderWithProviders(
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MockAuthProvider value={mockAuthValue}>
-        <MockLibraryProvider>{ui}</MockLibraryProvider>
+      <MockAuthProvider value={mockAuthValue as any}>
+        <MockLibraryProvider value={{} as any}>{ui}</MockLibraryProvider>
       </MockAuthProvider>
     </QueryClientProvider>
   );
@@ -141,6 +139,11 @@ function renderWithProviders(
 describe("LibraryContext", () => {
   let mockSupabase: {
     from: jest.Mock;
+    select: jest.Mock;
+    eq: jest.Mock;
+    single: jest.Mock;
+    order: jest.Mock;
+    is: jest.Mock;
     auth: {
       getUser: jest.Mock;
     };
@@ -158,7 +161,10 @@ describe("LibraryContext", () => {
       single: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
       is: jest.fn().mockReturnThis(),
-    };
+      auth: {
+        getUser: jest.fn(),
+      },
+    } as any;
 
     (createClient as jest.Mock).mockReturnValue(mockSupabase);
 
@@ -189,7 +195,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,
@@ -221,7 +226,6 @@ describe("LibraryContext", () => {
           {
             id: singleLibrary[0].staff_id,
             role: singleLibrary[0].user_role,
-            permissions: singleLibrary[0].user_permissions,
             status: singleLibrary[0].staff_status,
             libraries: {
               id: singleLibrary[0].id,
@@ -277,7 +281,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,
@@ -377,7 +380,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,
@@ -419,7 +421,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,
@@ -483,7 +484,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,
@@ -552,7 +552,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,
@@ -597,7 +596,6 @@ describe("LibraryContext", () => {
           {
             id: mockLibraries[0].staff_id,
             role: mockLibraries[0].user_role,
-            permissions: mockLibraries[0].user_permissions,
             status: mockLibraries[0].staff_status,
             libraries: {
               id: mockLibraries[0].id,
@@ -635,7 +633,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,
@@ -738,7 +735,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,
@@ -784,7 +780,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,
@@ -831,7 +826,6 @@ describe("LibraryContext", () => {
           {
             id: mockLibraries[0].staff_id,
             role: mockLibraries[0].user_role,
-            permissions: mockLibraries[0].user_permissions,
             status: mockLibraries[0].staff_status,
             libraries: {
               id: mockLibraries[0].id,
@@ -861,7 +855,6 @@ describe("LibraryContext", () => {
         data: mockLibraries.map((lib) => ({
           id: lib.staff_id,
           role: lib.user_role,
-          permissions: lib.user_permissions,
           status: lib.staff_status,
           libraries: {
             id: lib.id,

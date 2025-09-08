@@ -19,7 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, UserPlus, User, Book } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useAuthorSearch } from "@/lib/hooks/use-author-search";
-import type { Author } from "@/lib/types/books";
+import type { Author } from "@/types/books";
 
 interface AuthorSearchComboboxProps {
   onAuthorSelected: (author: Author) => void;

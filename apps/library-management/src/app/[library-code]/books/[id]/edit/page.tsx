@@ -1,3 +1,5 @@
+"use client";
+
 import React, { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -60,9 +62,21 @@ function EditBookCopyPageSkeleton(): React.JSX.Element {
 function EditBookCopyPageContent({
   params,
 }: EditBookCopyPageProps): React.JSX.Element {
-  const resolvedParams = React.use(params);
+  const [resolvedParams, setResolvedParams] = React.useState<{
+    "library-code": string;
+    id: string;
+  } | null>(null);
+  
   const { currentLibrary } = useLibraryContext();
   const { canEditBookCopies } = usePermissions();
+
+  React.useEffect(() => {
+    params.then(setResolvedParams);
+  }, [params]);
+
+  if (!resolvedParams) {
+    return <EditBookCopyPageSkeleton />;
+  }
 
   if (!currentLibrary) {
     return (
@@ -119,26 +133,7 @@ function EditBookCopyPageContent({
         <span className="text-foreground font-medium">Edit</span>
       </nav>
 
-      {/* Back Button */}
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/${currentLibrary.code}/books/${resolvedParams.id}`}>
-            <ChevronLeft className="h-4 w-4" />
-            Back to Details
-          </Link>
-        </Button>
-      </div>
 
-      {/* Page Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <BookOpen className="h-8 w-8" />
-          Edit Book Copy
-        </h1>
-        <p className="text-muted-foreground">
-          Update book copy information, location, and condition
-        </p>
-      </div>
 
       {/* Edit Form */}
       <EditBookCopyForm

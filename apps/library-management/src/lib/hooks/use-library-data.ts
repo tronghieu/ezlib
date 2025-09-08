@@ -9,7 +9,7 @@ import { useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/lib/contexts/library-context";
-import type { TablesInsert, TablesUpdate } from "@/lib/types/database";
+import type { TablesInsert, TablesUpdate } from "@/types/database";
 
 // =============================================================================
 // BASE HOOK FOR LIBRARY-SCOPED OPERATIONS
@@ -415,10 +415,10 @@ export function useLibraryStats() {
       ]);
 
       return {
-        totalBooks: data?.total_copies || 0,
+        totalBooks: data?.active_copies || 0,
         uniqueTitles: data?.unique_titles || 0,
-        availableBooks: data?.available_copies || 0,
-        borrowedBooks: data?.borrowed_copies || 0,
+        availableBooks: data?.available_titles || 0,
+        borrowedBooks: data?.fully_borrowed_titles || 0,
         recentAdditions: data?.recent_additions || 0,
         activeMembers: membersResult.data?.length || 0,
         currentCheckouts: transactionsResult.data?.length || 0,

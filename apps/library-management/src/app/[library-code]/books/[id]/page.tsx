@@ -91,16 +91,6 @@ function BookDetailPageContent({
         <span className="text-foreground font-medium">Book Details</span>
       </nav>
 
-      {/* Back to Books Button */}
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={`/${currentLibrary.code}/books`}>
-            <ChevronLeft className="h-4 w-4" />
-            Back to Books
-          </Link>
-        </Button>
-      </div>
-
       {/* Book Copy Detail Component */}
       <BookCopyDetail
         bookCopyId={resolvedParams.id}

@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useLibraryContext } from "@/lib/contexts/library-context";
-import type { LibraryWithAccess } from "@/lib/types";
+import type { LibraryWithAccess } from "@/types";
 import {
   SidebarMenu,
   SidebarMenuButton,

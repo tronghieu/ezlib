@@ -508,7 +508,7 @@
           "name": "general_book_id",
           "columnName": "general_book_id",
           "type": "uuid",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -640,7 +640,7 @@
         {
           "name": "general_books",
           "type": "general_books",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "object",
           "relationName": "book_contributorsTogeneral_books",
           "relationFromFields": [
@@ -774,7 +774,7 @@
           "name": "location",
           "columnName": "location",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -788,7 +788,7 @@
           "name": "condition_info",
           "columnName": "condition_info",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -802,7 +802,7 @@
           "name": "availability",
           "columnName": "availability",
           "type": "jsonb",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -1028,7 +1028,7 @@
           "name": "general_book_id",
           "columnName": "general_book_id",
           "type": "uuid",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -1166,7 +1166,7 @@
         {
           "name": "general_books",
           "type": "general_books",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "object",
           "relationName": "book_editionsTogeneral_books",
           "relationFromFields": [
@@ -3618,20 +3618,6 @@
           "maxLength": null
         },
         {
-          "id": "public.invitations.permissions",
-          "name": "permissions",
-          "columnName": "permissions",
-          "type": "jsonb",
-          "isRequired": false,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": true,
-          "isId": false,
-          "maxLength": null
-        },
-        {
           "id": "public.invitations.invitation_type",
           "name": "invitation_type",
           "columnName": "invitation_type",
@@ -6071,7 +6057,7 @@
           "name": "general_book_id",
           "columnName": "general_book_id",
           "type": "uuid",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "scalar",
           "isList": false,
           "isGenerated": false,
@@ -6231,7 +6217,7 @@
         {
           "name": "general_books",
           "type": "general_books",
-          "isRequired": true,
+          "isRequired": false,
           "kind": "object",
           "relationName": "reviewsTogeneral_books",
           "relationFromFields": [
@@ -8127,34 +8113,6 @@
           "hasDefaultValue": true,
           "isId": false,
           "maxLength": 255
-        },
-        {
-          "id": "_realtime.tenants.max_presence_events_per_second",
-          "name": "max_presence_events_per_second",
-          "columnName": "max_presence_events_per_second",
-          "type": "int4",
-          "isRequired": false,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": true,
-          "isId": false,
-          "maxLength": null
-        },
-        {
-          "id": "_realtime.tenants.max_payload_size_in_kb",
-          "name": "max_payload_size_in_kb",
-          "columnName": "max_payload_size_in_kb",
-          "type": "int4",
-          "isRequired": false,
-          "kind": "scalar",
-          "isList": false,
-          "isGenerated": false,
-          "sequence": false,
-          "hasDefaultValue": true,
-          "isId": false,
-          "maxLength": null
         },
         {
           "name": "extensions",

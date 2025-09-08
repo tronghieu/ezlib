@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useCreateBookEdition, useCreateBookCopies } from "@/lib/hooks/use-book-management";
 import { createBookEdition } from "@/lib/api/book-editions";
 import { createBookCopies } from "@/lib/api/book-copies";
-import type { BookEdition, BookCopy, BookEditionFormData, BookCopyFormData } from "@/lib/types/books";
+import type { BookEdition, BookCopy, BookEditionFormData, BookCopyFormData } from "@/types/books";
 
 // Mock the API functions
 jest.mock("@/lib/api/book-editions");

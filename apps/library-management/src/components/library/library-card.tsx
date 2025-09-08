@@ -9,7 +9,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Users, Calendar, Building2 } from "lucide-react";
-import type { LibraryWithAccess } from "@/lib/types";
+import type { LibraryWithAccess } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface LibraryCardProps {

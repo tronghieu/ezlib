@@ -17,7 +17,7 @@ import type {
   LibraryContextState,
   LibraryWithAccess,
   LibraryAccessValidation,
-} from "@/lib/types";
+} from "@/types";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth/hooks";
 

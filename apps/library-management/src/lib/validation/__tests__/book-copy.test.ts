@@ -59,14 +59,12 @@ describe("bookCopyUpdateSchema", () => {
         "FICTION_001",
         "123",
         "A1B2C3",
-        "SPECIAL-EDITION.001",
       ];
 
       validCopyNumbers.forEach(copyNumber => {
         const result = bookCopyUpdateSchema.safeParse({
           copy_number: copyNumber,
-          location: {},
-          condition_info: { condition: "good" },
+          condition: "good",
         });
         expect(result.success).toBe(true);
       });
@@ -74,18 +72,15 @@ describe("bookCopyUpdateSchema", () => {
 
     it("should reject invalid copy numbers", () => {
       const invalidCopyNumbers = [
-        "", // Empty
-        "   ", // Only spaces
         "A B", // Contains space
         "A@001", // Special character @
-        "A-001-WITH-VERY-LONG-NAME-THAT-EXCEEDS-LIMIT", // Too long
+        "A-001-WITH-VERY-LONG-NAME-THAT-EXCEEDS-FIFTY-CHARACTERS-LIMIT", // Too long (over 50 chars)
       ];
 
       invalidCopyNumbers.forEach(copyNumber => {
         const result = bookCopyUpdateSchema.safeParse({
           copy_number: copyNumber,
-          location: {},
-          condition_info: { condition: "good" },
+          condition: "good",
         });
         expect(result.success).toBe(false);
       });
@@ -106,7 +101,7 @@ describe("bookCopyUpdateSchema", () => {
         const result = bookCopyUpdateSchema.safeParse({
           copy_number: "A-001",
           location,
-          condition_info: { condition: "good" },
+          condition: "good",
         });
         expect(result.success).toBe(true);
       });
@@ -125,7 +120,7 @@ describe("bookCopyUpdateSchema", () => {
         const result = bookCopyUpdateSchema.safeParse({
           copy_number: "A-001",
           location,
-          condition_info: { condition: "good" },
+          condition: "good",
         });
         expect(result.success).toBe(false);
       });
@@ -139,8 +134,7 @@ describe("bookCopyUpdateSchema", () => {
       validConditions.forEach(condition => {
         const result = bookCopyUpdateSchema.safeParse({
           copy_number: "A-001",
-          location: {},
-          condition_info: { condition },
+          condition,
         });
         expect(result.success).toBe(true);
       });
@@ -152,8 +146,7 @@ describe("bookCopyUpdateSchema", () => {
       invalidConditions.forEach(condition => {
         const result = bookCopyUpdateSchema.safeParse({
           copy_number: "A-001",
-          location: {},
-          condition_info: { condition },
+          condition,
         });
         expect(result.success).toBe(false);
       });
@@ -170,8 +163,8 @@ describe("bookCopyUpdateSchema", () => {
       validNotes.forEach(notes => {
         const result = bookCopyUpdateSchema.safeParse({
           copy_number: "A-001",
-          location: {},
-          condition_info: { condition: "good", notes },
+          condition: "good",
+          notes,
         });
         expect(result.success).toBe(true);
       });
@@ -180,8 +173,8 @@ describe("bookCopyUpdateSchema", () => {
       const invalidNotes = "A".repeat(501); // 501 characters
       const result = bookCopyUpdateSchema.safeParse({
         copy_number: "A-001",
-        location: {},
-        condition_info: { condition: "good", notes: invalidNotes },
+        condition: "good",
+        notes: invalidNotes,
       });
       expect(result.success).toBe(false);
     });

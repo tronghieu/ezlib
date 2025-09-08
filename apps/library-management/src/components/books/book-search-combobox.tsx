@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookPlus, Book, Calendar, Info } from "lucide-react";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useBookSearch } from "@/lib/hooks/use-book-search";
-import type { BookEdition } from "@/lib/types/books";
+import type { BookEdition } from "@/types/books";
 
 interface BookSearchComboboxProps {
   onExistingBookSelected: (edition: BookEdition) => void;

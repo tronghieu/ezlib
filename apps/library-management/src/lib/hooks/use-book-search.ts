@@ -4,7 +4,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { searchBookEditions } from "@/lib/api/book-editions";
-import type { BookSearchResult } from "@/lib/types/books";
+import type { BookSearchResult } from "@/types/books";
 
 /**
  * Hook for searching book editions with debounced query

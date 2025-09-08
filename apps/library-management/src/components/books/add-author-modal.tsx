@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, UserPlus, AlertCircle } from "lucide-react";
 import { useCreateAuthor } from "@/lib/hooks/use-author-search";
-import type { Author, AuthorFormData } from "@/lib/types/books";
+import type { Author, AuthorFormData } from "@/types/books";
 
 // Form validation schema
 const authorFormSchema = z.object({

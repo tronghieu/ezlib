@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { searchAuthors, createAuthor, getAuthorById } from "@/lib/api/authors";
-import type { AuthorSearchResult, Author, AuthorFormData } from "@/lib/types/books";
+import type { AuthorSearchResult, Author, AuthorFormData } from "@/types/books";
 
 /**
  * Hook for searching authors with debounced query

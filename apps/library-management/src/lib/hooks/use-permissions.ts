@@ -62,17 +62,17 @@ const PERMISSIONS: Record<string, Record<StaffRole, Permission[]>> = {
  * Hook for checking user permissions in the current library
  */
 export function usePermissions() {
-  const { currentStaff, currentLibrary } = useLibraryContext();
+  const { currentLibrary } = useLibraryContext();
 
   /**
    * Check if user has a specific permission for a feature
    */
   const hasPermission = (feature: string, permission: Permission): boolean => {
-    if (!currentStaff || !currentLibrary) {
+    if (!currentLibrary || !currentLibrary.user_role) {
       return false;
     }
 
-    const userRole = currentStaff.role as StaffRole;
+    const userRole = currentLibrary.user_role as StaffRole;
     const featurePermissions = PERMISSIONS[feature];
 
     if (!featurePermissions || !featurePermissions[userRole]) {
@@ -86,11 +86,11 @@ export function usePermissions() {
    * Check if user has minimum role level
    */
   const hasMinimumRole = (minRole: StaffRole): boolean => {
-    if (!currentStaff) {
+    if (!currentLibrary || !currentLibrary.user_role) {
       return false;
     }
 
-    const userRole = currentStaff.role as StaffRole;
+    const userRole = currentLibrary.user_role as StaffRole;
     const userLevel = ROLE_HIERARCHY[userRole];
     const minLevel = ROLE_HIERARCHY[minRole];
 
@@ -101,11 +101,11 @@ export function usePermissions() {
    * Check if user has any of the specified roles
    */
   const hasAnyRole = (roles: StaffRole[]): boolean => {
-    if (!currentStaff) {
+    if (!currentLibrary || !currentLibrary.user_role) {
       return false;
     }
 
-    const userRole = currentStaff.role as StaffRole;
+    const userRole = currentLibrary.user_role as StaffRole;
     return roles.includes(userRole);
   };
 
@@ -113,11 +113,11 @@ export function usePermissions() {
    * Get all permissions for current user
    */
   const getAllPermissions = (): Record<string, Permission[]> => {
-    if (!currentStaff) {
+    if (!currentLibrary || !currentLibrary.user_role) {
       return {};
     }
 
-    const userRole = currentStaff.role as StaffRole;
+    const userRole = currentLibrary.user_role as StaffRole;
     const permissions: Record<string, Permission[]> = {};
 
     Object.entries(PERMISSIONS).forEach(([feature, rolePermissions]) => {
@@ -168,10 +168,10 @@ export function usePermissions() {
   const canManageStaff = hasPermission("staff_management", "manage");
 
   // Role-based shortcuts
-  const isOwner = currentStaff?.role === "owner";
-  const isManager = currentStaff?.role === "manager";
-  const isLibrarian = currentStaff?.role === "librarian";
-  const isVolunteer = currentStaff?.role === "volunteer";
+  const isOwner = currentLibrary?.user_role === "owner";
+  const isManager = currentLibrary?.user_role === "manager";
+  const isLibrarian = currentLibrary?.user_role === "librarian";
+  const isVolunteer = currentLibrary?.user_role === "volunteer";
 
   // Combined permission checks
   const isLibrarianOrHigher = hasMinimumRole("librarian");
@@ -235,8 +235,7 @@ export function usePermissions() {
     canMakeStructuralChanges,
 
     // User info
-    currentRole: currentStaff?.role as StaffRole | undefined,
-    currentStaff,
+    currentRole: currentLibrary?.user_role as StaffRole | undefined,
     currentLibrary,
   };
 }

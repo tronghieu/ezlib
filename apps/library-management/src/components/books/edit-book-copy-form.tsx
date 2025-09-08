@@ -1,19 +1,49 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Save, X, AlertCircle } from "lucide-react";
+import Image from "next/image";
+import {
+  Save,
+  X,
+  AlertCircle,
+  BookOpen,
+  ChevronLeft,
+  Trash2,
+  Hash,
+  Scan,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useBookCopyDetail } from "@/lib/hooks/use-book-copy-detail";
-import { bookCopyUpdateSchema, type BookCopyUpdateData } from "@/lib/validation/book-copy";
+import { usePermissions } from "@/lib/hooks/use-permissions";
+import { DeleteBookCopyDialog } from "@/components/books/delete-book-copy-dialog";
+import {
+  bookCopyUpdateSchema,
+  type BookCopyUpdateData,
+} from "@/lib/validation/book-copy";
 import { toast } from "sonner";
 
 interface EditBookCopyFormProps {
@@ -28,33 +58,46 @@ export function EditBookCopyForm({
   libraryCode,
 }: EditBookCopyFormProps): React.JSX.Element {
   const router = useRouter();
-  const { data: bookCopy, isLoading, error, updateMutation } = useBookCopyDetail(bookCopyId, libraryId);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const {
+    data: bookCopy,
+    isLoading,
+    error,
+    updateMutation,
+  } = useBookCopyDetail(bookCopyId, libraryId);
+  const { canDeleteBookCopies } = usePermissions();
+  const hasInitialized = useRef(false);
 
   const form = useForm<BookCopyUpdateData>({
     resolver: zodResolver(bookCopyUpdateSchema),
     defaultValues: {
-      copy_number: bookCopy?.copy_number || "",
-      barcode: bookCopy?.barcode || "",
-      shelf_location: bookCopy?.location?.shelf || "",
-      section: bookCopy?.location?.section || "",
-      call_number: bookCopy?.location?.call_number || "",
-      condition: bookCopy?.condition_info?.condition || "good",
-      notes: bookCopy?.condition_info?.notes || "",
+      total_copies: 1,
+      copy_number: "",
+      barcode: "",
+      shelf_location: "",
+      section: "",
+      call_number: "",
+      condition: "good",
+      notes: "",
     },
   });
 
-  // Update form values when book copy data loads
-  if (bookCopy && !form.formState.isDirty) {
-    form.reset({
-      copy_number: bookCopy.copy_number,
-      barcode: bookCopy.barcode || "",
-      shelf_location: bookCopy.location?.shelf || "",
-      section: bookCopy.location?.section || "",
-      call_number: bookCopy.location?.call_number || "",
-      condition: bookCopy.condition_info?.condition || "good",
-      notes: bookCopy.condition_info?.notes || "",
-    });
-  }
+  // Update form values when book copy data loads (only once)
+  useEffect(() => {
+    if (bookCopy && !hasInitialized.current) {
+      form.reset({
+        total_copies: bookCopy.total_copies || 1,
+        copy_number: bookCopy.copy_number,
+        barcode: bookCopy.barcode || "",
+        shelf_location: bookCopy.location?.shelf || "",
+        section: bookCopy.location?.section || "",
+        call_number: bookCopy.location?.call_number || "",
+        condition: bookCopy.condition_info?.condition || "good",
+        notes: bookCopy.condition_info?.notes || "",
+      });
+      hasInitialized.current = true;
+    }
+  }, [bookCopy, form]);
 
   const onSubmit = async (data: BookCopyUpdateData) => {
     try {
@@ -96,7 +139,9 @@ export function EditBookCopyForm({
           <div className="mx-auto w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
             <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">Error Loading Book Copy</h3>
+          <h3 className="text-lg font-semibold mb-2">
+            Error Loading Book Copy
+          </h3>
           <p className="text-muted-foreground mb-4">
             Failed to load book copy details. Please try again.
           </p>
@@ -104,9 +149,7 @@ export function EditBookCopyForm({
             <Button variant="outline" onClick={() => window.location.reload()}>
               Retry
             </Button>
-            <Button onClick={handleCancel}>
-              Back to Details
-            </Button>
+            <Button onClick={handleCancel}>Back to Details</Button>
           </div>
         </CardContent>
       </Card>
@@ -128,53 +171,98 @@ export function EditBookCopyForm({
 
   const { book_edition } = bookCopy;
   const authors = book_edition?.authors || [];
-  const authorNames = authors.map(a => a.name).join(", ");
+  const authorNames = authors.map((a) => a.name).join(", ");
 
   return (
     <div className="space-y-6">
-      {/* Read-Only Book Edition Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Book Information</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            The following book edition information cannot be edited from this page.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="font-medium">Title:</span>
-                <span>{book_edition?.title || "N/A"}</span>
+      {/* Header with Book Cover, Title and Back Button */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-row gap-3 sm:gap-6">
+          {/* Book Cover */}
+          <div className="flex-shrink-0">
+            {book_edition?.edition_metadata?.cover_image_url ? (
+              <div className="relative w-32 h-48 md:w-40 md:h-60 rounded-lg overflow-hidden shadow-md">
+                <Image
+                  src={book_edition.edition_metadata.cover_image_url}
+                  alt={`Cover of ${book_edition?.title || "book"}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 80px, (max-width: 768px) 128px, 160px"
+                  priority
+                />
               </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Author(s):</span>
-                <span>{authorNames || "N/A"}</span>
+            ) : (
+              <div className="w-20 h-28 sm:w-32 sm:h-48 md:w-40 md:h-60 bg-muted border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-1 sm:mb-2" />
+                  <p className="text-xs">No Cover</p>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="font-medium">ISBN-13:</span>
-                <span className="font-mono text-sm">{book_edition?.isbn_13 || "N/A"}</span>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="font-medium">Language:</span>
-                <span>{book_edition?.language || "N/A"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Publisher:</span>
-                <span>{book_edition?.edition_metadata?.publisher || "N/A"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Status:</span>
+            )}
+          </div>
+
+          {/* Book Information */}
+          <div className="space-y-2 flex-1 min-w-0">
+            <h1 className="flex items-center text-lg sm:text-2xl md:text-3xl font-bold tracking-tight break-words gap-2 sm:gap-3">
+              {book_edition?.title || "Untitled"}
+              <span className="text-muted-foreground">
+                #{bookCopy.copy_number}
+              </span>
+            </h1>
+            {book_edition?.subtitle && (
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground break-words">
+                {book_edition.subtitle}
+              </p>
+            )}
+            <div className="space-y-1 text-sm text-muted-foreground">
+              {authorNames && <p>by {authorNames}</p>}
+              {book_edition?.isbn_13 && (
+                <p className="font-mono">ISBN: {book_edition.isbn_13}</p>
+              )}
+              {(book_edition?.country || book_edition?.language) && (
+                <p>
+                  {book_edition?.country && book_edition?.language
+                    ? `Country: ${book_edition.country} (${book_edition.language})`
+                    : book_edition?.country
+                      ? `Country: ${book_edition.country}`
+                      : `Language: ${book_edition.language}`}
+                </p>
+              )}
+              {book_edition.edition_metadata?.page_count && (
+                <p>Pages: {book_edition.edition_metadata.page_count}</p>
+              )}
+              {book_edition.edition_metadata?.format && (
+                <p>Format: {book_edition.edition_metadata.format}</p>
+              )}
+              {book_edition.edition_metadata?.publisher && (
+                <p>
+                  Publisher: {book_edition.edition_metadata.publisher}{" "}
+                  {book_edition.edition_metadata?.publication_date && (
+                    <span>
+                      (
+                      {new Date(
+                        book_edition.edition_metadata.publication_date
+                      ).getFullYear()}
+                      )
+                    </span>
+                  )}
+                </p>
+              )}
+              <div>
                 <Badge variant="secondary">{bookCopy.status}</Badge>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Separator />
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleCancel}>
+            <ChevronLeft className="h-4 w-4" />
+            Back to Details
+          </Button>
+        </div>
+      </div>
 
       {/* Editable Form */}
       <Card>
@@ -186,40 +274,130 @@ export function EditBookCopyForm({
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Copy Information Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Copy Information</h3>
-                
-                <FormField
-                  control={form.control}
-                  name="copy_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Copy Number *</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g., A-001, BK-2024-001"
-                          className="max-w-sm"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Library-specific identifier for this book copy
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Form Layout - Match add-copies-form structure */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Column: Copies & Condition */}
+                <div className="space-y-4 bg-muted/50 p-3 rounded-2xl border">
+                  {/* Total Copies */}
+                  <FormField
+                    control={form.control}
+                    name="total_copies"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Total Copies <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            min="1"
+                            max="99"
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            placeholder="1"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Total copies of this edition in your library
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Condition */}
+                  <FormField
+                    control={form.control}
+                    name="condition"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Condition</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select condition" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="excellent">Excellent</SelectItem>
+                            <SelectItem value="good">Good</SelectItem>
+                            <SelectItem value="fair">Fair</SelectItem>
+                            <SelectItem value="poor">Poor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Right Column: Management */}
+                <div className="space-y-3">
+                  <div>
+                    <FormLabel className="text-sm font-medium">
+                      Management (Optional)
+                    </FormLabel>
+                  </div>
+
+                  {/* Identify Code */}
+                  <FormField
+                    control={form.control}
+                    name="copy_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Hash className="h-3 w-3" />
+                          Identify Code
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="text"
+                            placeholder="e.g. A001, SC-01, 123"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Barcode */}
+                  <FormField
+                    control={form.control}
+                    name="barcode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Scan className="h-3 w-3" />
+                          Barcode
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="text"
+                            placeholder="e.g. 1234567890123"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              <Separator />
+              <Separator className="h-0 border-t border-dashed bg-transparent" />
 
-              {/* Location Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Location</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Location Information */}
+              <div className="space-y-3">
+                <FormLabel className="text-sm font-medium">
+                  Location Information (Optional)
+                </FormLabel>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Shelf Location */}
                   <FormField
                     control={form.control}
                     name="shelf_location"
@@ -229,7 +407,8 @@ export function EditBookCopyForm({
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="e.g., A1, Fiction-01"
+                            type="text"
+                            placeholder="e.g. A1, B3-Top"
                           />
                         </FormControl>
                         <FormMessage />
@@ -237,6 +416,7 @@ export function EditBookCopyForm({
                     )}
                   />
 
+                  {/* Section */}
                   <FormField
                     control={form.control}
                     name="section"
@@ -246,7 +426,27 @@ export function EditBookCopyForm({
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="e.g., Fiction, Science"
+                            type="text"
+                            placeholder="e.g. Fiction, Science"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Call Number */}
+                  <FormField
+                    control={form.control}
+                    name="call_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Call Number</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="text"
+                            placeholder="e.g. 813.54 SMI"
                           />
                         </FormControl>
                         <FormMessage />
@@ -254,128 +454,72 @@ export function EditBookCopyForm({
                     )}
                   />
                 </div>
-
-                <FormField
-                  control={form.control}
-                  name="call_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Call Number</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g., 823.914 SMI, FIC-001"
-                          className="max-w-sm"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Dewey Decimal or custom classification number
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
-              <Separator />
+              {/* Notes */}
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Any additional notes about these copies..."
+                        className="min-h-[60px] resize-none"
+                        maxLength={500}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              {/* Condition Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Condition</h3>
-                
-                <FormField
-                  control={form.control}
-                  name="condition"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Condition *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="max-w-sm">
-                            <SelectValue placeholder="Select condition" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="excellent">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-green-500" />
-                              Excellent
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="good">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-blue-500" />
-                              Good
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="fair">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                              Fair
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="poor">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-red-500" />
-                              Poor
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+              {/* Action Buttons - Delete on left, Save/Cancel on right */}
+              <div className="flex justify-between items-center pt-6">
+                <div>
+                  {canDeleteBookCopies && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setShowDeleteDialog(true)}
+                      disabled={updateMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
                   )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Condition Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Optional notes about the book's condition, damage, or maintenance..."
-                          className="min-h-[100px]"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Add any relevant notes about the book&apos;s condition or maintenance history
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-6">
-                <Button
-                  type="submit"
-                  disabled={updateMutation.isPending || !form.formState.isDirty}
-                >
-                  {updateMutation.isPending ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full mr-2" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={updateMutation.isPending}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
+                </div>
+                <div className="flex gap-4">
+                  <Button
+                    type="submit"
+                    disabled={
+                      updateMutation.isPending || !form.formState.isDirty
+                    }
+                  >
+                    {updateMutation.isPending ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full mr-2" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={updateMutation.isPending}
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </Button>
+                </div>
               </div>
 
               {/* Dirty Form Warning */}
@@ -389,6 +533,18 @@ export function EditBookCopyForm({
           </Form>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteBookCopyDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        bookCopy={bookCopy}
+        libraryId={libraryId}
+        onSuccess={() => {
+          // Navigate back to books list after successful deletion
+          router.push(`/${libraryCode}/books`);
+        }}
+      />
     </div>
   );
 }

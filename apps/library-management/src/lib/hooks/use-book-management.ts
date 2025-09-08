@@ -5,7 +5,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createBookEdition } from "@/lib/api/book-editions";
 import { createBookCopies } from "@/lib/api/book-copies";
-import type { BookEdition, BookCopy, BookEditionFormData, BookCopyFormData } from "@/lib/types/books";
+import type { BookEdition, BookCopy, BookEditionFormData, BookCopyFormData } from "@/types/books";
 
 /**
  * Hook for creating a new book edition

@@ -22,7 +22,7 @@ import type {
   BookEdition,
   Author,
   BookEditionFormData,
-} from "@/lib/types/books";
+} from "@/types/books";
 import { Separator } from "../ui/separator";
 
 // Form validation schema

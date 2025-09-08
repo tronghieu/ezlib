@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { useLibraryContext } from "@/lib/contexts/library-context";
 import { useCreateBookCopies } from "@/lib/hooks/use-book-management";
-import type { BookEdition, BookCopyFormData } from "@/lib/types/books";
+import type { BookEdition, BookCopyFormData } from "@/types/books";
 import { Separator } from "../ui/separator";
 
 // Form validation schema

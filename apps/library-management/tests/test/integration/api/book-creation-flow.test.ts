@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 import { createAuthor, searchAuthors } from "@/lib/api/authors";
 import { createBookEdition, searchBookEditions } from "@/lib/api/book-editions";
 import { createBookCopies } from "@/lib/api/book-copies";
-import type { AuthorFormData, BookEditionFormData, BookCopyFormData } from "@/lib/types/books";
+import type { AuthorFormData, BookEditionFormData, BookCopyFormData } from "@/types/books";
 
 // This requires Supabase to be running locally
 describe("Book Creation Flow Integration", () => {

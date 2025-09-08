@@ -68,6 +68,8 @@ export interface BookCopy {
   book_edition_id: string;
   copy_number: string;
   barcode?: string | null;
+  total_copies?: number;
+  available_copies?: number;
   location?: {
     shelf?: string;
     section?: string;
@@ -88,8 +90,14 @@ export interface BookCopy {
     hold_queue?: string[];
   } | null;
   status: "active" | "inactive" | "damaged" | "lost" | "maintenance";
+  is_deleted?: boolean;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
   created_at: string;
   updated_at: string;
+  // Additional display fields from views
+  title?: string;
+  authors_display?: string;
   // Joined data
   book_edition?: BookEdition;
 }

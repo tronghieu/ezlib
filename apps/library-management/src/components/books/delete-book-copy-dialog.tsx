@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useDeleteBookCopy } from "@/lib/hooks/use-book-copy-detail";
-import type { BookCopy } from "@/lib/types/books";
+import type { BookCopy } from "@/types/books";
 import { toast } from "sonner";
 
 interface DeleteBookCopyDialogProps {

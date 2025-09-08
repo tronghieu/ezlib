@@ -17,7 +17,7 @@ import { Search, BookPlus, Package, CheckCircle2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLibraryContext } from "@/lib/contexts/library-context";
 import { toast } from "sonner";
-import type { BookEdition } from "@/lib/types/books";
+import type { BookEdition } from "@/types/books";
 
 interface AddBookWorkflowProps {
   onComplete: () => void;

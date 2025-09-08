@@ -4,7 +4,7 @@
  */
 
 import { supabase } from "@/lib/supabase/client";
-import type { BookCopy, BookCopyFormData, BookEdition, Author } from "@/types/books.d";
+import type { BookCopy, BookCopyFormData, BookEdition, Author } from "@/types/books";
 import type { BookCopyUpdateData } from "@/lib/validation/book-copy";
 
 export interface BookCopyWithDetails extends BookCopy {
@@ -254,50 +254,49 @@ export async function fetchBookCopyDetail(
   // Transform view data to match our BookCopyWithDetails interface
   const bookCopy: BookCopyWithDetails = {
     // Book copy fields
-    id: data.book_copy_id,
-    library_id: data.library_id,
-    book_edition_id: data.book_edition_id,
-    copy_number: data.copy_number,
-    barcode: data.barcode,
-    total_copies: data.total_copies,
-    available_copies: data.available_copies,
-    location: data.location,
-    condition_info: data.condition_info,
-    availability: data.availability,
-    status: data.copy_status,
-    is_deleted: data.is_deleted,
-    deleted_at: data.deleted_at,
-    deleted_by: data.deleted_by,
-    created_at: data.copy_created_at,
-    updated_at: data.copy_updated_at,
+    id: data.book_copy_id ?? '',
+    library_id: data.library_id ?? '',
+    book_edition_id: data.book_edition_id ?? '',
+    copy_number: data.copy_number ?? '',
+    barcode: data.barcode ?? undefined,
+    total_copies: data.total_copies ?? undefined,
+    available_copies: data.available_copies ?? undefined,
+    location: data.location as any,
+    condition_info: data.condition_info as any,
+    availability: data.availability as any,
+    status: (data.copy_status as any) ?? 'active',
+    is_deleted: data.is_deleted ?? undefined,
+    deleted_at: data.deleted_at ?? undefined,
+    deleted_by: data.deleted_by ?? undefined,
+    created_at: data.copy_created_at ?? '',
+    updated_at: data.copy_updated_at ?? '',
     
     // Additional display fields
-    title: data.title,
-    authors_display: data.authors_display,
+    title: data.title ?? undefined,
+    authors_display: data.authors_display ?? undefined,
     
     // Book edition nested object
     book_edition: {
-      id: data.book_edition_id,
-      general_book_id: data.general_book_id,
-      isbn_13: data.isbn_13,
-      title: data.title,
-      subtitle: data.subtitle,
-      language: data.language,
-      country: data.country,
-      edition_metadata: data.edition_metadata,
-      social_stats: data.social_stats,
-      created_at: data.edition_created_at,
-      updated_at: data.edition_updated_at,
+      id: data.book_edition_id ?? '',
+      general_book_id: data.general_book_id ?? '',
+      isbn_13: data.isbn_13 ?? undefined,
+      title: data.title ?? '',
+      subtitle: data.subtitle ?? undefined,
+      language: data.language ?? '',
+      country: data.country ?? undefined,
+      edition_metadata: data.edition_metadata as any,
+      created_at: data.edition_created_at ?? '',
+      updated_at: data.edition_updated_at ?? '',
       // Parse authors from display string (simplified for view usage)
       authors: data.authors_display ? 
         data.authors_display.split(', ').map((name: string) => ({
           id: '', // Not available in view
           name: name.trim(),
+          canonical_name: name.trim().toLowerCase(),
           biography: null,
-          birth_date: null,
-          death_date: null,
-          created_at: null,
-          updated_at: null
+          metadata: null,
+          created_at: '',
+          updated_at: ''
         })) : []
     }
   };
@@ -346,12 +345,13 @@ export async function updateBookCopy(
     throw new Error("Failed to fetch current book copy");
   }
 
-  const currentConditionInfo = currentCopy?.condition_info || {};
+  const currentConditionInfo = (currentCopy?.condition_info as any) || {};
 
   // Prepare update data with proper structure
   const updatePayload = {
     copy_number: updateData.copy_number,
     barcode: updateData.barcode || null,
+    total_copies: updateData.total_copies,
     location: {
       shelf: updateData.shelf_location || null,
       section: updateData.section || null,
@@ -398,7 +398,8 @@ export async function updateBookCopy(
     throw new Error("Book copy not found or no changes made");
   }
 
-  return data as BookCopyWithDetails;
+  // Return the updated book copy by fetching it with proper structure
+  return await fetchBookCopyDetail(bookCopyId, libraryId);
 }
 
 /**
@@ -472,7 +473,8 @@ export async function checkBookCopyDeleteSafety(
     throw new Error(`Failed to fetch book copy: ${copyError.message}`);
   }
 
-  const activeHolds = bookCopy?.availability?.hold_queue?.length || 0;
+  const availability = bookCopy?.availability as any;
+  const activeHolds = availability?.hold_queue?.length || 0;
   const activeBorrowsCount = activeBorrows?.length || 0;
 
   const warnings: string[] = [];

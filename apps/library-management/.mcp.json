@@ -25,7 +25,13 @@
     },
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest"]
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "vibe-annotations": {
+      "type": "sse",
+      "url": "http://127.0.0.1:3846/sse"
     }
   }
 }

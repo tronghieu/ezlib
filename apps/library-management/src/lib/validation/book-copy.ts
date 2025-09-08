@@ -5,6 +5,12 @@ import { z } from "zod";
  * Aligned with existing creation patterns from add-copies-form
  */
 export const bookCopyUpdateSchema = z.object({
+  total_copies: z
+    .number()
+    .min(1, "Must have at least 1 copy")
+    .max(99, "Cannot have more than 99 copies")
+    .optional(),
+
   copy_number: z
     .string()
     .max(50, "Copy number must be less than 50 characters")
@@ -193,7 +199,7 @@ export function validateCopyNumber(copyNumber: string, existingNumbers: string[]
   suggestion?: string;
 } {
   // Check if it meets the basic schema requirements
-  const result = z.string().min(1).max(20).safeParse(copyNumber);
+  const result = z.string().min(1).max(50).safeParse(copyNumber);
   if (!result.success) {
     return {
       isValid: false,
@@ -210,8 +216,16 @@ export function validateCopyNumber(copyNumber: string, existingNumbers: string[]
     };
   }
 
-  // Check format
-  const formatResult = bookCopyUpdateSchema.shape.copy_number.safeParse(copyNumber);
+  // Check format using a separate schema since the main schema has transform
+  const copyNumberSchema = z
+    .string()
+    .max(50, "Copy number must be less than 50 characters")
+    .regex(
+      /^[A-Za-z0-9\-_]*$/,
+      "Copy number can only contain letters, numbers, hyphens and underscores"
+    );
+    
+  const formatResult = copyNumberSchema.safeParse(copyNumber);
   if (!formatResult.success) {
     return {
       isValid: false,
@@ -262,33 +276,42 @@ export function validateLocation(location: {
   section?: string;
   call_number?: string;
 }): { isValid: boolean; error?: string } {
-  // Validate individual location fields using the schema
-  const shelfResult = location.shelf ? 
-    bookCopyUpdateSchema.shape.shelf_location.safeParse(location.shelf) : { success: true };
-  const sectionResult = location.section ? 
-    bookCopyUpdateSchema.shape.section.safeParse(location.section) : { success: true };
-  const callNumberResult = location.call_number ? 
-    bookCopyUpdateSchema.shape.call_number.safeParse(location.call_number) : { success: true };
+  // Create separate validation schemas since the main schema has transform
+  const shelfSchema = z.string().max(50, "Shelf location must be less than 50 characters");
+  const sectionSchema = z.string().max(50, "Section must be less than 50 characters");
+  const callNumberSchema = z.string().max(100, "Call number must be less than 100 characters");
 
-  if (!shelfResult.success) {
-    return {
-      isValid: false,
-      error: shelfResult.error.issues[0].message,
-    };
+  // Validate shelf location
+  if (location.shelf) {
+    const shelfResult = shelfSchema.safeParse(location.shelf);
+    if (!shelfResult.success) {
+      return {
+        isValid: false,
+        error: shelfResult.error.issues[0].message,
+      };
+    }
   }
 
-  if (!sectionResult.success) {
-    return {
-      isValid: false,
-      error: sectionResult.error.issues[0].message,
-    };
+  // Validate section
+  if (location.section) {
+    const sectionResult = sectionSchema.safeParse(location.section);
+    if (!sectionResult.success) {
+      return {
+        isValid: false,
+        error: sectionResult.error.issues[0].message,
+      };
+    }
   }
 
-  if (!callNumberResult.success) {
-    return {
-      isValid: false,
-      error: callNumberResult.error.issues[0].message,
-    };
+  // Validate call number
+  if (location.call_number) {
+    const callNumberResult = callNumberSchema.safeParse(location.call_number);
+    if (!callNumberResult.success) {
+      return {
+        isValid: false,
+        error: callNumberResult.error.issues[0].message,
+      };
+    }
   }
 
   return { isValid: true };

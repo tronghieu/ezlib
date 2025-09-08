@@ -5,7 +5,7 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
-import type { LibraryWithAccess } from "@/lib/types";
+import type { LibraryWithAccess } from "@/types";
 
 // Create a mock User factory with all required properties
 export const createMockUser = (overrides: Partial<User> = {}): User => ({

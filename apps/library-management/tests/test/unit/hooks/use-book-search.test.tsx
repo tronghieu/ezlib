@@ -8,7 +8,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useBookSearch } from "@/lib/hooks/use-book-search";
 import { searchBookEditions } from "@/lib/api/book-editions";
-import type { BookSearchResult } from "@/lib/types/books";
+import type { BookSearchResult } from "@/types/books";
 
 // Mock the API function
 jest.mock("@/lib/api/book-editions");

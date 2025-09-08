@@ -10,7 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useLibraryContext } from "@/lib/contexts/library-context";
 import { useDebounce } from "@/lib/hooks/use-debounce";
-import type { Database } from "@/lib/types/database";
+import type { Database } from "@/types/database";
 
 // =============================================================================
 // TYPES

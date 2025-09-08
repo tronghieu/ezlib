@@ -7,6 +7,7 @@
 
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -37,6 +38,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { useBooks, useBookSearch } from "@/lib/hooks/use-books";
+import { useLibraryContext } from "@/lib/contexts/library-context";
 import { cn } from "@/lib/utils";
 
 export interface Book {
@@ -61,6 +63,9 @@ type SortField = "title" | "author";
 type SortOrder = "asc" | "desc";
 
 export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
+  // Library context for URL generation
+  const { currentLibrary } = useLibraryContext();
+  
   // Search and pagination state
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,6 +113,12 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Generate book detail URL
+  const getBookDetailUrl = (bookId: string) => {
+    if (!currentLibrary) return '#';
+    return `/${currentLibrary.code}/books/${bookId}`;
   };
 
   // Paginate search results client-side if needed
@@ -272,9 +283,12 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
                   {/* Title Column with ISBN above */}
                   <TableCell>
                     <div className="space-y-1">
-                      <div className="font-medium hover:underline cursor-pointer">
+                      <Link 
+                        href={getBookDetailUrl(book.id)}
+                        className="font-medium hover:underline cursor-pointer text-blue-600 hover:text-blue-800"
+                      >
                         {book.title}
-                      </div>
+                      </Link>
                       {book.isbn && (
                         <div className="text-xs text-muted-foreground font-mono">
                           ISBN: {book.isbn}
@@ -318,17 +332,18 @@ export function BooksTable({ className }: BooksTableProps): React.JSX.Element {
 
                   {/* Actions Column */}
                   <TableCell className="w-16">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => {
-                        // TODO: Navigate to book details page
-                        console.log("Navigate to book details:", book.id);
-                      }}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
+                    <Link href={getBookDetailUrl(book.id)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        asChild
+                      >
+                        <span>
+                          <ChevronRight className="h-4 w-4" />
+                        </span>
+                      </Button>
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))

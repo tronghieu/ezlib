@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { LibrarySelectionGrid } from "./library-selection-grid";
 import { useLibraryContext } from "@/lib/contexts/library-context";
 import { useAuth } from "@/lib/auth/hooks";
-import type { LibraryWithAccess } from "@/lib/types";
+import type { LibraryWithAccess } from "@/types";
 
 export function LibrarySelectionPage(): React.JSX.Element {
   const router = useRouter();

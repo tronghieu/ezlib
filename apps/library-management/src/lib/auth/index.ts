@@ -12,19 +12,14 @@ export type { AuthState, LibraryAccess } from "./hooks";
 export type { LibraryStaffData } from "./server";
 
 // Client-side hooks
-export {
-  useAuth,
-  useLibraryAccess,
-  authUtils,
-} from "./hooks";
+export { useAuth, useLibraryAccess, authUtils } from "./hooks";
 
-// Server-side utilities  
+// Server-side utilities
 export {
   createAuthenticatedClient,
   getAuthenticatedUser,
   requireLibraryAccess,
   withAuth as withAuthMiddleware,
-  withPermission,
   withLibraryScope,
   validateLibraryContext,
   getUserLibraries,

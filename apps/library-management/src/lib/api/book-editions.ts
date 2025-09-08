@@ -4,28 +4,38 @@
  */
 
 import { supabase } from "@/lib/supabase/client";
-import type { BookSearchResult, BookEdition, BookEditionFormData } from "@/lib/types/books";
+import type {
+  BookSearchResult,
+  BookEdition,
+  BookEditionFormData,
+} from "@/types/books";
 
 /**
  * Search for existing book editions by title using optimized view
  * @param searchTerm - Search query (minimum 3 characters)
  * @returns Array of book search results
  */
-export async function searchBookEditions(searchTerm: string): Promise<BookSearchResult[]> {
+export async function searchBookEditions(
+  searchTerm: string
+): Promise<BookSearchResult[]> {
   if (searchTerm.length < 3) {
     return [];
   }
 
   try {
     console.log("Making search API call for:", searchTerm);
-    
+
     // Use book_search_view for optimized searching with pre-computed fields
     // Note: Using DISTINCT on book_edition_id to avoid duplicates from multiple copies
     const { data, error } = await supabase()
       .from("book_search_view")
-      .select("book_edition_id, title, isbn_13, authors_display, edition_metadata")
-      .or(`title_search.ilike.%${searchTerm.toLowerCase()}%,authors_search.ilike.%${searchTerm.toLowerCase()}%,isbn_13.ilike.%${searchTerm}%`)
-      .order('title')
+      .select(
+        "book_edition_id, title, isbn_13, authors_display, edition_metadata"
+      )
+      .or(
+        `title_search.ilike.%${searchTerm.toLowerCase()}%,authors_search.ilike.%${searchTerm.toLowerCase()}%,isbn_13.ilike.%${searchTerm}%`
+      )
+      .order("title")
       .limit(20); // Increase limit since we'll dedupe in JS
 
     console.log("API response:", { data, error });
@@ -36,19 +46,29 @@ export async function searchBookEditions(searchTerm: string): Promise<BookSearch
     }
 
     // Deduplicate by book_edition_id and transform the view data into search results
-    const uniqueEditions = data ? 
-      data.filter((edition, index, arr) => 
-        arr.findIndex(e => e.book_edition_id === edition.book_edition_id) === index
-      ) : [];
-    
-    const results = uniqueEditions.map((edition) => ({
-      id: edition.book_edition_id,
-      title: edition.title,
-      authors: edition.authors_display ? edition.authors_display.split(", ") : [],
-      publication_year: edition.edition_metadata?.publication_date ? parseInt(edition.edition_metadata.publication_date) : undefined,
-      isbn_13: edition.isbn_13 || undefined,
-    })).slice(0, 10); // Limit final results to 10
-    
+    const uniqueEditions = data
+      ? data.filter(
+          (edition, index, arr) =>
+            arr.findIndex(
+              (e) => e.book_edition_id === edition.book_edition_id
+            ) === index
+        )
+      : [];
+
+    const results = uniqueEditions
+      .map((edition) => ({
+        id: edition.book_edition_id ?? '',
+        title: edition.title ?? '',
+        authors: edition.authors_display
+          ? edition.authors_display.split(", ")
+          : [],
+        publication_year: (edition.edition_metadata as any)?.publication_date
+          ? parseInt((edition.edition_metadata as any).publication_date)
+          : undefined,
+        isbn_13: edition.isbn_13 ?? undefined,
+      }))
+      .slice(0, 10); // Limit final results to 10
+
     console.log("Search results transformation:", { data, results });
     return results;
   } catch (error) {
@@ -57,29 +77,32 @@ export async function searchBookEditions(searchTerm: string): Promise<BookSearch
   }
 }
 
-
 /**
  * Create a new book edition with author
  * @param editionData - Book edition form data
  * @returns Created book edition with full details
  */
-export async function createBookEdition(editionData: BookEditionFormData): Promise<BookEdition> {
+export async function createBookEdition(
+  editionData: BookEditionFormData
+): Promise<BookEdition> {
   try {
     // 1. Check catalog access role for creating editions and authors
-    const { data: hasCatalogAccess, error: catalogError } = await supabase()
-      .rpc("user_has_catalog_access");
+    const { data: hasCatalogAccess, error: catalogError } =
+      await supabase().rpc("user_has_catalog_access");
 
     if (catalogError) {
       throw new Error(`Catalog access check failed: ${catalogError.message}`);
     }
 
     if (!hasCatalogAccess) {
-      throw new Error("Insufficient role access. Catalog access required to create book editions.");
+      throw new Error(
+        "Insufficient role access. Catalog access required to create book editions."
+      );
     }
 
     // 2. Start a transaction-like operation
     let authorId = editionData.author_id;
-    
+
     // 3. Create or find author if needed
     if (!authorId && editionData.author_name) {
       const { data: existingAuthor } = await supabase()
@@ -104,7 +127,7 @@ export async function createBookEdition(editionData: BookEditionFormData): Promi
         if (authorError) {
           throw new Error(`Failed to create author: ${authorError.message}`);
         }
-        
+
         authorId = newAuthor.id;
       }
     }
@@ -144,7 +167,9 @@ export async function createBookEdition(editionData: BookEditionFormData): Promi
       });
 
     if (contributorError) {
-      throw new Error(`Failed to link author to book: ${contributorError.message}`);
+      throw new Error(
+        `Failed to link author to book: ${contributorError.message}`
+      );
     }
 
     // 6. Get author details to return complete edition
