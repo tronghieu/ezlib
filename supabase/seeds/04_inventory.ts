@@ -5,14 +5,15 @@
 import { createSeedClient } from "@snaplet/seed";
 import { faker } from "@snaplet/copycat";
 import { createClient } from "@supabase/supabase-js";
-import * as dotenv from 'dotenv';
-import { join } from 'path';
+import * as dotenv from "dotenv";
+import { join } from "path";
 
 // Load environment variables
-dotenv.config({ path: join(__dirname, '..', '.env') });
+dotenv.config({ path: join(__dirname, "..", ".env") });
 
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!serviceRoleKey) {
@@ -22,8 +23,8 @@ if (!serviceRoleKey) {
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 });
 
 // Helper function to replace faker.helpers.weighted
@@ -50,6 +51,11 @@ export const seedInventoryAndCollections = async (
   console.log("📦 Creating book copies and collections...");
   const seed = await createSeedClient();
   const createdBookCopies: any[] = [];
+
+  // Track copy numbers per library to ensure uniqueness
+  const copyNumberCounters = new Map<string, number>();
+  // Track used barcodes globally to ensure uniqueness
+  const usedBarcodes = new Set<string>();
 
   // Each library gets copies of various books
   for (const library of createdLibraries) {
@@ -95,13 +101,32 @@ export const seedInventoryAndCollections = async (
             ? faker.helpers.arrayElement(libraryMembers)?.id || null
             : null;
 
+        // Generate unique copy_number per library
+        const libraryCounter = copyNumberCounters.get(library.id) || 0;
+        const copyNumber = String(libraryCounter + 1).padStart(5, "0");
+        copyNumberCounters.set(library.id, libraryCounter + 1);
+
+        // Generate unique barcode with collision prevention
+        let barcode: string;
+        let attempts = 0;
+        const maxAttempts = 100;
+        do {
+          barcode = `${library.code}-${faker.string.numeric(10)}`;
+          attempts++;
+          if (attempts > maxAttempts) {
+            // Fallback: use timestamp to ensure uniqueness
+            barcode = `${library.code}-${Date.now()}${faker.string.numeric(4)}`;
+            break;
+          }
+        } while (usedBarcodes.has(barcode));
+        usedBarcodes.add(barcode);
 
         const result = await seed.book_copies([
           {
             library_id: library.id,
             book_edition_id: edition.id,
-            copy_number: String(i + 1).padStart(3, "0"),
-            barcode: `${library.code}-${faker.string.numeric(10)}`,
+            copy_number: copyNumber,
+            barcode: barcode,
             total_copies: copyCount,
             available_copies: copyCount,
             location: {
@@ -137,7 +162,7 @@ export const seedInventoryAndCollections = async (
               current_borrower_id: currentBorrower,
               due_date:
                 availabilityStatus === "borrowed"
-                  ? faker.date.future({ days: 14 }).toISOString()
+                  ? faker.date.soon({ days: 14 }).toISOString()
                   : null,
               hold_queue: [],
             },

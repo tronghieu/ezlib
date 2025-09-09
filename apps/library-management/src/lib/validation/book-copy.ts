@@ -4,92 +4,100 @@ import { z } from "zod";
  * Validation schema for updating book copy information
  * Aligned with existing creation patterns from add-copies-form
  */
-export const bookCopyUpdateSchema = z.object({
-  total_copies: z
-    .number()
-    .min(1, "Must have at least 1 copy")
-    .max(99, "Cannot have more than 99 copies")
-    .optional(),
+export const bookCopyUpdateSchema = z
+  .object({
+    total_copies: z
+      .number()
+      .min(1, "Must have at least 1 copy")
+      .max(99, "Cannot have more than 99 copies")
+      .optional(),
 
-  copy_number: z
-    .string()
-    .max(50, "Copy number must be less than 50 characters")
-    .regex(
-      /^[A-Za-z0-9\-_]*$/,
-      "Copy number can only contain letters, numbers, hyphens and underscores"
-    )
-    .optional()
-    .or(z.literal("")),
+    copy_number: z
+      .string()
+      .max(50, "Identify code must be less than 50 characters")
+      .regex(
+        /^[A-Za-z0-9\-_]*$/,
+        "Identify code can only contain letters, numbers, hyphens and underscores"
+      )
+      .optional()
+      .or(z.literal("")),
 
-  barcode: z
-    .string()
-    .max(50, "Barcode must be less than 50 characters")
-    .regex(
-      /^[A-Za-z0-9\-_]*$/,
-      "Barcode can only contain letters, numbers, hyphens and underscores"
-    )
-    .optional()
-    .or(z.literal("")),
+    barcode: z
+      .string()
+      .max(50, "Barcode must be less than 50 characters")
+      .regex(
+        /^[A-Za-z0-9\-_]*$/,
+        "Barcode can only contain letters, numbers, hyphens and underscores"
+      )
+      .optional()
+      .or(z.literal("")),
 
-  // Support both flat fields (for forms) AND nested objects (for tests/API consistency)
-  shelf_location: z
-    .string()
-    .max(50, "Shelf location must be less than 50 characters")
-    .optional()
-    .or(z.literal("")),
+    // Support both flat fields (for forms) AND nested objects (for tests/API consistency)
+    shelf_location: z
+      .string()
+      .max(50, "Shelf location must be less than 50 characters")
+      .optional()
+      .or(z.literal("")),
 
-  section: z
-    .string()
-    .max(50, "Section must be less than 50 characters")
-    .optional()
-    .or(z.literal("")),
+    section: z
+      .string()
+      .max(50, "Section must be less than 50 characters")
+      .optional()
+      .or(z.literal("")),
 
-  call_number: z
-    .string()
-    .max(50, "Call number must be less than 50 characters")
-    .optional()
-    .or(z.literal("")),
+    call_number: z
+      .string()
+      .max(50, "Call number must be less than 50 characters")
+      .optional()
+      .or(z.literal("")),
 
-  condition: z.enum(["excellent", "good", "fair", "poor"], {
-    message: "Invalid condition value",
-  }).optional(),
-  
-  notes: z
-    .string()
-    .max(500, "Notes must be less than 500 characters")
-    .optional()
-    .or(z.literal("")),
+    condition: z
+      .enum(["excellent", "good", "fair", "poor"], {
+        message: "Invalid condition value",
+      })
+      .optional(),
 
-  // Nested structure support for tests and backwards compatibility
-  location: z.object({
-    shelf: z.string().max(50).optional().or(z.literal("")),
-    section: z.string().max(50).optional().or(z.literal("")), 
-    call_number: z.string().max(100).optional().or(z.literal("")),
-  }).optional(),
+    notes: z
+      .string()
+      .max(500, "Notes must be less than 500 characters")
+      .optional()
+      .or(z.literal("")),
 
-  condition_info: z.object({
-    condition: z.enum(["excellent", "good", "fair", "poor"]),
-    notes: z.string().max(500).optional().or(z.literal("")),
-  }).optional(),
-}).transform((data) => {
-  // Transform nested structures to flat fields if needed for backwards compatibility
-  if (data.condition_info?.condition && !data.condition) {
-    data.condition = data.condition_info.condition;
-  }
-  if (data.condition_info?.notes && !data.notes) {
-    data.notes = data.condition_info.notes;
-  }
-  if (data.location?.shelf && !data.shelf_location) {
-    data.shelf_location = data.location.shelf;
-  }
-  if (data.location?.section && !data.section) {
-    data.section = data.location.section;
-  }
-  if (data.location?.call_number && !data.call_number) {
-    data.call_number = data.location.call_number;
-  }
-  return data;
-});
+    // Nested structure support for tests and backwards compatibility
+    location: z
+      .object({
+        shelf: z.string().max(50).optional().or(z.literal("")),
+        section: z.string().max(50).optional().or(z.literal("")),
+        call_number: z.string().max(100).optional().or(z.literal("")),
+      })
+      .optional(),
+
+    condition_info: z
+      .object({
+        condition: z.enum(["excellent", "good", "fair", "poor"]),
+        notes: z.string().max(500).optional().or(z.literal("")),
+      })
+      .optional(),
+  })
+  .transform((data) => {
+    // Transform nested structures to flat fields if needed for backwards compatibility
+    if (data.condition_info?.condition && !data.condition) {
+      data.condition = data.condition_info.condition;
+    }
+    if (data.condition_info?.notes && !data.notes) {
+      data.notes = data.condition_info.notes;
+    }
+    if (data.location?.shelf && !data.shelf_location) {
+      data.shelf_location = data.location.shelf;
+    }
+    if (data.location?.section && !data.section) {
+      data.section = data.location.section;
+    }
+    if (data.location?.call_number && !data.call_number) {
+      data.call_number = data.location.call_number;
+    }
+    return data;
+  });
 
 /**
  * Type definition for book copy update data
@@ -141,7 +149,7 @@ export const bookCopyCreateSchema = z.object({
   condition: z.enum(["excellent", "good", "fair", "poor"], {
     message: "Invalid condition value",
   }),
-  
+
   notes: z
     .string()
     .max(500, "Notes must be less than 500 characters")
@@ -149,8 +157,8 @@ export const bookCopyCreateSchema = z.object({
     .or(z.literal("")),
 
   // Additional fields for creation
-  book_edition_id: z.string().uuid("Invalid book edition ID"),
-  library_id: z.string().uuid("Invalid library ID"),
+  book_edition_id: z.uuid("Invalid book edition ID"),
+  library_id: z.uuid("Invalid library ID"),
   status: z
     .enum(["active", "inactive", "damaged", "lost", "maintenance"])
     .default("active"),
@@ -193,7 +201,10 @@ export type BookCopySearchParams = z.infer<typeof bookCopySearchSchema>;
 /**
  * Helper function to validate and transform copy number format
  */
-export function validateCopyNumber(copyNumber: string, existingNumbers: string[] = []): {
+export function validateCopyNumber(
+  copyNumber: string,
+  existingNumbers: string[] = []
+): {
   isValid: boolean;
   error?: string;
   suggestion?: string;
@@ -224,7 +235,7 @@ export function validateCopyNumber(copyNumber: string, existingNumbers: string[]
       /^[A-Za-z0-9\-_]*$/,
       "Copy number can only contain letters, numbers, hyphens and underscores"
     );
-    
+
   const formatResult = copyNumberSchema.safeParse(copyNumber);
   if (!formatResult.success) {
     return {
@@ -239,31 +250,34 @@ export function validateCopyNumber(copyNumber: string, existingNumbers: string[]
 /**
  * Helper function to generate next available copy number
  */
-export function generateNextCopyNumber(baseCopyNumber: string, existingNumbers: string[]): string {
+export function generateNextCopyNumber(
+  baseCopyNumber: string,
+  existingNumbers: string[]
+): string {
   // Extract number suffix if present
   const match = baseCopyNumber.match(/^(.*?)(\d+)$/);
-  
+
   if (match) {
     const [, prefix, numberStr] = match;
     let number = parseInt(numberStr, 10);
     let candidate: string;
-    
+
     do {
       number++;
-      candidate = `${prefix}${number.toString().padStart(numberStr.length, '0')}`;
+      candidate = `${prefix}${number.toString().padStart(numberStr.length, "0")}`;
     } while (existingNumbers.includes(candidate));
-    
+
     return candidate;
   } else {
     // No number suffix, add one
     let number = 1;
     let candidate: string;
-    
+
     do {
-      candidate = `${baseCopyNumber}-${number.toString().padStart(3, '0')}`;
+      candidate = `${baseCopyNumber}-${number.toString().padStart(3, "0")}`;
       number++;
     } while (existingNumbers.includes(candidate));
-    
+
     return candidate;
   }
 }
@@ -277,9 +291,15 @@ export function validateLocation(location: {
   call_number?: string;
 }): { isValid: boolean; error?: string } {
   // Create separate validation schemas since the main schema has transform
-  const shelfSchema = z.string().max(50, "Shelf location must be less than 50 characters");
-  const sectionSchema = z.string().max(50, "Section must be less than 50 characters");
-  const callNumberSchema = z.string().max(100, "Call number must be less than 100 characters");
+  const shelfSchema = z
+    .string()
+    .max(50, "Shelf location must be less than 50 characters");
+  const sectionSchema = z
+    .string()
+    .max(50, "Section must be less than 50 characters");
+  const callNumberSchema = z
+    .string()
+    .max(100, "Call number must be less than 100 characters");
 
   // Validate shelf location
   if (location.shelf) {
