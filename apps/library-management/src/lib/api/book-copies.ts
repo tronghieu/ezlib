@@ -7,6 +7,64 @@ import { supabase } from "@/lib/supabase/client";
 import type { BookCopy, BookCopyFormData, BookEdition, Author } from "@/types/books";
 import type { BookCopyUpdateData } from "@/lib/validation/book-copy";
 
+// Type assertion helpers for safe casting - match exactly with BookCopy interface
+type LocationData = {
+  shelf?: string;
+  section?: string;
+  call_number?: string;
+} | null;
+
+type ConditionData = {
+  condition: "excellent" | "good" | "fair" | "poor";
+  notes?: string;
+  acquisition_date?: string;
+  acquisition_price?: number;
+  last_maintenance?: string;
+} | null;
+
+type AvailabilityData = {
+  status: "available" | "borrowed" | "reserved" | "maintenance";
+  since: string;
+  current_borrower_id?: string;
+  due_date?: string;
+  hold_queue?: string[];
+} | null;
+
+// Helper functions to transform database JSON to proper types
+function transformLocationData(data: unknown): LocationData {
+  if (!data || typeof data !== 'object') return null;
+  const obj = data as Record<string, unknown>;
+  return {
+    shelf: typeof obj.shelf === 'string' ? obj.shelf : undefined,
+    section: typeof obj.section === 'string' ? obj.section : undefined,
+    call_number: typeof obj.call_number === 'string' ? obj.call_number : undefined,
+  };
+}
+
+function transformConditionData(data: unknown): ConditionData {
+  if (!data || typeof data !== 'object') return null;
+  const obj = data as Record<string, unknown>;
+  return {
+    condition: (obj.condition as "excellent" | "good" | "fair" | "poor") || "good",
+    notes: typeof obj.notes === 'string' ? obj.notes : undefined,
+    acquisition_date: typeof obj.acquisition_date === 'string' ? obj.acquisition_date : undefined,
+    acquisition_price: typeof obj.acquisition_price === 'number' ? obj.acquisition_price : undefined,
+    last_maintenance: typeof obj.last_maintenance === 'string' ? obj.last_maintenance : undefined,
+  };
+}
+
+function transformAvailabilityData(data: unknown): AvailabilityData {
+  if (!data || typeof data !== 'object') return null;
+  const obj = data as Record<string, unknown>;
+  return {
+    status: (obj.status as "available" | "borrowed" | "reserved" | "maintenance") || "available",
+    since: typeof obj.since === 'string' ? obj.since : new Date().toISOString(),
+    current_borrower_id: typeof obj.current_borrower_id === 'string' ? obj.current_borrower_id : undefined,
+    due_date: typeof obj.due_date === 'string' ? obj.due_date : undefined,
+    hold_queue: Array.isArray(obj.hold_queue) ? obj.hold_queue as string[] : undefined,
+  };
+}
+
 export interface BookCopyWithDetails extends BookCopy {
   book_edition: BookEdition & {
     authors: Author[];
@@ -261,10 +319,10 @@ export async function fetchBookCopyDetail(
     barcode: data.barcode ?? undefined,
     total_copies: data.total_copies ?? undefined,
     available_copies: data.available_copies ?? undefined,
-    location: data.location as any,
-    condition_info: data.condition_info as any,
-    availability: data.availability as any,
-    status: (data.copy_status as any) ?? 'active',
+    location: transformLocationData(data.location),
+    condition_info: transformConditionData(data.condition_info),
+    availability: transformAvailabilityData(data.availability),
+    status: (data.copy_status as "active" | "inactive" | "damaged" | "lost" | "maintenance") ?? 'active',
     is_deleted: data.is_deleted ?? undefined,
     deleted_at: data.deleted_at ?? undefined,
     deleted_by: data.deleted_by ?? undefined,
@@ -284,7 +342,7 @@ export async function fetchBookCopyDetail(
       subtitle: data.subtitle ?? undefined,
       language: data.language ?? '',
       country: data.country ?? undefined,
-      edition_metadata: data.edition_metadata as any,
+      edition_metadata: data.edition_metadata as BookEdition["edition_metadata"],
       created_at: data.edition_created_at ?? '',
       updated_at: data.edition_updated_at ?? '',
       // Parse authors from display string (simplified for view usage)
@@ -345,7 +403,7 @@ export async function updateBookCopy(
     throw new Error("Failed to fetch current book copy");
   }
 
-  const currentConditionInfo = (currentCopy?.condition_info as any) || {};
+  const currentConditionInfo = transformConditionData(currentCopy?.condition_info) || {};
 
   // Prepare update data with proper structure
   const updatePayload = {
@@ -473,7 +531,7 @@ export async function checkBookCopyDeleteSafety(
     throw new Error(`Failed to fetch book copy: ${copyError.message}`);
   }
 
-  const availability = bookCopy?.availability as any;
+  const availability = transformAvailabilityData(bookCopy?.availability);
   const activeHolds = availability?.hold_queue?.length || 0;
   const activeBorrowsCount = activeBorrows?.length || 0;
 

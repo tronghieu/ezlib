@@ -438,15 +438,17 @@ so that **I can track who can borrow books without complex member management wor
 
 **Acceptance Criteria:**
 
-1. Simple member registration form: name, email, basic contact information only
-2. Automatic member ID generation (simple auto-increment format)
-3. Basic member search by name and email only
-4. Simple member list showing name, email, and current checkout count
-5. Basic member profile showing contact information and list of currently checked-out books
-6. Edit member contact information with email format validation
-7. All members default to "active" status - no complex status management initially
-8. Duplicate detection by email address to prevent multiple accounts
-9. No advanced features like fines, limits, or communication preferences in initial version
+1. Simple member registration form: name, email, basic personal information, membership info with invitation system
+2. Manual input member ID or automatic member ID generation (simple auto-increment format)
+3. Basic member search by member ID, name or email only
+4. Simple member list showing member ID, status, name, email, membership information added date and current checkout count
+5. Basic member details showing personal information, membership information, and list of currently checked-out books
+6. Edit member personal information with email format validation
+7. Edit member membership information with status update
+8. All members default to "active" status - no complex status management initially
+9. Duplicate detection by email address to prevent multiple accounts
+10. No advanced features like fines, limits, or communication preferences in initial version
+11. Mobile-responsive design for all created UI
 
 ### Story 2.5: Ultra-Simple Checkout and Return Operations
 

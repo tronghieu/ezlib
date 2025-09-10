@@ -3,7 +3,7 @@
  * Integration tests for useBooks and useBookSearch hooks
  */
 
-import React from "react";
+import * as React from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useBooks, useBookSearch } from "../use-books";

@@ -348,11 +348,11 @@ export function useFeatureName() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["feature-name"],
-    queryFn: () => supabase.from("table").select("*"),
+    queryFn: () => supabase().from("table").select("*"),
   });
 
   const mutation = useMutation({
-    mutationFn: (data: InputType) => supabase.from("table").insert(data),
+    mutationFn: (data: InputType) => supabase().from("table").insert(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["feature-name"] });
     },
@@ -418,6 +418,98 @@ export function FeatureForm({ onSubmit, initialData }: FeatureFormProps) {
 }
 ```
 
+### Dual Validation Pattern for Nested Objects
+
+**MANDATORY Pattern for Forms with Nested Data Structures:**
+
+When dealing with nested objects (like addresses, metadata, etc.), use the **dual validation pattern** to avoid React Hook Form TypeScript errors:
+
+```typescript
+// ✅ MANDATORY: Dual validation pattern with transform
+// lib/validation/member.ts
+const memberSchema = z
+  .object({
+    first_name: z.string().min(1, "First name is required"),
+    last_name: z.string().min(1, "Last name is required"),
+    
+    // Support both flat fields (for forms) AND nested objects (for API)
+    street: z.string().max(100).optional().or(z.literal("")),
+    city: z.string().max(50).optional().or(z.literal("")),
+    state: z.string().max(50).optional().or(z.literal("")),
+    postal_code: z.string().max(20).optional().or(z.literal("")),
+
+    // Nested structure support for API backwards compatibility
+    address: z
+      .object({
+        street: z.string().max(100).optional(),
+        city: z.string().max(50).optional(),
+        state: z.string().max(50).optional(),
+        postal_code: z.string().max(20).optional(),
+      })
+      .optional(),
+  })
+  .transform((data) => {
+    // Transform nested structures to flat fields for forms
+    if (data.address?.street && !data.street) {
+      data.street = data.address.street;
+    }
+    if (data.address?.city && !data.city) {
+      data.city = data.address.city;
+    }
+    // ... repeat for all nested fields
+    return data;
+  });
+
+// ✅ MANDATORY: Use flat fields in forms
+export function MemberForm() {
+  const { register, formState: { errors } } = useForm<MemberData>({
+    resolver: zodResolver(memberSchema),
+  });
+
+  return (
+    <form>
+      <input {...register("street")} />
+      {errors.street && <span>{errors.street.message}</span>}
+      
+      <input {...register("city")} />
+      {errors.city && <span>{errors.city.message}</span>}
+    </form>
+  );
+}
+```
+
+**Why This Pattern is Required:**
+
+- **React Hook Form TypeScript Issue**: Direct nested field access like `errors.address.street.message` causes TypeScript errors because the structure may not exist
+- **API Compatibility**: Transform function allows supporting both flat and nested data structures
+- **Type Safety**: Flat fields guarantee TypeScript can validate error message access
+- **Maintainability**: Avoids complex helper functions for nested error handling
+
+**FORBIDDEN Patterns:**
+
+```typescript
+// ❌ FORBIDDEN: Pure nested schema without transform
+const badSchema = z.object({
+  address: z.object({
+    street: z.string().optional(),
+  }).optional(),
+});
+
+// ❌ FORBIDDEN: Complex nested error handling
+function getNestedErrorMessage(path: string[], errors: FieldErrors) {
+  // Complex traversal logic - avoid this pattern
+}
+
+// ❌ FORBIDDEN: Direct nested access in forms
+{errors.address.street && <span>{errors.address.street.message}</span>}
+```
+
+**MANDATORY Pattern:**
+- Always provide flat fields for React Hook Form
+- Use `.transform()` to handle both flat and nested data
+- Use simple `errors.fieldName.message` pattern
+- Support API backwards compatibility through transform
+
 ## Database Integration Standards
 
 ### Supabase Client Usage
@@ -431,13 +523,32 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+export const supabase = () => {
+  if (!_supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabasePublishableKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+
+    if (!supabaseUrl || !supabasePublishableKey) {
+      throw new Error(
+        "Missing required Supabase environment variables. Please check your .env.local file."
+      );
+    }
+
+    _supabase = createBrowserClient<Database>(
+      supabaseUrl,
+      supabasePublishableKey
+    );
+  }
+  return _supabase;
+};
 ```
 
 ### Query Patterns
 
 ```typescript
 // ✅ Good: Type-safe queries
-const { data: books, error } = await supabase
+const { data: books, error } = await supabase()
   .from("books")
   .select("id, title, author, isbn")
   .eq("library_id", libraryId);
@@ -448,7 +559,7 @@ if (error) {
 
 // ✅ Good: Proper error handling
 try {
-  const { data, error } = await supabase.from("books").insert(bookData);
+  const { data, error } = await supabase().from("books").insert(bookData);
 
   if (error) throw error;
   return data;
@@ -603,13 +714,26 @@ function handleData(data: any) {}
 import { Button } from "../../../components/ui/button";
 
 // ❌ FORBIDDEN: Missing error handling
-const data = await supabase.from("books").select("*");
+const data = await supabase().from("books").select("*");
 
 // ❌ FORBIDDEN: Untyped component props
 export function Component({ data, onSubmit }) {}
 
 // ❌ FORBIDDEN: console.log in production code
 console.log("Debug info:", data);
+
+// ❌ FORBIDDEN: Pure nested validation without transform
+const badSchema = z.object({
+  address: z.object({
+    street: z.string().optional(),
+  }).optional(),
+});
+
+// ❌ FORBIDDEN: Complex nested error handling functions
+function getNestedErrorMessage(path: string[], errors: FieldErrors) {}
+
+// ❌ FORBIDDEN: Direct nested field access in forms
+{errors.address?.street?.message && <span>{errors.address.street.message}</span>}
 ```
 
 ## Development Commands

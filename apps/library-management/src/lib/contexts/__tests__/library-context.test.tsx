@@ -129,8 +129,8 @@ function renderWithProviders(
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MockAuthProvider value={mockAuthValue as any}>
-        <MockLibraryProvider value={{} as any}>{ui}</MockLibraryProvider>
+      <MockAuthProvider value={mockAuthValue}>
+        <MockLibraryProvider value={{}}>{ui}</MockLibraryProvider>
       </MockAuthProvider>
     </QueryClientProvider>
   );
@@ -164,7 +164,7 @@ describe("LibraryContext", () => {
       auth: {
         getUser: jest.fn(),
       },
-    } as any;
+    } as jest.MockedObject<ReturnType<typeof createClient>>;
 
     (createClient as jest.Mock).mockReturnValue(mockSupabase);
 

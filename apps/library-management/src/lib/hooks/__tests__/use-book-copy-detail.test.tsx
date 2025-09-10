@@ -1,24 +1,27 @@
-import React from "react";
+import * as React from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useBookCopyDetail, useDeleteBookCopy } from "../use-book-copy-detail";
-import * as bookCopyApi from "@/lib/api/book-copy-detail";
+import * as bookCopyApi from "@/lib/api/book-copies";
+import type { BookCopyWithDetails } from "@/lib/api/book-copies";
 import type { BookCopyUpdateData } from "@/lib/validation/book-copy";
 
 // Mock the API functions
-jest.mock("@/lib/api/book-copy-detail");
+jest.mock("@/lib/api/book-copies");
 
-const mockFetchBookCopyDetail = bookCopyApi.fetchBookCopyDetail as jest.MockedFunction<
-  typeof bookCopyApi.fetchBookCopyDetail
->;
+const mockFetchBookCopyDetail =
+  bookCopyApi.fetchBookCopyDetail as jest.MockedFunction<
+    typeof bookCopyApi.fetchBookCopyDetail
+  >;
 const mockUpdateBookCopy = bookCopyApi.updateBookCopy as jest.MockedFunction<
   typeof bookCopyApi.updateBookCopy
 >;
-const mockSoftDeleteBookCopy = bookCopyApi.softDeleteBookCopy as jest.MockedFunction<
-  typeof bookCopyApi.softDeleteBookCopy
->;
+const mockSoftDeleteBookCopy =
+  bookCopyApi.softDeleteBookCopy as jest.MockedFunction<
+    typeof bookCopyApi.softDeleteBookCopy
+  >;
 
-const mockBookCopyData = {
+const mockBookCopyData: BookCopyWithDetails = {
   id: "test-book-copy-id",
   library_id: "test-library-id",
   book_edition_id: "test-edition-id",
@@ -63,9 +66,12 @@ const mockBookCopyData = {
       {
         id: "author-1",
         name: "Jane Smith",
+        canonical_name: "smith-jane",
         biography: "A test author",
-        birth_date: "1980-01-01",
-        death_date: null,
+        metadata: {
+          birth_date: "1980-01-01",
+          death_date: undefined,
+        },
         created_at: "2024-01-15T00:00:00Z",
         updated_at: "2024-01-15T00:00:00Z",
       },
@@ -82,12 +88,10 @@ const createWrapper = () => {
   });
 
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  Wrapper.displayName = 'TestQueryProvider';
-  
+  Wrapper.displayName = "TestQueryProvider";
+
   return Wrapper;
 };
 
@@ -133,10 +137,9 @@ describe("useBookCopyDetail", () => {
   });
 
   it("should not fetch when parameters are missing", () => {
-    const { result } = renderHook(
-      () => useBookCopyDetail("", "lib-123"),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useBookCopyDetail("", "lib-123"), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.isLoading).toBe(false);
     expect(mockFetchBookCopyDetail).not.toHaveBeenCalled();
@@ -169,7 +172,11 @@ describe("useBookCopyDetail", () => {
       expect(updateMutation.isSuccess).toBe(true);
     });
 
-    expect(mockUpdateBookCopy).toHaveBeenCalledWith("test-id", updateData, "lib-123");
+    expect(mockUpdateBookCopy).toHaveBeenCalledWith(
+      "test-id",
+      updateData,
+      "lib-123"
+    );
     expect(updateMutation.data).toEqual(updatedBookCopy);
   });
 
@@ -212,10 +219,9 @@ describe("useDeleteBookCopy", () => {
   it("should delete book copy successfully", async () => {
     mockSoftDeleteBookCopy.mockResolvedValue();
 
-    const { result } = renderHook(
-      () => useDeleteBookCopy(),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useDeleteBookCopy(), {
+      wrapper: createWrapper(),
+    });
 
     const deleteData = {
       bookCopyId: "test-id",
@@ -235,10 +241,9 @@ describe("useDeleteBookCopy", () => {
     const mockError = new Error("Delete failed");
     mockSoftDeleteBookCopy.mockRejectedValue(mockError);
 
-    const { result } = renderHook(
-      () => useDeleteBookCopy(),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useDeleteBookCopy(), {
+      wrapper: createWrapper(),
+    });
 
     const deleteData = {
       bookCopyId: "test-id",
@@ -268,9 +273,7 @@ describe("Query invalidation", () => {
     const setQueryDataSpy = jest.spyOn(queryClient, "setQueryData");
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
     const updateData: BookCopyUpdateData = {
@@ -306,7 +309,11 @@ describe("Query invalidation", () => {
     );
 
     // Check that related queries were invalidated
-    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ["books", "lib-123"] });
-    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ["book-copies", "lib-123"] });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+      queryKey: ["books", "lib-123"],
+    });
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+      queryKey: ["book-copies", "lib-123"],
+    });
   });
 });

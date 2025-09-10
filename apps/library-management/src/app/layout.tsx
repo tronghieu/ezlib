@@ -47,7 +47,7 @@ export default function RootLayout({
         <QueryProvider>
           <LibraryProvider>{children}</LibraryProvider>
         </QueryProvider>
-        <Toaster />
+        <Toaster position="top-right" duration={6000} />
       </body>
     </html>
   );

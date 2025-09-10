@@ -9,6 +9,31 @@ import type {
   BookEdition,
   BookEditionFormData,
 } from "@/types/books";
+// Type assertion helpers for safe casting
+type EditionMetadata = {
+  publisher?: string;
+  publication_date?: string;
+  page_count?: number;
+  cover_image_url?: string;
+  edition_notes?: string;
+  format?: string;
+  last_enriched_at?: string;
+} | null;
+
+// Helper function to transform edition metadata
+function transformEditionMetadata(data: unknown): EditionMetadata {
+  if (!data || typeof data !== 'object') return null;
+  const obj = data as Record<string, unknown>;
+  return {
+    publisher: typeof obj.publisher === 'string' ? obj.publisher : undefined,
+    publication_date: typeof obj.publication_date === 'string' ? obj.publication_date : undefined,
+    page_count: typeof obj.page_count === 'number' ? obj.page_count : undefined,
+    cover_image_url: typeof obj.cover_image_url === 'string' ? obj.cover_image_url : undefined,
+    edition_notes: typeof obj.edition_notes === 'string' ? obj.edition_notes : undefined,
+    format: typeof obj.format === 'string' ? obj.format : undefined,
+    last_enriched_at: typeof obj.last_enriched_at === 'string' ? obj.last_enriched_at : undefined,
+  };
+}
 
 /**
  * Search for existing book editions by title using optimized view
@@ -62,9 +87,10 @@ export async function searchBookEditions(
         authors: edition.authors_display
           ? edition.authors_display.split(", ")
           : [],
-        publication_year: (edition.edition_metadata as any)?.publication_date
-          ? parseInt((edition.edition_metadata as any).publication_date)
-          : undefined,
+        publication_year: (() => {
+          const metadata = transformEditionMetadata(edition.edition_metadata);
+          return metadata?.publication_date ? parseInt(metadata.publication_date, 10) : undefined;
+        })(),
         isbn_13: edition.isbn_13 ?? undefined,
       }))
       .slice(0, 10); // Limit final results to 10

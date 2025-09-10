@@ -92,8 +92,8 @@ When working with Supabase databases, **ALWAYS** use migrations for ANY schema c
 
 - Stories: `docs/stories/*.md`
 - QA Gates: `docs/qa/gates/*.yml`
-- Detailed patterns: Original CLAUDE.md backup
 
 ---
 
 _Concise guide for Claude Code - See full documentation in docs/_
+- No need to unit test for user interface components

@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import React from "react";
+import * as React from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAddBook } from "../use-add-book";
