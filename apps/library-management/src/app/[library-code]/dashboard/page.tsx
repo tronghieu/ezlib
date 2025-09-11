@@ -246,7 +246,7 @@ interface RecentActivityItemProps {
   transaction: {
     id: string;
     transaction_type: string;
-    created_at: string;
+    created_at: string | null;
     book_copies?: {
       book_editions?: {
         title?: string;
@@ -287,7 +287,7 @@ function RecentActivityItem({ transaction }: RecentActivityItemProps) {
       ) : (
         <Book className="h-4 w-4" />
       ),
-      time: new Date(transaction.created_at).toLocaleDateString(),
+      time: transaction.created_at ? new Date(transaction.created_at).toLocaleDateString() : "Unknown date",
     };
   };
 

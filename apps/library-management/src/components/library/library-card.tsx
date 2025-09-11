@@ -143,7 +143,7 @@ export function LibraryCard({
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <Calendar className="h-3 w-3" />
             <span>
-              Member since {new Date(library.created_at).toLocaleDateString()}
+              Member since {library.created_at ? new Date(library.created_at).toLocaleDateString() : "Unknown"}
             </span>
           </div>
         </div>

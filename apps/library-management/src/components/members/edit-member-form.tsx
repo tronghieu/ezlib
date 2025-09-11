@@ -35,7 +35,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -452,7 +451,7 @@ function MembershipInfoSection({
             onValueChange={(value: MembershipType) => setValue("membership_type", value)}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Select membership type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="regular">Regular</SelectItem>
@@ -557,9 +556,7 @@ function ActionButtons({
               </>
             )}
           </Button>
-        </div>
 
-        <div className="flex gap-2">
           <Button 
             type="button" 
             variant="outline" 
@@ -570,48 +567,46 @@ function ActionButtons({
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset
           </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" className="flex-1">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Member
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Member</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this member? This action cannot be undone.
+                  The member&apos;s checkout history will be preserved, but they will no longer
+                  be able to borrow books.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={onDelete}
+                  disabled={isDeleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Member
+                    </>
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
-
-        <Separator />
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm" className="w-full">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Member
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Member</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this member? This action cannot be undone.
-                The member&apos;s checkout history will be preserved, but they will no longer
-                be able to borrow books.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={onDelete}
-                disabled={isDeleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Member
-                  </>
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </CardContent>
     </Card>
   );

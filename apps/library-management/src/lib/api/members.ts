@@ -208,12 +208,9 @@ export const fetchMembers = async (
 
   // Apply search filter
   if (search) {
-    query = query.or(`
-      member_id.ilike.%${search}%,
-      personal_info->>first_name.ilike.%${search}%,
-      personal_info->>last_name.ilike.%${search}%,
-      personal_info->>email.ilike.%${search}%
-    `);
+    query = query.or(
+      `member_id.ilike.%${search}%,personal_info->>first_name.ilike.%${search}%,personal_info->>last_name.ilike.%${search}%,personal_info->>email.ilike.%${search}%`
+    );
   }
 
   // Apply status filter

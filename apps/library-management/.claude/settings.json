@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(~/.bmad-code)",
+      "mcp__sequential-thinking__*",
+      "mcp__serena__*",
+      "mcp__playwright__*"
+    ]
+  }
+}

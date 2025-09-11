@@ -42,7 +42,7 @@ yarn-error.log*
 next-env.d.ts
 
 # claude configuration
-.claude
+.claude/settings.local.json
 
 # MCP configuration
 .mcp.json

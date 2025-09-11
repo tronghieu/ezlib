@@ -97,3 +97,5 @@ When working with Supabase databases, **ALWAYS** use migrations for ANY schema c
 
 _Concise guide for Claude Code - See full documentation in docs/_
 - No need to unit test for user interface components
+- This project use `pnpm` for package management avoid use `npm` or `npx`
+- use context7 mcp when dealing with external packages

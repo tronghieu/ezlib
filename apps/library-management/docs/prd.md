@@ -30,7 +30,7 @@ The authentication strategy requires library staff to first register on the main
 
 ### Functional Requirements
 
-1. **FR1:** The system shall require users to first register on the main reader platform (ezlib.com) using passwordless email OTP authentication, then provide independent login access to manage.ezlib.com with role-based access control (owner, manager, librarian) across multiple libraries, with permissions enforced through Row Level Security policies and server-side authorization checks
+1. **FR1:** The system shall require users to first register on the main reader platform (ezlib.com) using passwordless email OTP authentication, then provide unified login access to manage.ezlib.com with `shouldCreateUser: false` preventing new registrations. Role-based access control (owner, manager, librarian) across multiple libraries is implemented via Row Level Security policies in the database, with application-layer validation currently using development fallbacks that grant owner access to authenticated users
 
 2. **FR2:** The system shall provide ultra-simple book management with basic book lists containing title, author, ISBN, and availability status showing number of copies (e.g., "3 of 5 available"), with optional ISBN lookup integration to the crawler service for automatic metadata enrichment
 
@@ -99,6 +99,44 @@ The authentication strategy requires library staff to first register on the main
 11. **NFR11:** The system shall support data export in standard formats (CSV, PDF) for reporting and compliance needs
 
 12. **NFR12:** The system shall maintain audit trail retention for minimum 7 years for compliance and operational analysis
+
+## Technical Debt & Implementation Status
+
+### Authentication System Status
+
+**Database Layer (Production Ready):**
+- ✅ **Row Level Security**: Comprehensive RLS policies implemented for all tables
+- ✅ **Database Functions**: `get_user_role()`, `get_user_library_ids()`, `user_has_catalog_access()` properly implemented  
+- ✅ **Multi-tenant Isolation**: RLS policies enforce library-specific data access
+- ✅ **Role-based Permissions**: Owner, manager, librarian, volunteer roles with appropriate restrictions
+
+**Application Layer (Development Mode):**
+- ⚠️ **Development Fallbacks Active**: Authentication functions return placeholder data
+- ⚠️ **Permission Bypass**: `getUserRoleForLibrary()` defaults to "owner" role for all authenticated users
+- ⚠️ **Library Staff Validation**: Uses placeholder `LibraryStaffData` instead of querying database
+- ⚠️ **Security Risk**: Current implementation grants full owner access to any authenticated user
+
+### Required Actions for Production
+
+1. **Remove Development Fallbacks**: Update `getUserRoleForLibrary()` to query actual `library_staff` table
+2. **Implement Real Validation**: Replace placeholder data in `getAuthenticatedUser()` with database queries
+3. **Enable RLS Enforcement**: Remove fallback returns and let database RLS policies control access
+4. **Add Library Context Validation**: Enhance middleware to validate library-specific permissions
+5. **Production Testing**: Verify multi-tenant isolation works correctly with real library staff data
+
+### Current Security Model
+
+```mermaid
+graph TD
+    A[User Login] --> B[Supabase Auth ✅]
+    B --> C[App Layer ⚠️]
+    C --> D[Database RLS ✅]
+    C --> E[Development Fallback: Grant Owner Access]
+    D --> F[Proper Multi-tenant Access Control]
+    E --> G[Security Bypass - All Users Get Owner Role]
+```
+
+**Priority**: **HIGH** - Authentication system needs completion before production deployment.
 
 ## User Interface Design Goals
 
@@ -221,46 +259,47 @@ The library management application will be developed within the existing EzLib m
 
 ## Authentication & Registration Strategy
 
-### Registration Flow (Reader App Only)
+### Unified Authentication System
 
-**Single Registration Point:** All user registration occurs exclusively on the Reader app (`ezlib.com`) to avoid user confusion and establish clear platform identity. Library staff must first register as readers before gaining access to management tools.
+**Single Registration Point:** All user registration occurs exclusively on the Reader app (`ezlib.com`) to maintain clear platform identity. Library staff must first register as readers before gaining management access.
 
 **Passwordless Email OTP Process:**
 
-1. **Email Collection**: Library staff visit `ezlib.com` → enter email address → request verification code
-2. **OTP Verification**: 6-digit code sent to email → user enters code for authentication
-3. **Profile Setup**: User completes profile with display name, gender, language preference, and region selection
-4. **Default Access**: All accounts created as readers with Supabase authenticated role
+1. **Reader Registration**: Users register on `ezlib.com` with email address → receive OTP → complete profile setup
+2. **Management Access**: Staff login to `manage.ezlib.com` using existing credentials → OTP verification
+3. **No Registration in Management App**: `shouldCreateUser: false` prevents new account creation in management interface
+4. **Clear User Guidance**: Management app directs unregistered users to register on main platform first
 
-### Cross-Domain Access Strategy
+### Simplified Authentication Flow
 
-**Early Stage Implementation:**
+**Unified Session Management:**
 
-- **Independent Login**: Library staff must log in separately on `ezlib.com` and `manage.ezlib.com`
-- **Registration Restriction**: Management app shows "Login with existing account" - no registration option
-- **Clear Messaging**: Management app explains users must first register on main platform
+- **Single Supabase Project**: Both applications share the same authentication system and user database
+- **Consistent Login Experience**: Same passwordless OTP flow across all applications
+- **Shared User Sessions**: Users authenticate once and access appropriate features based on permissions
+- **Registration Prevention**: Management app prevents account creation while allowing existing user login
 
 **Role-Based Access Control:**
 
-- **Default Role**: All users can access reader features (social book discovery) with authenticated role
-- **Library Management Access**: Users gain admin capabilities when added to library_staff table for specific libraries
-- **Permission Levels**: Owner, Manager, Librarian roles with granular permissions for each library
-
-**Future Enhancement:** Planned implementation of cross-domain session sharing for seamless user experience between applications.
+- **Reader Access**: All registered users can access reader features on `ezlib.com`
+- **Library Management Access**: Users gain admin capabilities when added to `library_staff` table for specific libraries  
+- **Permission Levels**: Owner, Manager, Librarian roles with granular permissions enforced via Row Level Security
+- **Multi-Library Support**: Users can have different roles across multiple libraries
 
 ### Technical Implementation
 
 **Supabase Authentication:**
 
-- Email OTP authentication using `supabase.auth.signInWithOtp()`
-- JWT tokens with role-based claims
-- Row Level Security policies enforcing multi-tenant access
+- Email OTP authentication using `supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } })`
+- JWT tokens with role-based claims and library context
+- Row Level Security policies enforcing multi-tenant data isolation
+- Unified session management across applications
 
 **User Profile Structure:**
 
-- Base user record in `users` table
-- Optional `library_members` records for library memberships
-- Optional `library_staff` records for management access
+- Base user record in `users` table (created via reader app only)
+- Optional `library_members` records for library memberships  
+- Optional `library_staff` records for management access and role assignment
 - Preference storage for language, region, notification settings
 
 ## Epic List
@@ -282,7 +321,17 @@ Complete the system with reporting, bulk operations, advanced administrative fea
 
 ## Epic 1: Foundation & Passwordless Authentication
 
-**Epic Goal:** Establish the technical foundation for the library management application including project setup, passwordless email OTP authentication with cross-domain access strategy, and basic library context management while delivering a deployable health check endpoint that validates the complete technical stack integration and ultra-simple core functionality.
+**Epic Status:** 🟡 **PARTIALLY COMPLETE** - Basic authentication working but library staff validation incomplete
+
+**Epic Goal:** Establish the technical foundation for the library management application including project setup, passwordless email OTP authentication with unified session management, and basic library context management while delivering a deployable health check endpoint that validates the complete technical stack integration and ultra-simple core functionality.
+
+**Implementation Status:**
+- ✅ **Basic OTP Authentication**: Working email OTP flow with `shouldCreateUser: false`
+- ✅ **Project Infrastructure**: Next.js 15 setup with TypeScript and dependencies
+- ✅ **Database Layer**: RLS policies and permission functions implemented
+- ⚠️ **Library Staff Validation**: Using development placeholders instead of database queries
+- ⚠️ **Permission Enforcement**: Application layer bypasses database security with fallbacks
+- ❌ **Production Ready**: Requires completion of real library staff validation
 
 ### Story 1.1: Project Setup and Core Infrastructure
 

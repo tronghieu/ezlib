@@ -5,60 +5,25 @@
  * and database operations with library staff validation
  */
 
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database.d";
+
 /**
  * Library staff roles in hierarchy order (most to least privileged)
  */
 export type LibraryRole = "owner" | "manager" | "librarian" | "volunteer";
 
 /**
- * Create authenticated Supabase server client
+ * Library staff data from database (using actual schema)
  */
-export async function createAuthenticatedClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch (error) {
-            console.error("Error setting cookies:", error);
-          }
-        },
-      },
-    }
-  );
-}
-
-/**
- * Library staff data from database (once library_staff table is implemented)
- */
-export interface LibraryStaffData {
-  id: string;
-  user_id: string;
-  library_id: string;
-  role: LibraryRole;
-  status: "active" | "inactive" | "pending";
-  invited_at: string;
-  activated_at?: string;
-}
+export type LibraryStaffData = Database["public"]["Tables"]["library_staff"]["Row"];
 
 /**
  * Get current authenticated user with library access validation
  */
 export async function getAuthenticatedUser(libraryId?: string) {
-  const supabase = await createAuthenticatedClient();
+  const supabase = await createClient();
 
   // Check user authentication
   const {
@@ -70,43 +35,36 @@ export async function getAuthenticatedUser(libraryId?: string) {
     redirect("/auth/login");
   }
 
-  // TODO: Implement library staff validation when database schema is updated
-  // For now, we'll return a placeholder staff record for development
-
-  /* Future implementation once library_staff table exists:
-  
-  const { data: staffData, error: staffError } = await supabase
-    .from('library_staff')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('library_id', libraryId)
-    .eq('status', 'active')
-    .single();
+  // Real library staff validation - no more placeholders!
+  if (libraryId) {
+    const { data: staffData, error: staffError } = await supabase
+      .from('library_staff')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('library_id', libraryId)
+      .eq('status', 'active')
+      .single();
+      
+    if (staffError) {
+      console.error('Library staff validation failed:', staffError.message);
+      redirect('/auth/login?error=no-library-access');
+    }
     
-  if (staffError || !staffData) {
-    redirect('/unauthorized');
+    if (!staffData) {
+      console.error(`User ${user.email} has no access to library ${libraryId}`);
+      redirect('/auth/login?error=no-library-access');
+    }
+    
+    return {
+      user,
+      staffData: staffData
+    };
   }
-  
+
+  // If no specific library requested, return basic user info
   return {
     user,
-    staffData: staffData as LibraryStaffData
-  };
-  */
-
-  // Temporary placeholder for development
-  const placeholderStaffData: LibraryStaffData = {
-    id: "temp-staff-id",
-    user_id: user.id,
-    library_id: libraryId || "demo-library-id",
-    role: "owner" as LibraryRole, // Temporary - grant full access for development
-    status: "active",
-    invited_at: new Date().toISOString(),
-    activated_at: new Date().toISOString(),
-  };
-
-  return {
-    user,
-    staffData: placeholderStaffData,
+    staffData: null
   };
 }
 
@@ -117,45 +75,28 @@ export async function getUserRoleForLibrary(
   userId: string,
   libraryId: string
 ): Promise<LibraryRole | null> {
-  const supabase = await createAuthenticatedClient();
+  const supabase = await createClient();
 
-  try {
-    // Attempt to query real database first
-    const { data: staffData, error } = await supabase
-      .from("library_staff")
-      .select("role, status")
-      .eq("user_id", userId)
-      .eq("library_id", libraryId)
-      .eq("status", "active")
-      .single();
+  // Query real database - no more development fallbacks!
+  const { data: staffData, error } = await supabase
+    .from("library_staff")
+    .select("role, status")
+    .eq("user_id", userId)
+    .eq("library_id", libraryId)
+    .eq("status", "active")
+    .single();
 
-    if (!error && staffData) {
-      // Real database data available
-      return staffData.role as LibraryRole;
-    }
-
-    // If error is "relation does not exist", table hasn't been created yet
-    if (
-      error?.message?.includes('relation "public.library_staff" does not exist')
-    ) {
-      console.log(
-        "Library staff table not yet created - using development defaults"
-      );
-    } else if (error) {
-      console.log(
-        "Database query failed, using development defaults:",
-        error.message
-      );
-    }
-  } catch (error) {
-    console.log(
-      "Database connection failed, using development defaults:",
-      error
-    );
+  if (error) {
+    console.error(`Failed to get user role for library ${libraryId}:`, error.message);
+    return null;
   }
 
-  // Fallback to development placeholder when database is not available
-  return "owner"; // Grant full access during development
+  if (!staffData) {
+    console.error(`No active staff record found for user ${userId} in library ${libraryId}`);
+    return null;
+  }
+
+  return staffData.role as LibraryRole;
 }
 
 /**
@@ -165,9 +106,13 @@ export async function requireLibraryAccess(libraryId?: string) {
   try {
     const { user, staffData } = await getAuthenticatedUser(libraryId);
 
+    if (!libraryId || !staffData) {
+      redirect("/auth/login");
+    }
+
     const userRole = await getUserRoleForLibrary(
       user.id,
-      staffData.library_id
+      libraryId
     );
 
     if (!userRole) {
@@ -243,14 +188,18 @@ export async function withRole<T extends any[]>(
  */
 export async function withLibraryScope<T>(
   query: (
-    supabase: Awaited<ReturnType<typeof createAuthenticatedClient>>,
+    supabase: Awaited<ReturnType<typeof createClient>>,
     libraryId: string
   ) => Promise<T>,
   requiredRoles?: LibraryRole[],
   libraryId?: string
 ): Promise<T> {
-  const supabase = await createAuthenticatedClient();
+  const supabase = await createClient();
   const { role, staffData } = await requireLibraryAccess(libraryId);
+
+  if (!staffData) {
+    throw new Error("Library staff data not found");
+  }
 
   // Check role if specified
   if (requiredRoles && !requiredRoles.includes(role)) {
@@ -269,6 +218,10 @@ export async function withLibraryScope<T>(
 export async function validateLibraryContext(libraryId: string) {
   const { user, staffData, role } = await requireLibraryAccess(libraryId);
 
+  if (!staffData) {
+    redirect("/unauthorized");
+  }
+
   // Ensure library ID matches staff access
   if (staffData.library_id !== libraryId) {
     redirect("/unauthorized");
@@ -286,72 +239,38 @@ export async function validateLibraryContext(libraryId: string) {
  * Get user's accessible libraries (for library switching)
  */
 export async function getUserLibraries(userId: string) {
-  const supabase = await createAuthenticatedClient();
+  const supabase = await createClient();
 
-  try {
-    // Attempt to query real database first
-    const { data: libraries, error } = await supabase
-      .from("library_staff")
-      .select(
-        `
-        library_id,
-        role,
-        status,
-        libraries (
-          id,
-          name,
-          code,
-          settings
-        )
+  // Query real database - no more development fallbacks!
+  const { data: libraries, error } = await supabase
+    .from("library_staff")
+    .select(
       `
+      library_id,
+      role,
+      status,
+      libraries (
+        id,
+        name,
+        code,
+        settings
       )
-      .eq("user_id", userId)
-      .eq("status", "active");
+    `
+    )
+    .eq("user_id", userId)
+    .eq("status", "active");
 
-    if (!error && libraries && libraries.length > 0) {
-      // Real database data available
-      return libraries;
-    }
-
-    // If error is "relation does not exist", table hasn't been created yet
-    if (
-      error?.message?.includes(
-        'relation "public.library_staff" does not exist'
-      ) ||
-      error?.message?.includes('relation "public.libraries" does not exist')
-    ) {
-      console.log(
-        "Library tables not yet created - using development defaults"
-      );
-    } else if (error) {
-      console.log(
-        "Database query failed, using development defaults:",
-        error.message
-      );
-    } else if (!libraries || libraries.length === 0) {
-      console.log("No libraries found for user, using development defaults");
-    }
-  } catch (error) {
-    console.log(
-      "Database connection failed, using development defaults:",
-      error
-    );
+  if (error) {
+    console.error(`Failed to get libraries for user ${userId}:`, error.message);
+    return [];
   }
 
-  // Fallback to development placeholder when database is not available
-  return [
-    {
-      library_id: "demo-library-id",
-      role: "owner",
-      status: "active",
-      libraries: {
-        id: "demo-library-id",
-        name: "Demo Library",
-        code: "DEMO-LIB",
-        settings: {},
-      },
-    },
-  ];
+  if (!libraries || libraries.length === 0) {
+    console.warn(`No active library access found for user ${userId}`);
+    return [];
+  }
+
+  return libraries;
 }
 
 /**

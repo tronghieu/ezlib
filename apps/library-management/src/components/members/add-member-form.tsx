@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, Plus, RotateCcw, ToggleLeft, ToggleRight } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  RotateCcw,
+  ToggleLeft,
+  ToggleRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +25,10 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useCreateMember } from "@/lib/hooks/use-members";
-import { memberRegistrationSchema, type MemberRegistrationData } from "@/lib/validation/members";
+import {
+  memberRegistrationSchema,
+  type MemberRegistrationData,
+} from "@/lib/validation/members";
 
 interface AddMemberFormProps {
   libraryId: string;
@@ -28,7 +37,12 @@ interface AddMemberFormProps {
   userName: string;
 }
 
-export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddMemberFormProps) {
+export function AddMemberForm({
+  libraryId,
+  libraryCode,
+  userId,
+  userName,
+}: AddMemberFormProps) {
   const router = useRouter();
   const [useManualId, setUseManualId] = useState(false);
   const [showAddAnother, setShowAddAnother] = useState(false);
@@ -52,14 +66,16 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
   const onSubmit = async (data: MemberRegistrationData) => {
     try {
       // If not using manual ID, remove the member_id field to trigger auto-generation
-      const submissionData = useManualId ? data : { ...data, member_id: undefined };
+      const submissionData = useManualId
+        ? data
+        : { ...data, member_id: undefined };
 
       const newMember = await createMemberMutation.mutateAsync({
         ...submissionData,
         inviterUserId: userId,
         inviterName: userName,
       });
-      
+
       toast.success(
         <div className="flex flex-col gap-1">
           <p className="font-medium">Member registered successfully!</p>
@@ -76,7 +92,6 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
       reset({
         membership_type: "regular",
       });
-
     } catch (error) {
       console.error("Failed to register member:", error);
     }
@@ -98,7 +113,9 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Plus className="h-8 w-8 text-green-600" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Member Added Successfully!</h3>
+        <h3 className="text-lg font-semibold mb-2">
+          Member Added Successfully!
+        </h3>
         <p className="text-muted-foreground mb-6">
           The new member has been registered and can now borrow books.
         </p>
@@ -141,7 +158,7 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
             )}
           </Button>
         </div>
-        
+
         {useManualId ? (
           <div className="space-y-2">
             <Input
@@ -167,10 +184,64 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
 
       <Separator />
 
+      {/* Membership Information */}
+      <div className="space-y-4">
+        <h3 className="text-base font-medium">Membership Information</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Membership Type</Label>
+            <Select
+              value={watch("membership_type")}
+              onValueChange={(value) =>
+                setValue(
+                  "membership_type",
+                  value as "regular" | "student" | "senior"
+                )
+              }
+            >
+              <SelectTrigger
+                className={errors.membership_type ? "border-red-500" : ""}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="regular">Regular</SelectItem>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="senior">Senior</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.membership_type && (
+              <p className="text-sm text-red-600">
+                {errors.membership_type.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="membership_notes">Notes (optional)</Label>
+            <Textarea
+              id="membership_notes"
+              {...register("membership_notes")}
+              placeholder="Additional notes about the member..."
+              rows={3}
+              className={errors.membership_notes ? "border-red-500" : ""}
+            />
+            {errors.membership_notes && (
+              <p className="text-sm text-red-600">
+                {errors.membership_notes.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
       {/* Personal Information */}
       <div className="space-y-4">
         <h3 className="text-base font-medium">Personal Information</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="first_name">
@@ -183,7 +254,9 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
               className={errors.first_name ? "border-red-500" : ""}
             />
             {errors.first_name && (
-              <p className="text-sm text-red-600">{errors.first_name.message}</p>
+              <p className="text-sm text-red-600">
+                {errors.first_name.message}
+              </p>
             )}
           </div>
 
@@ -234,10 +307,12 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
         </div>
       </div>
 
+      <Separator />
+
       {/* Address Information */}
       <div className="space-y-4">
         <h3 className="text-base font-medium">Address (Optional)</h3>
-        
+
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="address.street">Street Address</Label>
@@ -248,7 +323,9 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
               className={errors.address?.street ? "border-red-500" : ""}
             />
             {errors.address?.street && (
-              <p className="text-sm text-red-600">{errors.address.street.message}</p>
+              <p className="text-sm text-red-600">
+                {errors.address.street.message}
+              </p>
             )}
           </div>
 
@@ -262,7 +339,9 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
                 className={errors.address?.city ? "border-red-500" : ""}
               />
               {errors.address?.city && (
-                <p className="text-sm text-red-600">{errors.address.city.message}</p>
+                <p className="text-sm text-red-600">
+                  {errors.address.city.message}
+                </p>
               )}
             </div>
 
@@ -275,7 +354,9 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
                 className={errors.address?.state ? "border-red-500" : ""}
               />
               {errors.address?.state && (
-                <p className="text-sm text-red-600">{errors.address.state.message}</p>
+                <p className="text-sm text-red-600">
+                  {errors.address.state.message}
+                </p>
               )}
             </div>
           </div>
@@ -290,7 +371,9 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
                 className={errors.address?.country ? "border-red-500" : ""}
               />
               {errors.address?.country && (
-                <p className="text-sm text-red-600">{errors.address.country.message}</p>
+                <p className="text-sm text-red-600">
+                  {errors.address.country.message}
+                </p>
               )}
             </div>
 
@@ -303,65 +386,24 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
                 className={errors.address?.postal_code ? "border-red-500" : ""}
               />
               {errors.address?.postal_code && (
-                <p className="text-sm text-red-600">{errors.address.postal_code.message}</p>
+                <p className="text-sm text-red-600">
+                  {errors.address.postal_code.message}
+                </p>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Membership Information */}
-      <div className="space-y-4">
-        <h3 className="text-base font-medium">Membership Information</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Membership Type</Label>
-            <Select
-              value={watch("membership_type")}
-              onValueChange={(value) => setValue("membership_type", value as "regular" | "student" | "senior")}
-            >
-              <SelectTrigger className={errors.membership_type ? "border-red-500" : ""}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="regular">Regular</SelectItem>
-                <SelectItem value="student">Student</SelectItem>
-                <SelectItem value="senior">Senior</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.membership_type && (
-              <p className="text-sm text-red-600">{errors.membership_type.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="membership_notes">Notes (optional)</Label>
-            <Textarea
-              id="membership_notes"
-              {...register("membership_notes")}
-              placeholder="Additional notes about the member..."
-              rows={3}
-              className={errors.membership_notes ? "border-red-500" : ""}
-            />
-            {errors.membership_notes && (
-              <p className="text-sm text-red-600">{errors.membership_notes.message}</p>
-            )}
-          </div>
-        </div>
-      </div>
+      <Separator />
 
       {/* Form Actions */}
-      <div className="flex gap-3 pt-4">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="gap-2"
-        >
+      <div className="flex gap-3 pt-4 justify-end">
+        <Button type="submit" disabled={isSubmitting} className="gap-2">
           {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
           Register Member
         </Button>
-        
+
         <Button
           type="button"
           variant="outline"
@@ -385,7 +427,9 @@ export function AddMemberForm({ libraryId, libraryCode, userId, userName }: AddM
 
       {/* Status Information */}
       <div className="text-xs text-muted-foreground pt-2 border-t">
-        <p>• All new members are automatically set to &ldquo;active&rdquo; status</p>
+        <p>
+          • All new members are automatically set to &ldquo;active&rdquo; status
+        </p>
         <p>• An invitation will be sent to the member&apos;s email address</p>
         <p>• Members can immediately begin borrowing books</p>
       </div>

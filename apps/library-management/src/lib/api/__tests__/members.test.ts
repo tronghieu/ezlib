@@ -107,19 +107,43 @@ describe("Member API - Integration Tests", () => {
     jest.clearAllMocks();
 
     // Create fresh mock functions for each test
-    mockSelect = jest.fn().mockReturnThis();
-    mockInsert = jest.fn().mockReturnThis();
-    mockUpdate = jest.fn().mockReturnThis();
+    mockSingle = jest.fn();
+    mockMaybeSingle = jest.fn();
+    mockHead = jest.fn();
+    
+    mockSelect = jest.fn().mockReturnValue({ 
+      eq: jest.fn().mockReturnValue({ 
+        eq: jest.fn().mockReturnValue({ 
+          eq: jest.fn().mockReturnValue({ 
+            head: mockHead,
+            single: mockSingle,
+            maybeSingle: mockMaybeSingle
+          })
+        }) 
+      }) 
+    });
+    
+    mockInsert = jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        single: mockSingle
+      })
+    });
+    
+    mockUpdate = jest.fn().mockReturnValue({
+      eq: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          single: mockSingle
+        })
+      })
+    });
+    
     mockEq = jest.fn().mockReturnThis();
     mockNeq = jest.fn().mockReturnThis();
     mockOr = jest.fn().mockReturnThis();
     mockOrder = jest.fn().mockReturnThis();
     mockRange = jest.fn().mockReturnThis();
-    mockSingle = jest.fn();
-    mockMaybeSingle = jest.fn();
-    mockHead = jest.fn();
 
-    // Create mock Supabase chain
+    // Create mock Supabase chain with proper method chaining
     const mockSupabaseChain = {
       select: mockSelect,
       insert: mockInsert,

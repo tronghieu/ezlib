@@ -67,7 +67,7 @@ function LoginPageContent() {
       const authPromise = supabase.auth.signInWithOtp({
         email: emailValue,
         options: {
-          shouldCreateUser: true, // This works for both new and existing users
+          shouldCreateUser: false, // This works for both new and existing users
         },
       });
 

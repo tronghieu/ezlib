@@ -20,11 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -59,20 +55,27 @@ export function MembersTable({
 }: MembersTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<MemberStatus | "all">("all");
-  const [membershipTypeFilter, setMembershipTypeFilter] = useState<MembershipType | "all">("all");
+  const [membershipTypeFilter, setMembershipTypeFilter] = useState<
+    MembershipType | "all"
+  >("all");
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   const debouncedSearch = useDebounce(searchTerm, 300);
-  
+
   const searchParams = {
     search: debouncedSearch || undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
-    membership_type: membershipTypeFilter !== "all" ? membershipTypeFilter : undefined,
+    membership_type:
+      membershipTypeFilter !== "all" ? membershipTypeFilter : undefined,
     page: currentPage,
     limit: 20,
   };
 
-  const { data: membersData, isLoading, error } = useMembers(libraryId, searchParams);
+  const {
+    data: membersData,
+    isLoading,
+    error,
+  } = useMembers(libraryId, searchParams);
 
   const getStatusBadge = (status: MemberStatus) => {
     const variants = {
@@ -80,18 +83,14 @@ export function MembersTable({
       inactive: "secondary" as const,
       banned: "destructive" as const,
     };
-    
+
     const labels = {
       active: "Active",
-      inactive: "Inactive", 
+      inactive: "Inactive",
       banned: "Banned",
     };
 
-    return (
-      <Badge variant={variants[status]}>
-        {labels[status]}
-      </Badge>
-    );
+    return <Badge variant={variants[status]}>{labels[status]}</Badge>;
   };
 
   const getMembershipTypeBadge = (type: MembershipType) => {
@@ -108,7 +107,10 @@ export function MembersTable({
     );
   };
 
-  const formatMemberName = (personalInfo: { first_name: string; last_name: string }) => {
+  const formatMemberName = (personalInfo: {
+    first_name: string;
+    last_name: string;
+  }) => {
     return `${personalInfo.first_name} ${personalInfo.last_name}`;
   };
 
@@ -129,10 +131,7 @@ export function MembersTable({
         <CardContent className="p-6">
           <div className="text-center text-red-600">
             <p>Error loading members: {error.message}</p>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="mt-2"
-            >
+            <Button onClick={() => window.location.reload()} className="mt-2">
               Retry
             </Button>
           </div>
@@ -154,7 +153,7 @@ export function MembersTable({
         {canManageMembers && (
           <Button asChild>
             <Link href={`/${libraryCode}/members/add`}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Add New Member
             </Link>
           </Button>
@@ -162,8 +161,8 @@ export function MembersTable({
       </div>
 
       {/* Search and Filters */}
-      <Card>
-        <CardHeader>
+      <div className="bg-card text-card-foreground flex flex-col gap-6">
+        <div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -177,7 +176,9 @@ export function MembersTable({
             <div className="flex gap-2">
               <Select
                 value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value as MemberStatus | "all")}
+                onValueChange={(value) =>
+                  setStatusFilter(value as MemberStatus | "all")
+                }
               >
                 <SelectTrigger className="w-[130px]">
                   <SelectValue />
@@ -189,10 +190,12 @@ export function MembersTable({
                   <SelectItem value="banned">Banned</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select
                 value={membershipTypeFilter}
-                onValueChange={(value) => setMembershipTypeFilter(value as MembershipType | "all")}
+                onValueChange={(value) =>
+                  setMembershipTypeFilter(value as MembershipType | "all")
+                }
               >
                 <SelectTrigger className="w-[140px]">
                   <SelectValue />
@@ -211,8 +214,8 @@ export function MembersTable({
               </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div>
           {isLoading ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
@@ -230,14 +233,16 @@ export function MembersTable({
               <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No members found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || statusFilter !== "all" || membershipTypeFilter !== "all"
+                {searchTerm ||
+                statusFilter !== "all" ||
+                membershipTypeFilter !== "all"
                   ? "No members match your search criteria."
                   : "Get started by adding your first member."}
               </p>
               {canManageMembers && (
                 <Button asChild>
                   <Link href={`/${libraryCode}/members/add`}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4" />
                     Add First Member
                   </Link>
                 </Button>
@@ -248,20 +253,20 @@ export function MembersTable({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Member ID</TableHead>
+                    <TableHead className="text-center">Member ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Current Loans</TableHead>
-                    <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Current Loans</TableHead>
+                    <TableHead className="text-right">Joined</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {membersData.members.map((member) => (
                     <TableRow key={member.id}>
-                      <TableCell className="font-mono">
+                      <TableCell className="text-center font-mono">
                         {member.member_id}
                       </TableCell>
                       <TableCell>
@@ -275,15 +280,13 @@ export function MembersTable({
                       <TableCell>
                         {getMembershipTypeBadge(member.membership_info.type)}
                       </TableCell>
-                      <TableCell>
-                        {getStatusBadge(member.status)}
-                      </TableCell>
-                      <TableCell>
+                      <TableCell>{getStatusBadge(member.status)}</TableCell>
+                      <TableCell className="text-right">
                         <span className="font-medium">
                           {member.borrowing_stats.current_loans}
                         </span>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-right text-muted-foreground">
                         {format(new Date(member.created_at), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
@@ -295,14 +298,18 @@ export function MembersTable({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/${libraryCode}/members/${member.id}`}>
+                              <Link
+                                href={`/${libraryCode}/members/${member.id}`}
+                              >
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Profile
                               </Link>
                             </DropdownMenuItem>
                             {canManageMembers && (
                               <DropdownMenuItem asChild>
-                                <Link href={`/${libraryCode}/members/${member.id}/edit`}>
+                                <Link
+                                  href={`/${libraryCode}/members/${member.id}/edit`}
+                                >
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit Member
                                 </Link>
@@ -322,7 +329,7 @@ export function MembersTable({
           {membersData && membersData.members.length > 0 && (
             <div className="flex items-center justify-between pt-4">
               <div className="text-sm text-muted-foreground">
-                Showing {((currentPage - 1) * 20) + 1} to{" "}
+                Showing {(currentPage - 1) * 20 + 1} to{" "}
                 {Math.min(currentPage * 20, membersData.total)} of{" "}
                 {membersData.total} members
               </div>
@@ -349,8 +356,8 @@ export function MembersTable({
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

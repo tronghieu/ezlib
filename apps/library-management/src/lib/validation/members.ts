@@ -32,41 +32,36 @@ const baseMemberSchema = z.object({
       "Last name can only contain letters, spaces, hyphens, and apostrophes"
     ),
   email: z
+    .string()
     .email("Please enter a valid email address")
     .min(1, "Email is required")
     .max(100, "Email must be less than 100 characters"),
-  phone: z
-    .string()
-    .regex(/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number")
-    .optional()
-    .or(z.literal("")),
+  phone: z.string()
+    .regex(/^[\+]?[1-9][\d\s\-\(\)]*$/, "Please enter a valid phone number")
+    .or(z.literal(""))
+    .optional(),
   
   // Support both flat fields (for forms) AND nested objects (for API consistency)
-  street: z
-    .string()
+  street: z.string()
     .max(100, "Street address must be less than 100 characters")
-    .optional()
-    .or(z.literal("")),
-  city: z
-    .string()
+    .or(z.literal(""))
+    .optional(),
+  city: z.string()
     .max(50, "City must be less than 50 characters")
-    .optional()
-    .or(z.literal("")),
-  state: z
-    .string()
+    .or(z.literal(""))
+    .optional(),
+  state: z.string()
     .max(50, "State must be less than 50 characters")
-    .optional()
-    .or(z.literal("")),
-  country: z
-    .string()
+    .or(z.literal(""))
+    .optional(),
+  country: z.string()
     .max(50, "Country must be less than 50 characters")
-    .optional()
-    .or(z.literal("")),
-  postal_code: z
-    .string()
+    .or(z.literal(""))
+    .optional(),
+  postal_code: z.string()
     .max(20, "Postal code must be less than 20 characters")
-    .optional()
-    .or(z.literal("")),
+    .or(z.literal(""))
+    .optional(),
 
   // Nested structure support for API backwards compatibility
   address: z
@@ -93,7 +88,7 @@ const baseMemberSchema = z.object({
         .optional(),
     })
     .optional(),
-  membership_type: z.enum(["regular", "student", "senior"]),
+  membership_type: z.enum(["regular", "student", "senior"]).default("regular"),
   membership_notes: z
     .string()
     .max(500, "Membership notes must be less than 500 characters")
@@ -121,9 +116,116 @@ export const memberRegistrationSchema = baseMemberSchema.transform((data) => {
   return data;
 });
 
+// Base schema without default values for updates
+const baseMemberUpdateSchema = z.object({
+  member_id: z
+    .string()
+    .max(20, "Member ID must be less than 20 characters")
+    .regex(
+      /^[A-Za-z0-9-_]{1,20}$/,
+      "Member ID can only contain letters, numbers, hyphens, and underscores"
+    )
+    .optional(),
+  first_name: z
+    .string()
+    .min(1, "First name is required")
+    .max(50, "First name must be less than 50 characters")
+    .regex(
+      /^[A-Za-z\s\-'\.]+$/,
+      "First name can only contain letters, spaces, hyphens, and apostrophes"
+    )
+    .optional(),
+  last_name: z
+    .string()
+    .min(1, "Last name is required")
+    .max(50, "Last name must be less than 50 characters")
+    .regex(
+      /^[A-Za-z\s\-'\.]+$/,
+      "Last name can only contain letters, spaces, hyphens, and apostrophes"
+    )
+    .optional(),
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .min(1, "Email is required")
+    .max(100, "Email must be less than 100 characters")
+    .optional(),
+  phone: z.string()
+    .regex(/^[\+]?[1-9][\d\s\-\(\)]*$/, "Please enter a valid phone number")
+    .or(z.literal(""))
+    .optional(),
+  street: z.string()
+    .max(100, "Street address must be less than 100 characters")
+    .or(z.literal(""))
+    .optional(),
+  city: z.string()
+    .max(50, "City must be less than 50 characters")
+    .or(z.literal(""))
+    .optional(),
+  state: z.string()
+    .max(50, "State must be less than 50 characters")
+    .or(z.literal(""))
+    .optional(),
+  country: z.string()
+    .max(50, "Country must be less than 50 characters")
+    .or(z.literal(""))
+    .optional(),
+  postal_code: z.string()
+    .max(20, "Postal code must be less than 20 characters")
+    .or(z.literal(""))
+    .optional(),
+  address: z
+    .object({
+      street: z
+        .string()
+        .max(100, "Street address must be less than 100 characters")
+        .optional(),
+      city: z
+        .string()
+        .max(50, "City must be less than 50 characters")
+        .optional(),
+      state: z
+        .string()
+        .max(50, "State must be less than 50 characters")
+        .optional(),
+      country: z
+        .string()
+        .max(50, "Country must be less than 50 characters")
+        .optional(),
+      postal_code: z
+        .string()
+        .max(20, "Postal code must be less than 20 characters")
+        .optional(),
+    })
+    .optional(),
+  membership_type: z.enum(["regular", "student", "senior"]).optional(), // No default for updates
+  membership_notes: z
+    .string()
+    .max(500, "Membership notes must be less than 500 characters")
+    .optional(),
+});
+
 // Member update schema (all fields optional, includes status)
-export const memberUpdateSchema = baseMemberSchema.partial().extend({
+export const memberUpdateSchema = baseMemberUpdateSchema.extend({
   status: z.enum(["active", "inactive", "banned"]).optional(),
+}).transform((data) => {
+  // Transform nested structures to flat fields if needed for forms
+  if (data.address?.street && !data.street) {
+    data.street = data.address.street;
+  }
+  if (data.address?.city && !data.city) {
+    data.city = data.address.city;
+  }
+  if (data.address?.state && !data.state) {
+    data.state = data.address.state;
+  }
+  if (data.address?.country && !data.country) {
+    data.country = data.address.country;
+  }
+  if (data.address?.postal_code && !data.postal_code) {
+    data.postal_code = data.address.postal_code;
+  }
+  return data;
 });
 
 // Member search schema

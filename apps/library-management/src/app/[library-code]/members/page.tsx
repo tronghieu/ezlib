@@ -19,7 +19,7 @@ interface MembersPageProps {
 export default async function MembersPage({ params }: MembersPageProps) {
   const resolvedParams = await params;
   const libraryCode = resolvedParams["library-code"];
-  
+
   const supabase = await createClient();
 
   // Get current user
@@ -52,14 +52,15 @@ export default async function MembersPage({ params }: MembersPageProps) {
 
   // Only librarian+ roles can access member management
   const allowedRoles = ["librarian", "manager", "owner"];
-  const canManageMembers = staffRecord && allowedRoles.includes(staffRecord.role);
+  const canManageMembers =
+    staffRecord && allowedRoles.includes(staffRecord.role);
 
   if (!canManageMembers) {
     notFound();
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="mx-auto space-y-6">
       <Suspense fallback={<MembersPageSkeleton />}>
         <MembersTable
           libraryId={library.id}
@@ -124,7 +125,7 @@ function MembersPageSkeleton() {
 export async function generateMetadata({ params }: MembersPageProps) {
   const resolvedParams = await params;
   const libraryCode = resolvedParams["library-code"];
-  
+
   return {
     title: `Members - ${libraryCode.toUpperCase()} Library`,
     description: "Manage library members and their information",

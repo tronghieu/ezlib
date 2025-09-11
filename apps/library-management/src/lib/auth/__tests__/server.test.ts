@@ -8,14 +8,14 @@ import {
   getUserLibraries,
 } from "../server";
 
-// Mock Supabase
-jest.mock("@supabase/ssr", () => ({
-  createServerClient: jest.fn(() => ({
-    auth: {
-      getUser: jest.fn(),
-    },
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
+// Mock the Supabase server client properly
+const mockSupabaseClient = {
+  auth: {
+    getUser: jest.fn(),
+  },
+  from: jest.fn(() => ({
+    select: jest.fn(() => ({
+      eq: jest.fn(() => ({
         eq: jest.fn(() => ({
           eq: jest.fn(() => ({
             single: jest.fn(),
@@ -24,6 +24,11 @@ jest.mock("@supabase/ssr", () => ({
       })),
     })),
   })),
+};
+
+// Mock the createClient function from our server module
+jest.mock("@/lib/supabase/server", () => ({
+  createClient: jest.fn(() => Promise.resolve(mockSupabaseClient)),
 }));
 
 // Mock Next.js cookies
@@ -43,139 +48,258 @@ describe("Server-side Authentication and Permission Utilities", () => {
   });
 
   describe("getUserRoleForLibrary", () => {
-    it("should return user role for development (placeholder)", async () => {
-      const role = await getUserRoleForLibrary(
-        testUserId,
-        testLibraryId
-      );
+    it("should return null when no staff record found", async () => {
+      // Mock database returning no data (PGRST116 error)
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: null,
+        error: { code: "PGRST116", message: "No rows returned" },
+      });
 
-      expect(role).toBeDefined();
-      expect(role).toBe("owner"); // Temporary development setting
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            eq: jest.fn(() => ({
+              eq: jest.fn(() => ({
+                single: mockSingle,
+              })),
+            })),
+          })),
+        })),
+      }));
+
+      const role = await getUserRoleForLibrary(testUserId, testLibraryId);
+
+      expect(role).toBeNull();
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith("library_staff");
     });
 
-    it("should handle invalid user/library combinations", async () => {
-      // This test will be more meaningful when actual database integration exists
-      const role = await getUserRoleForLibrary(
-        "invalid-user",
-        "invalid-library"
-      );
+    it("should return user role when staff record exists", async () => {
+      // Mock database returning valid staff data
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: { role: "manager", status: "active" },
+        error: null,
+      });
 
-      // For now, returns placeholder data
-      expect(role).toBeDefined();
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            eq: jest.fn(() => ({
+              eq: jest.fn(() => ({
+                single: mockSingle,
+              })),
+            })),
+          })),
+        })),
+      }));
+
+      const role = await getUserRoleForLibrary(testUserId, testLibraryId);
+
+      expect(role).toBe("manager");
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith("library_staff");
+    });
+
+    it("should return null when database error occurs", async () => {
+      // Mock database returning error
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Database connection failed" },
+      });
+
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            eq: jest.fn(() => ({
+              eq: jest.fn(() => ({
+                single: mockSingle,
+              })),
+            })),
+          })),
+        })),
+      }));
+
+      const role = await getUserRoleForLibrary(testUserId, testLibraryId);
+
+      expect(role).toBeNull();
     });
   });
 
   describe("canAccessLibrary", () => {
-    it("should return true for valid user/library combination (development)", async () => {
+    it("should return true when user has library access", async () => {
+      // Mock successful role retrieval
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: { role: "librarian", status: "active" },
+        error: null,
+      });
+
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            eq: jest.fn(() => ({
+              eq: jest.fn(() => ({
+                single: mockSingle,
+              })),
+            })),
+          })),
+        })),
+      }));
+
       const canAccess = await canAccessLibrary(testUserId, testLibraryId);
 
       expect(canAccess).toBe(true);
     });
 
-    it("should handle access validation", async () => {
-      const canAccess = await canAccessLibrary("any-user", "any-library");
+    it("should return false when user has no library access", async () => {
+      // Mock no staff record found
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: null,
+        error: { code: "PGRST116", message: "No rows returned" },
+      });
 
-      // Currently returns true for development - will be more restrictive with real data
-      expect(canAccess).toBe(true);
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            eq: jest.fn(() => ({
+              eq: jest.fn(() => ({
+                single: mockSingle,
+              })),
+            })),
+          })),
+        })),
+      }));
+
+      const canAccess = await canAccessLibrary(testUserId, testLibraryId);
+
+      expect(canAccess).toBe(false);
     });
   });
 
   describe("getUserLibraries", () => {
-    it("should return user's accessible libraries", async () => {
+    it("should return empty array when user has no library access", async () => {
+      // Mock database returning no libraries
+      const mockEq = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "No rows found" },
+      });
+
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            eq: mockEq,
+          })),
+        })),
+      }));
+
       const libraries = await getUserLibraries(testUserId);
 
       expect(Array.isArray(libraries)).toBe(true);
-      expect(libraries.length).toBeGreaterThan(0);
-
-      // Check structure of placeholder data
-      const library = libraries[0];
-      expect(library).toHaveProperty("library_id");
-      expect(library).toHaveProperty("role");
-      expect(library).toHaveProperty("libraries");
+      expect(libraries.length).toBe(0);
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith("library_staff");
     });
 
-    it("should include library details in response", async () => {
-      const libraries = await getUserLibraries(testUserId);
-      const library = libraries[0];
+    it("should return user's accessible libraries when they exist", async () => {
+      // Mock database returning libraries
+      const mockLibraries = [
+        {
+          library_id: testLibraryId,
+          role: "owner",
+          status: "active",
+          libraries: {
+            id: testLibraryId,
+            name: "Test Library",
+            code: "TEST-LIB",
+            settings: {},
+          },
+        },
+      ];
 
-      expect(library.libraries).toHaveProperty("id");
-      expect(library.libraries).toHaveProperty("name");
-      expect(library.libraries).toHaveProperty("code");
-      expect(library.libraries.name).toBe("Demo Library");
-      expect(library.libraries.code).toBe("DEMO-LIB");
-    });
-  });
-
-  describe("Permission middleware integration", () => {
-    // These tests verify the structure and behavior patterns
-    // Full integration testing will be possible with actual database
-
-    it("should have proper error handling patterns", () => {
-      // Test that our utility functions handle errors gracefully
-      expect(async () => {
-        await getUserRoleForLibrary("", "");
-      }).not.toThrow();
-    });
-
-    it("should maintain consistent return types", async () => {
-      const role = await getUserRoleForLibrary(
-        testUserId,
-        testLibraryId
-      );
-
-      expect(role).toBeDefined();
-      expect(typeof role).toBe("string");
-      expect(["owner", "manager", "librarian", "volunteer"]).toContain(role);
-    });
-  });
-
-  describe("Development placeholder validation", () => {
-    it("should provide consistent development data", async () => {
-      const role1 = await getUserRoleForLibrary(
-        testUserId,
-        testLibraryId
-      );
-      const role2 = await getUserRoleForLibrary(
-        testUserId,
-        testLibraryId
-      );
-
-      expect(role1).toBe(role2);
-    });
-
-    it("should maintain library context in development", async () => {
-      const role = await getUserRoleForLibrary(
-        testUserId,
-        testLibraryId
-      );
-
-      expect(role).toBeDefined();
-      expect(typeof role).toBe("string");
-    });
-  });
-
-  describe("Future database integration patterns", () => {
-    it("should be ready for RLS policy integration", async () => {
-      // This test validates that our functions are structured to work with RLS
-      const role = await getUserRoleForLibrary(
-        testUserId,
-        testLibraryId
-      );
-
-      // Verify the structure matches what RLS policies will expect
-      expect(role).toBeDefined();
-      expect(["owner", "manager", "librarian", "volunteer"]).toContain(role);
-    });
-
-    it("should support multi-tenant data isolation patterns", async () => {
-      const libraries = await getUserLibraries(testUserId);
-
-      // Each library entry should have proper tenant isolation data
-      libraries.forEach((lib) => {
-        expect(lib).toHaveProperty("library_id");
-        expect(lib.libraries).toHaveProperty("id");
-        expect(lib.library_id).toBe(lib.libraries.id); // Foreign key consistency
+      const mockEq = jest.fn().mockResolvedValue({
+        data: mockLibraries,
+        error: null,
       });
+
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            eq: mockEq,
+          })),
+        })),
+      }));
+
+      const libraries = await getUserLibraries(testUserId);
+
+      expect(Array.isArray(libraries)).toBe(true);
+      expect(libraries.length).toBe(1);
+      expect(libraries[0]).toHaveProperty("library_id");
+      expect(libraries[0]).toHaveProperty("role");
+      expect(libraries[0]).toHaveProperty("libraries");
+      expect(libraries[0].libraries.name).toBe("Test Library");
+    });
+
+    it("should return empty array on database error", async () => {
+      // Mock database error
+      const mockEq = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Database connection failed" },
+      });
+
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            eq: mockEq,
+          })),
+        })),
+      }));
+
+      const libraries = await getUserLibraries(testUserId);
+
+      expect(Array.isArray(libraries)).toBe(true);
+      expect(libraries.length).toBe(0);
+    });
+  });
+
+  describe("Database query structure validation", () => {
+    it("should use correct query structure for staff role lookup", async () => {
+      const mockSelect = jest.fn(() => ({
+        eq: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            eq: jest.fn(() => ({
+              single: jest.fn().mockResolvedValue({
+                data: { role: "owner", status: "active" },
+                error: null,
+              }),
+            })),
+          })),
+        })),
+      }));
+
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: mockSelect,
+      }));
+
+      await getUserRoleForLibrary(testUserId, testLibraryId);
+
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith("library_staff");
+      expect(mockSelect).toHaveBeenCalledWith("role, status");
+    });
+
+    it("should use correct query structure for user libraries lookup", async () => {
+      const mockSelect = jest.fn(() => ({
+        eq: jest.fn(() => ({
+          eq: jest.fn().mockResolvedValue({
+            data: [],
+            error: null,
+          }),
+        })),
+      }));
+
+      mockSupabaseClient.from = jest.fn(() => ({
+        select: mockSelect,
+      }));
+
+      await getUserLibraries(testUserId);
+
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith("library_staff");
+      expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining("libraries ("));
     });
   });
 });

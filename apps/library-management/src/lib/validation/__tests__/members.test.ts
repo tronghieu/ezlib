@@ -111,7 +111,7 @@ describe("Member Validation Schemas", () => {
         member_id: "a".repeat(21), // Max 20
         first_name: "a".repeat(51), // Max 50
         last_name: "a".repeat(51), // Max 50
-        email: "a".repeat(90) + "@test.com", // Max 100
+        email: "a".repeat(95) + "@test.com", // Max 100 - this will be 104 chars
         street: "a".repeat(101), // Max 100
         city: "a".repeat(51), // Max 50
         state: "a".repeat(51), // Max 50

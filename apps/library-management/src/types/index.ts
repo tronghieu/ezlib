@@ -505,8 +505,8 @@ export interface LibraryWithAccess {
   settings: Database["public"]["Tables"]["libraries"]["Row"]["settings"];
   stats: Database["public"]["Tables"]["libraries"]["Row"]["stats"];
   status: string;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   // User's access information from library_staff
   user_role: string;
   staff_id: string;
