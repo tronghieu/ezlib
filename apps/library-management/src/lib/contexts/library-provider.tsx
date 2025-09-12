@@ -185,13 +185,23 @@ export function LibraryProvider({
         return clientLibraries;
       }
       
-      if (librariesPromiseContext && user) {
-        // For now, return fallback until we fix the promise resolution pattern
-        console.log("[Library Context] Using fallback libraries (promise context exists)");
+      // If user is authenticated, use client-fetched or try promise resolution  
+      if (user) {
+        if (librariesPromiseContext) {
+          // For now, return fallback until we fix the promise resolution pattern
+          console.log("[Library Context] Using fallback libraries (promise context exists)");
+          return fallbackLibraries;
+        }
+        
+        // If no promise context but user is authenticated, fallback to empty array
+        // This will trigger client-side fetch
+        console.log("[Library Context] User authenticated, using fallback libraries");
         return fallbackLibraries;
       }
-      console.log("[Library Context] Using fallback libraries (default)");
-      return fallbackLibraries;
+      
+      // No user, return empty array to avoid confusion
+      console.log("[Library Context] No user, returning empty libraries");
+      return [];
     } catch (error) {
       console.error("Failed to resolve libraries promise:", error);
       setError(error instanceof Error ? error.message : "Failed to load libraries");

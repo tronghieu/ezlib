@@ -140,6 +140,7 @@ export async function setupAuthTestScenario(testName: string): Promise<AuthTestS
       library_id: library.id,
       role: "owner",
       status: "active",
+      is_deleted: false, // Required field
       employment_info: {
         employee_id: `TEST-${Date.now()}`,
         department: "Administration",
