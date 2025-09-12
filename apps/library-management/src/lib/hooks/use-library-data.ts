@@ -8,7 +8,7 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import type { TablesInsert, TablesUpdate } from "@/types/database";
 
 // =============================================================================

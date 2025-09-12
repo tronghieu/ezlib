@@ -36,16 +36,26 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/error') &&
-    !request.nextUrl.pathname.startsWith('/api/health')
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  // Check if this is a library route (format: /[library-code]/*)
+  const isLibraryRoute = /^\/[a-zA-Z0-9-]+\//.test(request.nextUrl.pathname)
+  
+  // Define public routes that don't require authentication
+  const isPublicRoute = 
+    request.nextUrl.pathname === '/' ||
+    request.nextUrl.pathname.startsWith('/auth/') ||
+    request.nextUrl.pathname.startsWith('/error') ||
+    request.nextUrl.pathname.startsWith('/api/health')
+
+  // Debug logging
+  console.log(`[Middleware Debug] Path: ${request.nextUrl.pathname}, User: ${user ? 'authenticated' : 'not authenticated'}, IsLibraryRoute: ${isLibraryRoute}, IsPublicRoute: ${isPublicRoute}`)
+
+  if (!user && (isLibraryRoute || !isPublicRoute)) {
+    // No user and trying to access protected route, redirect to login
+    console.log(`[Middleware Debug] Redirecting to login: ${request.nextUrl.pathname}`)
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/auth/login'
+    // Add return URL for redirect after login
+    url.searchParams.set('redirectTo', request.nextUrl.pathname)
     return NextResponse.redirect(url)
   }
 

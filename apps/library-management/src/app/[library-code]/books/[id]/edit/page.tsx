@@ -7,7 +7,7 @@ import { ChevronLeft, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { EditBookCopyForm } from "@/components/books/edit-book-copy-form";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { usePermissions } from "@/lib/hooks/use-permissions";
 
 interface EditBookCopyPageProps {

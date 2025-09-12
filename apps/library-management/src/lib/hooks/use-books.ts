@@ -8,7 +8,7 @@
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import type { Database } from "@/types/database";
 

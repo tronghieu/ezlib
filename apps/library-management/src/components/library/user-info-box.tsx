@@ -21,7 +21,7 @@ export function UserInfoBox(): React.JSX.Element {
   };
 
   if (!user || loading) {
-    return <div>Loading...</div>;
+    return <></>;
   }
 
   return (

@@ -7,7 +7,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { AddBookWorkflow } from "@/components/books/add-book-workflow";
 import { Button } from "@/components/ui/button";
 import { Book, ArrowLeft } from "lucide-react";

@@ -57,7 +57,7 @@ export function AddMemberForm({
   } = useForm<MemberRegistrationData>({
     resolver: zodResolver(memberRegistrationSchema),
     defaultValues: {
-      membership_type: "regular",
+      membership_type: "regular" as const,
     },
   });
 

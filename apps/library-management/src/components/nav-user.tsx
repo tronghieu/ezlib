@@ -8,7 +8,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/hooks";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { createClient } from "@/lib/supabase/client";
 import {
   BadgeCheck,

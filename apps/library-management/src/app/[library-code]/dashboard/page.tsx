@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import {
   useLibraryStats,
   useLibraryTransactions,

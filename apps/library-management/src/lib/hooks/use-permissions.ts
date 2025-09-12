@@ -1,6 +1,6 @@
 "use client";
 
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 
 export type StaffRole = "owner" | "manager" | "librarian" | "volunteer";
 export type Permission = "read" | "create" | "update" | "delete" | "manage";

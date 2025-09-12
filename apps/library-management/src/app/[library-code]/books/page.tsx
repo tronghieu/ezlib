@@ -6,7 +6,7 @@
  */
 
 import React, { Suspense } from "react";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { BooksTable } from "@/components/books/books-table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

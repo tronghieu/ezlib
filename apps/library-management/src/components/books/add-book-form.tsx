@@ -8,7 +8,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { useAddBook } from "@/lib/hooks/use-add-book";
 import { addBookSchema, type AddBookFormData } from "@/lib/validation/books";
 

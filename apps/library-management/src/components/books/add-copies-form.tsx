@@ -34,7 +34,7 @@ import {
   Scan,
   Globe,
 } from "lucide-react";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { useCreateBookCopies } from "@/lib/hooks/use-book-management";
 import type { BookEdition, BookCopyFormData } from "@/types/books";
 import { Separator } from "../ui/separator";

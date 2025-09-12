@@ -8,7 +8,7 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LibrarySelectionGrid } from "./library-selection-grid";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { useAuth } from "@/lib/auth/hooks";
 import type { LibraryWithAccess } from "@/types";
 

@@ -38,7 +38,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { useBooks, useBookSearch } from "@/lib/hooks/use-books";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { cn } from "@/lib/utils";
 
 export interface Book {

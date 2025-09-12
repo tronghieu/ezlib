@@ -7,7 +7,7 @@ import { ChevronLeft } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookCopyDetail } from "@/components/books/book-copy-detail";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 
 interface BookDetailPageProps {
   params: Promise<{

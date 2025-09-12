@@ -7,7 +7,7 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import {
   Book,
   Users,

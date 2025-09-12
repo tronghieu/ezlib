@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, BookPlus, Package, CheckCircle2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import { toast } from "sonner";
 import type { BookEdition } from "@/types/books";
 

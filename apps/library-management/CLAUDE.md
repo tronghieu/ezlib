@@ -66,8 +66,15 @@ When working with Supabase databases, **ALWAYS** use migrations for ANY schema c
 2. **Because shared Supabase with other projects, activities that change database schema, Supabase configuration are not performed within the scope of this project.**
 3. **NEVER join `general_books` when fetching `book_*` data except user mentioned**
 
-### UAT Testing
+### E2E Testing
 
+**Test-Specific Seed Data Pattern:**
+- Create deterministic test data at runtime (not random faker data)
+- Use unique timestamps for isolation: `test-${Date.now()}@example.com`
+- Clean up test data after each test to prevent interference
+- Never use hardcoded emails/IDs from random seeds
+
+**UAT Testing:**
 1. Use supabase mcp to get existing users, never create new user except for testing registrations
 2. Use Playwright MCP to navigate and authenticate
 3. Open new browser tab to get OTP from Mailpit: http://localhost:54324

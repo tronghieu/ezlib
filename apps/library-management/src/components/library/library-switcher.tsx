@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Building2, Plus, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useLibraryContext } from "@/lib/contexts/library-context";
+import { useLibraryContext } from "@/lib/contexts/library-provider";
 import type { LibraryWithAccess } from "@/types";
 import {
   SidebarMenu,
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/sidebar";
 
 export function LibrarySwitcher(): React.JSX.Element {
+  const router = useRouter();
   const { currentLibrary, availableLibraries, selectLibrary, isLoading } =
     useLibraryContext();
   const { state } = useSidebar();
@@ -36,12 +38,12 @@ export function LibrarySwitcher(): React.JSX.Element {
     selectLibrary(library);
     setIsOpen(false);
 
-    // Navigate to the selected library's dashboard
-    window.location.href = `/${library.code}/dashboard`;
+    // Navigate to the selected library's dashboard using client-side routing
+    router.push(`/${library.code}/dashboard`);
   };
 
   const handleBackToSelection = () => {
-    window.location.href = "/";
+    router.push("/");
   };
 
   if (isLoading) {
