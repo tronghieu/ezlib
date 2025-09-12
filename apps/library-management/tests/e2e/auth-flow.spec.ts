@@ -503,7 +503,7 @@ test.describe("Authentication Flow E2E Tests", () => {
       
       // More lenient check - authentication may redirect to home or dashboard
       try {
-        await page.waitForURL(url => !url.includes('/auth/login'), { timeout: 15000 });
+        await page.waitForURL(url => !url.toString().includes('/auth/login'), { timeout: 15000 });
       } catch (e) {
         console.log(`Still on login after OTP. URL: ${page.url()}`);
         // Continue with test - authentication may have worked but not redirected as expected
@@ -599,7 +599,7 @@ test.describe("Library Staff Security Tests", () => {
       
       // Wait for authentication to complete
       try {
-        await page.waitForURL(url => !url.includes('/auth/login'), { timeout: 15000 });
+        await page.waitForURL(url => !url.toString().includes('/auth/login'), { timeout: 15000 });
       } catch (e) {
         console.log(`Still on login after OTP in security test. URL: ${page.url()}`);
         // Continue with test

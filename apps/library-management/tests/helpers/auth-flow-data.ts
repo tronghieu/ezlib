@@ -5,11 +5,13 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/types/database";
+import type { Database } from "@/types/database";
 
 // Use environment variables for security
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
+const supabaseServiceKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
 
 const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey, {
@@ -39,10 +41,12 @@ export interface AuthTestScenario {
 /**
  * Creates a library owner for authentication testing
  */
-export async function createAuthTestUser(testName: string): Promise<AuthTestUser> {
+export async function createAuthTestUser(
+  testName: string
+): Promise<AuthTestUser> {
   const timestamp = Date.now();
   const email = `auth-test-${testName}-${timestamp}@example.com`;
-  
+
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
     email_confirm: true,
@@ -53,8 +57,9 @@ export async function createAuthTestUser(testName: string): Promise<AuthTestUser
     },
   });
 
-  if (error) throw new Error(`Failed to create auth test user: ${error.message}`);
-  
+  if (error)
+    throw new Error(`Failed to create auth test user: ${error.message}`);
+
   return {
     id: data.user.id,
     email: data.user.email!,
@@ -64,12 +69,14 @@ export async function createAuthTestUser(testName: string): Promise<AuthTestUser
 /**
  * Creates a library for authentication testing
  */
-export async function createAuthTestLibrary(testName: string): Promise<AuthTestLibrary> {
+export async function createAuthTestLibrary(
+  testName: string
+): Promise<AuthTestLibrary> {
   const timestamp = Date.now();
   const uniqueId = Math.random().toString(36).substring(2, 8); // Random 6-char string
   const code = `AUTH-${uniqueId.toUpperCase()}`; // Ensure uniqueness across parallel tests
   const name = `Auth Test Library ${testName} ${uniqueId}`;
-  
+
   const { data, error } = await supabaseAdmin
     .from("libraries")
     .insert({
@@ -116,7 +123,8 @@ export async function createAuthTestLibrary(testName: string): Promise<AuthTestL
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create auth test library: ${error.message}`);
+  if (error)
+    throw new Error(`Failed to create auth test library: ${error.message}`);
 
   return {
     id: data.id,
@@ -128,29 +136,30 @@ export async function createAuthTestLibrary(testName: string): Promise<AuthTestL
 /**
  * Sets up complete auth test scenario
  */
-export async function setupAuthTestScenario(testName: string): Promise<AuthTestScenario> {
+export async function setupAuthTestScenario(
+  testName: string
+): Promise<AuthTestScenario> {
   const user = await createAuthTestUser(testName);
   const library = await createAuthTestLibrary(testName);
-  
+
   // Assign user as owner (using correct schema)
-  const { error } = await supabaseAdmin
-    .from("library_staff")
-    .insert({
-      user_id: user.id,
-      library_id: library.id,
-      role: "owner",
-      status: "active",
-      is_deleted: false, // Required field
-      employment_info: {
-        employee_id: `TEST-${Date.now()}`,
-        department: "Administration",
-        hire_date: new Date().toISOString(),
-        work_schedule: "Full-time",
-      },
-    });
-    
-  if (error) throw new Error(`Failed to assign user to library: ${error.message}`);
-  
+  const { error } = await supabaseAdmin.from("library_staff").insert({
+    user_id: user.id,
+    library_id: library.id,
+    role: "owner",
+    status: "active",
+    is_deleted: false, // Required field
+    employment_info: {
+      employee_id: `TEST-${Date.now()}`,
+      department: "Administration",
+      hire_date: new Date().toISOString(),
+      work_schedule: "Full-time",
+    },
+  });
+
+  if (error)
+    throw new Error(`Failed to assign user to library: ${error.message}`);
+
   return {
     user,
     library,
@@ -163,7 +172,10 @@ export async function setupAuthTestScenario(testName: string): Promise<AuthTestS
 /**
  * Clean up auth test data
  */
-export async function cleanupAuthTestData(userId: string, libraryId: string): Promise<void> {
+export async function cleanupAuthTestData(
+  userId: string,
+  libraryId: string
+): Promise<void> {
   try {
     // Clean up library staff first
     await supabaseAdmin
@@ -171,13 +183,10 @@ export async function cleanupAuthTestData(userId: string, libraryId: string): Pr
       .delete()
       .eq("user_id", userId)
       .eq("library_id", libraryId);
-    
+
     // Clean up library
-    await supabaseAdmin
-      .from("libraries")
-      .delete()
-      .eq("id", libraryId);
-    
+    await supabaseAdmin.from("libraries").delete().eq("id", libraryId);
+
     // Clean up user
     await supabaseAdmin.auth.admin.deleteUser(userId);
   } catch (error) {
@@ -189,37 +198,46 @@ export async function cleanupAuthTestData(userId: string, libraryId: string): Pr
  * Get OTP from Mailpit for auth testing
  * Try both common Mailpit ports (8025 and 54324)
  */
-export async function getAuthTestOTP(email: string, maxWaitMs = 10000): Promise<string | null> {
+export async function getAuthTestOTP(
+  email: string,
+  maxWaitMs = 10000
+): Promise<string | null> {
   const startTime = Date.now();
   const mailpitPorts = [8025, 54324]; // Try both common ports
-  
+
   while (Date.now() - startTime < maxWaitMs) {
     for (const port of mailpitPorts) {
       try {
-        const response = await fetch(`http://localhost:${port}/api/v1/messages`);
+        const response = await fetch(
+          `http://localhost:${port}/api/v1/messages`
+        );
         if (!response.ok) continue; // Try next port
-        
+
         const messages = await response.json();
-        
+
         const latestMessage = messages.messages
-          ?.filter((msg: any) => 
-            msg.To?.some((to: any) => to.Address === email) &&
-            new Date(msg.Created).getTime() > startTime - 10000 // Allow 10 seconds for email delivery
+          ?.filter(
+            (msg: any) =>
+              msg.To?.some((to: any) => to.Address === email) &&
+              new Date(msg.Created).getTime() > startTime - 10000 // Allow 10 seconds for email delivery
           )
-          ?.sort((a: any, b: any) => 
-            new Date(b.Created).getTime() - new Date(a.Created).getTime()
+          ?.sort(
+            (a: any, b: any) =>
+              new Date(b.Created).getTime() - new Date(a.Created).getTime()
           )?.[0];
-        
+
         if (latestMessage) {
           const messageResponse = await fetch(
             `http://localhost:${port}/api/v1/message/${latestMessage.ID}`
           );
           const fullMessage = await messageResponse.json();
-          
+
           // Extract 6-digit OTP from Supabase email
           const otpMatch = fullMessage.Text?.match(/(\d{6})/);
           if (otpMatch) {
-            console.log(`OTP found via Mailpit on port ${port}: ${otpMatch[1]}`);
+            console.log(
+              `OTP found via Mailpit on port ${port}: ${otpMatch[1]}`
+            );
             return otpMatch[1];
           }
         }
@@ -228,10 +246,10 @@ export async function getAuthTestOTP(email: string, maxWaitMs = 10000): Promise<
         continue;
       }
     }
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  
+
   console.warn(`OTP not found in Mailpit after ${maxWaitMs}ms for ${email}`);
   return null;
 }
