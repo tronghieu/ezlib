@@ -5,7 +5,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import type { Database } from "../../src/types/database";
 
 // Use environment variables for security
 const supabaseUrl =
@@ -195,17 +195,20 @@ export async function cleanupAuthTestData(
 }
 
 /**
- * Get OTP from Mailpit for auth testing
+ * Get OTP from Mailpit for auth testing with retry logic and exponential backoff
  * Try both common Mailpit ports (8025 and 54324)
  */
 export async function getAuthTestOTP(
   email: string,
-  maxWaitMs = 10000
+  maxWaitMs = 30000
 ): Promise<string | null> {
   const startTime = Date.now();
   const mailpitPorts = [8025, 54324]; // Try both common ports
+  let attemptCount = 0;
 
   while (Date.now() - startTime < maxWaitMs) {
+    attemptCount++;
+    
     for (const port of mailpitPorts) {
       try {
         const response = await fetch(
@@ -219,7 +222,7 @@ export async function getAuthTestOTP(
           ?.filter(
             (msg: any) =>
               msg.To?.some((to: any) => to.Address === email) &&
-              new Date(msg.Created).getTime() > startTime - 10000 // Allow 10 seconds for email delivery
+              new Date(msg.Created).getTime() > startTime - 15000 // Allow 15 seconds for email delivery
           )
           ?.sort(
             (a: any, b: any) =>
@@ -236,7 +239,7 @@ export async function getAuthTestOTP(
           const otpMatch = fullMessage.Text?.match(/(\d{6})/);
           if (otpMatch) {
             console.log(
-              `OTP found via Mailpit on port ${port}: ${otpMatch[1]}`
+              `OTP found via Mailpit on port ${port}: ${otpMatch[1]} (attempt ${attemptCount})`
             );
             return otpMatch[1];
           }
@@ -247,9 +250,36 @@ export async function getAuthTestOTP(
       }
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Exponential backoff: 1s, 2s, 4s, 4s, 4s...
+    const waitTime = Math.min(1000 * Math.pow(2, attemptCount - 1), 4000);
+    await new Promise((resolve) => setTimeout(resolve, waitTime));
   }
 
-  console.warn(`OTP not found in Mailpit after ${maxWaitMs}ms for ${email}`);
+  console.warn(`OTP not found in Mailpit after ${maxWaitMs}ms for ${email} (${attemptCount} attempts)`);
+  return null;
+}
+
+/**
+ * Enhanced OTP fetching with retry logic for tests
+ */
+export async function getAuthTestOTPWithRetry(
+  email: string,
+  maxRetries = 3,
+  timeoutPerAttempt = 15000
+): Promise<string | null> {
+  for (let i = 0; i < maxRetries; i++) {
+    console.log(`Attempting to fetch OTP for ${email} (attempt ${i + 1}/${maxRetries})`);
+    
+    const otp = await getAuthTestOTP(email, timeoutPerAttempt);
+    if (otp) return otp;
+    
+    if (i < maxRetries - 1) {
+      const retryDelay = 2000 * (i + 1); // 2s, 4s, 6s delays
+      console.log(`OTP attempt ${i + 1} failed, retrying in ${retryDelay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+  
+  console.error(`Failed to fetch OTP for ${email} after ${maxRetries} attempts`);
   return null;
 }

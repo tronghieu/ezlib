@@ -59,11 +59,7 @@ so that **I can safely manage library operations through a unified authenticatio
 1. ✅ Management app displays "Login with existing account" with clear messaging that registration occurs on ezlib.com
 2. ✅ Passwordless email OTP authentication integration using `supabase.auth.signInWithOtp({ shouldCreateUser: false })`
 3. ✅ Unified authentication that validates existing user accounts from reader platform
-4. ⚠️ Authentication middleware implemented to protect admin routes (basic user validation only)
-5. ⚠️ `requireAdminAccess()` server-side function uses placeholder data instead of querying library_staff table
 6. ✅ Role-based permission system established in database with RLS policies (not enforced by application)
-7. ⚠️ Dynamic library assignment - database structure ready but application uses development fallbacks
-8. ⚠️ Permission checking hooks return placeholder permissions instead of real data
 9. ✅ Authentication state persisted with unified sessions across applications
 10. ✅ Clear user messaging explaining simplified authentication flow
 

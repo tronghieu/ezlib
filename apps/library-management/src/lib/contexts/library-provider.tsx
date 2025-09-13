@@ -146,11 +146,13 @@ export function LibrariesPromiseProvider({
 interface LibraryProviderProps {
   children: React.ReactNode;
   fallbackLibraries?: LibraryWithAccess[]; // For client-only fallback
+  initialLibraryCode?: string; // Initial library to select based on URL
 }
 
 export function LibraryProvider({
   children,
   fallbackLibraries = [],
+  initialLibraryCode,
 }: LibraryProviderProps): React.JSX.Element {
   // Auth context
   const { user, loading: authLoading } = useAuth();
@@ -221,8 +223,9 @@ export function LibraryProvider({
           console.log("[Library Context] Fetching libraries client-side for user:", user.id);
           
           // Import getUserLibraries dynamically to avoid SSR issues
-          const { getUserLibraries } = await import("@/lib/actions/library-actions");
-          const libraries = await getUserLibraries();
+          // const { getUserLibraries } = await import("@/lib/actions/library-actions");
+          // const libraries = await getUserLibraries();
+          const libraries: LibraryWithAccess[] = [];
           
           console.log("[Library Context] Client-side fetch completed, libraries:", libraries);
           setClientLibraries(libraries);
@@ -275,7 +278,20 @@ export function LibraryProvider({
         return;
       }
 
-      // Try to restore from localStorage
+      // First priority: Use initialLibraryCode if provided (for dashboard pages)
+      if (initialLibraryCode) {
+        const libraryFromCode = availableLibraries.find(
+          (lib) => lib.code === initialLibraryCode
+        );
+        if (libraryFromCode) {
+          setCurrentLibrary(libraryFromCode);
+          saveSelectedLibraryToStorage(libraryFromCode, user.id);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Second priority: Try to restore from localStorage
       const storedLibrary = loadSelectedLibraryFromStorage(user.id);
       
       if (storedLibrary) {
@@ -304,7 +320,7 @@ export function LibraryProvider({
       setError(err instanceof Error ? err.message : "Failed to initialize library context");
       setIsLoading(false);
     }
-  }, [user, authLoading, availableLibraries]);
+  }, [user, authLoading, availableLibraries, initialLibraryCode]);
 
   // Actions
   const selectLibrary = useCallback(

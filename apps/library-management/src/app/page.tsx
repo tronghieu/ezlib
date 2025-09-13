@@ -1,25 +1,34 @@
 import { LibrarySelectionPage } from "@/components/library/library-selection-page";
 import { UserInfoBox } from "@/components/library/user-info-box";
+import { LibraryProvider, LibrariesPromiseProvider } from "@/lib/contexts/library-provider";
+import { getUserLibraries } from "@/lib/actions/library-actions";
 
-export default function Home() {
+export default async function Home() {
+  // Fetch libraries on the server side
+  const libraries = await getUserLibraries();
+
   return (
-    <main className="container mx-auto px-4 py-8 min-h-screen">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            EzLib Library Management
-          </h1>
-          <p className="text-gray-600">
-            Simple, modern library management for small and medium libraries
-          </p>
-        </div>
+    <LibrariesPromiseProvider librariesPromise={Promise.resolve(libraries)}>
+      <LibraryProvider fallbackLibraries={libraries}>
+        <main className="container mx-auto px-4 py-8 min-h-screen">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                EzLib Library Management
+              </h1>
+              <p className="text-gray-600">
+                Simple, modern library management for small and medium libraries
+              </p>
+            </div>
 
-        {/* Library Selection will be handled by LibrarySelectionPage */}
-        <LibrarySelectionPage />
+            {/* Library Selection will be handled by LibrarySelectionPage */}
+            <LibrarySelectionPage />
 
-        {/* User Info Box */}
-        <UserInfoBox />
-      </div>
-    </main>
+            {/* User Info Box */}
+            <UserInfoBox />
+          </div>
+        </main>
+      </LibraryProvider>
+    </LibrariesPromiseProvider>
   );
 }

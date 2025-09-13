@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { LibraryProvider, LibrariesPromiseProvider } from "@/lib/contexts/library-provider";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { getUserLibraries } from "@/lib/actions/library-actions";
 // Temporarily disabled for debugging
 // import { NextIntlClientProvider } from 'next-intl';
 // import { getMessages } from 'next-intl/server';
@@ -33,25 +31,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Temporarily disabled i18n integration
-  // const locale = await getUserLocale();
-  // if (!locales.includes(locale)) {
-  //   notFound();
-  // }
-  // const messages = await getMessages();
-
-  // Server-side library fetching - DO NOT await, pass promise to client
-  const librariesPromise = getUserLibraries();
-
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <LibrariesPromiseProvider librariesPromise={librariesPromise}>
-            <LibraryProvider>{children}</LibraryProvider>
-          </LibrariesPromiseProvider>
+          {children}
         </QueryProvider>
         <Toaster position="top-right" duration={6000} />
       </body>

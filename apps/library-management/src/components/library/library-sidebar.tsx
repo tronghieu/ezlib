@@ -47,7 +47,7 @@ export function LibrarySidebar(): React.JSX.Element {
   const pathname = usePathname();
 
   if (!currentLibrary) {
-    return <div>Loading...</div>;
+    return <>...</>;
   }
 
   // Main navigation items with permission requirements
