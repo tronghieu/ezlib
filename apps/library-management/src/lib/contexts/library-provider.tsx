@@ -10,7 +10,6 @@ import React, {
   useContext,
   useState,
   useCallback,
-  use,
   useEffect,
   useMemo,
 } from "react";
@@ -261,7 +260,7 @@ export function LibraryProvider({
     }
 
     fetchClientLibraries();
-  }, [user, authLoading]);
+  }, [user, authLoading, clientFetchComplete, clientLibraries.length, lastUserId]);
 
   // Auto-restore selected library from localStorage when libraries are loaded
   useEffect(() => {

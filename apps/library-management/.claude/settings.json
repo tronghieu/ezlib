@@ -23,9 +23,11 @@
       "mcp__playwright__browser_tabs",
       "mcp__playwright__browser_take_screenshot",
       "mcp__playwright__browser_console_messages",
-      "Bash(pnpm *)",
+      "Bash(pnpm **)",
       "Bash(curl:*)",
-      "Bash(lsof:*)"
-    ]
+      "Bash(lsof:*)",
+      "Bash(open http://localhost:9323)"
+    ],
+    "additionalDirectories": ["/Users/tronghieuluu/Projects/ezlib/supabase"]
   }
 }
